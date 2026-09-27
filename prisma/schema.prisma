@@ -1,0 +1,276 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PATIENT
+  DOCTOR
+  ADMIN
+  AGENT
+}
+
+enum SlotStatus {
+  FREE
+  HELD
+  BOOKED
+}
+
+enum AccommodationType {
+  APARTMENT
+  HOUSE
+}
+
+enum BookingStatus {
+  REQUESTED
+  CONFIRMED
+  REFUSED
+  EXPIRED
+  PAID
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TrackingStep {
+  ARRIVED_AIRPORT
+  AT_ACCOMMODATION
+  AT_CLINIC
+  OPERATED
+  RECOVERING
+  DEPARTED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String?
+  role            Role      @default(PATIENT)
+  firstName       String
+  lastName        String
+  phone           String?
+  country         String?
+  birthDate       DateTime?
+  locale          String    @default("fr")
+  active          Boolean   @default(true)
+  consentAt       DateTime?
+  inviteToken     String?   @unique
+  inviteExpiresAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  doctor          Doctor?
+  bookings        Booking[]       @relation("PatientBookings")
+  trackingEvents  TrackingEvent[]
+  payoutsRecorded DoctorPayout[]
+  accessLogs      AccessLog[]
+}
+
+model Doctor {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialty     String
+  bio           String   @db.Text
+  languages     String[]
+  clinicName    String
+  clinicAddress String
+  city          String
+  photoUrl      String?
+  yearsOfExperience Int  @default(0)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  operations DoctorOperation[]
+  slots      Slot[]
+  bookings   Booking[]
+  payouts    DoctorPayout[]
+}
+
+model Operation {
+  id                    String   @id @default(cuid())
+  slug                  String   @unique
+  nameFr                String
+  nameEn                String
+  nameAr                String
+  descriptionFr         String   @db.Text
+  descriptionEn         String   @db.Text
+  descriptionAr         String   @db.Text
+  basePrice             Int
+  defaultRecoveryNights Int      @default(7)
+  active                Boolean  @default(true)
+  createdAt             DateTime @default(now())
+
+  doctors  DoctorOperation[]
+  bookings Booking[]
+}
+
+/// price = what the patient pays for the operation, doctorFee = what LifeDeux owes the doctor (cash).
+model DoctorOperation {
+  doctorId    String
+  operationId String
+  price       Int
+  doctorFee   Int
+  doctor      Doctor    @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  operation   Operation @relation(fields: [operationId], references: [id], onDelete: Cascade)
+
+  @@id([doctorId, operationId])
+}
+
+model Slot {
+  id       String     @id @default(cuid())
+  doctorId String
+  doctor   Doctor     @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  startsAt DateTime
+  status   SlotStatus @default(FREE)
+  bookings Booking[]
+
+  @@unique([doctorId, startsAt])
+  @@index([doctorId, status, startsAt])
+}
+
+model Accommodation {
+  id            String            @id @default(cuid())
+  title         String
+  type          AccommodationType
+  city          String
+  address       String
+  description   String            @db.Text
+  pricePerNight Int
+  capacity      Int
+  bedrooms      Int               @default(1)
+  amenities     String[]
+  photos        String[]
+  active        Boolean           @default(true)
+  createdAt     DateTime          @default(now())
+
+  bookings Booking[]
+}
+
+model Booking {
+  id                 String        @id @default(cuid())
+  reference          String        @unique
+  patientId          String
+  patient            User          @relation("PatientBookings", fields: [patientId], references: [id])
+  doctorId           String
+  doctor             Doctor        @relation(fields: [doctorId], references: [id])
+  operationId        String
+  operation          Operation     @relation(fields: [operationId], references: [id])
+  slotId             String
+  slot               Slot          @relation(fields: [slotId], references: [id])
+  status             BookingStatus @default(REQUESTED)
+  trackingStep       TrackingStep?
+  patientNote        String?       @db.Text
+  refusalReason      String?
+  recoveryNights     Int
+  optionsChosen      Boolean       @default(false)
+  withTransport      Boolean       @default(false)
+  accommodationId    String?
+  accommodation      Accommodation? @relation(fields: [accommodationId], references: [id])
+  companionsCount    Int           @default(0)
+  arrivalDate        DateTime?
+  departureDate      DateTime?
+  nights             Int           @default(0)
+  operationPrice     Int
+  transportPrice     Int           @default(0)
+  accommodationPrice Int           @default(0)
+  totalAmount        Int
+  currency           String
+  doctorFee          Int
+  qrToken            String?       @unique
+  confirmedAt        DateTime?
+  paymentDeadline    DateTime?
+  paidAt             DateTime?
+  cancelledAt        DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  companions     Companion[]
+  payments       Payment[]
+  trackingEvents TrackingEvent[]
+  accessLogs     AccessLog[]
+
+  @@index([status])
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([accommodationId, status])
+}
+
+model Companion {
+  id             String  @id @default(cuid())
+  bookingId      String
+  booking        Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  firstName      String
+  lastName       String
+  passportNumber String
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  bookingId   String
+  booking     Booking       @relation(fields: [bookingId], references: [id])
+  provider    String
+  providerRef String?       @unique
+  amount      Int
+  currency    String
+  status      PaymentStatus @default(PENDING)
+  checkoutUrl String?       @db.Text
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([bookingId])
+}
+
+model DoctorPayout {
+  id           String   @id @default(cuid())
+  doctorId     String
+  doctor       Doctor   @relation(fields: [doctorId], references: [id])
+  amount       Int
+  paidAt       DateTime
+  note         String?
+  recordedById String
+  recordedBy   User     @relation(fields: [recordedById], references: [id])
+  createdAt    DateTime @default(now())
+}
+
+model TrackingEvent {
+  id        String       @id @default(cuid())
+  bookingId String
+  booking   Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  step      TrackingStep
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  createdAt DateTime     @default(now())
+}
+
+model AccessLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  action    String
+  createdAt DateTime @default(now())
+}
+
+/// Singleton row (id = 1) holding platform-wide settings editable by admins.
+model Setting {
+  id                     Int    @id @default(1)
+  currency               String @default("EUR")
+  transportPricePerPerson Int   @default(15000)
+  paymentDeadlineHours   Int    @default(72)
+  maxCompanions          Int    @default(2)
+  supportPhone           String @default("+216 00 000 000")
+  supportEmail           String @default("contact@lifedeux.com")
+}

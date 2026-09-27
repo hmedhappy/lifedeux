@@ -1,0 +1,87 @@
+import Link from "next/link";
+import { Avatar, Badge, EmptyState, LinkButton, PageTitle, Table, Td, Th } from "@/components/ui";
+import { requireRole } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { formatMoney } from "@/lib/format";
+import { getT, toLocale } from "@/lib/i18n";
+import { getSettings } from "@/lib/settings";
+
+export default async function AdminDoctorsPage({ params }: { params: Promise<{ locale: string }> }) {
+  const locale = toLocale((await params).locale);
+  const t = getT(locale);
+  await requireRole(locale, ["ADMIN"]);
+  const [doctors, settings] = await Promise.all([
+    db.doctor.findMany({
+      include: {
+        user: true,
+        operations: true,
+        _count: { select: { slots: { where: { status: "FREE", startsAt: { gt: new Date() } } } } },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    getSettings(),
+  ]);
+
+  return (
+    <div>
+      <PageTitle
+        title={t("admin.doctorsTitle")}
+        subtitle={t("admin.doctorsSubtitle")}
+        action={<LinkButton href={`/${locale}/admin/doctors/new`}>{t("admin.addDoctor")}</LinkButton>}
+      />
+      {doctors.length === 0 ? (
+        <EmptyState title={t("admin.noDoctors")} />
+      ) : (
+        <Table>
+          <thead>
+            <tr>
+              <Th>{t("admin.col.doctor")}</Th>
+              <Th>{t("admin.doctor.clinicName")}</Th>
+              <Th>{t("admin.doctor.price")}</Th>
+              <Th>{t("admin.col.freeSlots")}</Th>
+              <Th>{t("admin.col.account")}</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {doctors.map((d) => (
+              <tr key={d.id}>
+                <Td>
+                  <Link href={`/${locale}/admin/doctors/${d.id}`} className="flex items-center gap-3">
+                    <Avatar name={`${d.user.firstName} ${d.user.lastName}`} src={d.photoUrl} size={36} />
+                    <span>
+                      <span className="block font-medium underline">
+                        Dr {d.user.firstName} {d.user.lastName}
+                      </span>
+                      <span className="text-xs text-muted">{d.user.email}</span>
+                    </span>
+                  </Link>
+                </Td>
+                <Td>
+                  {d.clinicName}
+                  <p className="text-xs text-muted">{d.city}</p>
+                </Td>
+                <Td>
+                  {d.operations.map((o) => (
+                    <span key={o.operationId} className="block">
+                      {formatMoney(o.price, settings.currency, locale)}
+                    </span>
+                  ))}
+                </Td>
+                <Td>{d._count.slots}</Td>
+                <Td>
+                  {!d.user.passwordHash ? (
+                    <Badge tone="amber">{t("admin.invitePending")}</Badge>
+                  ) : d.active && d.user.active ? (
+                    <Badge tone="green">{t("admin.active")}</Badge>
+                  ) : (
+                    <Badge>{t("admin.inactive")}</Badge>
+                  )}
+                </Td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
+    </div>
+  );
+}
