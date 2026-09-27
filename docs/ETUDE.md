@@ -40,10 +40,15 @@ Choix opération → Choix médecin → Choix créneau → Demande envoyée
    - *Logement* : choix d'un appartement ou d'une maison (photos, prix/nuit,
      équipements). **Le logement inclut automatiquement le transport**
      (prise en charge complète).
+   - *Accompagnants* : le patient peut venir avec des accompagnants
+     (nom, prénom, n° de passeport). Seuls les logements assez grands
+     (capacité ≥ patient + accompagnants) sont proposés, et le transport
+     est facturé par personne. **[HYPOTHÈSE] maximum 2 accompagnants.**
 7. **Paiement** : total = opération + options. Le patient doit payer dans un
    **délai de 72 h** après la confirmation, sinon le créneau est libéré. **[HYPOTHÈSE]**
 8. **Fiche de réservation** : PDF + page web avec QR code, dates, médecin,
-   clinique, logement, mention « Transport inclus » ou « Arrivée autonome ».
+   clinique, logement, liste des accompagnants, mention « Transport inclus »
+   ou « Arrivée autonome ». Un seul QR par réservation couvre tout le groupe.
 
 ### Hypothèses sur le parcours
 
@@ -156,9 +161,11 @@ Slot(id, doctorId, startsAt, endsAt, status: FREE|HELD|BOOKED)
 Accommodation(id, title, type: APARTMENT|HOUSE, pricePerNight, capacity, amenities, photos, active)
 Booking(id, patientId, doctorId, operationId, slotId, status, trackingStep,
         withTransport, accommodationId?, nights, arrivalDate, departureDate,
+        companionsCount,
         totalAmount, currency, qrToken, confirmedAt, paymentDeadline)
 Payment(id, bookingId, provider, providerRef, amount, currency, status)
 DoctorPayout(id, doctorId, amount, paidAt, note, recordedById)
+Companion(id, bookingId, firstName, lastName, passportNumber)
 TrackingEvent(id, bookingId, step, scannedById, at)
 ```
 
@@ -181,5 +188,5 @@ TrackingEvent(id, bookingId, step, scannedById, at)
   seulement à vérifier la réservation ?
 - Devises : EUR + TND ? Prix des opérations différents selon le médecin ?
 - Politique d'annulation et de remboursement ?
-- Nombre de personnes accompagnantes (impact logement et bus) ?
+- Nombre maximum d'accompagnants, et prix du transport par personne ?
 - Le patient doit-il envoyer des documents médicaux avant la confirmation ?
