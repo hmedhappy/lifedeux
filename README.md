@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LifeDeux
 
-## Getting Started
+Plateforme de prise de rendez-vous pour une intervention chirurgicale en Tunisie, avec transfert aéroport, hébergement, paiement en ligne et suivi du patient par QR code. Interface en **français, anglais et arabe** (RTL).
 
-First, run the development server:
+L'étude fonctionnelle est dans [`docs/ETUDE.md`](docs/ETUDE.md).
+
+## Fonctionnalités
+
+| Espace | Ce qu'on y fait |
+|---|---|
+| **Patient** | Choisit le chirurgien et le créneau, envoie la demande, puis après confirmation choisit accompagnants, logement et transfert, paie en ligne et télécharge sa fiche avec QR code. |
+| **Médecin** (`/doctor`) | Confirme ou refuse les demandes (et fixe la durée de convalescence), publie ses créneaux, suit ses patients, marque l'intervention réalisée, consulte ce que LifeDeux lui doit. |
+| **Admin** (`/admin`) | Crée les comptes médecins (invitation par email), gère interventions, hébergements, réservations, remboursements, versements en espèces aux médecins, équipe et paramètres. Tableau de suivi en temps réel. |
+| **Agent terrain** (`/scan`) | Scanne le QR code du patient (ou saisit la référence) et valide chaque étape : aéroport → logement → clinique → opéré → convalescence → départ. |
+
+Règles métier principales :
+- le créneau est bloqué dès la demande, libéré en cas de refus, d'annulation ou d'expiration ;
+- le patient a **72 h** (paramétrable) pour payer après confirmation, et au plus tard 24 h avant l'intervention ;
+- le logement inclut toujours le transfert ; un logement ne peut pas être réservé deux fois sur des dates qui se chevauchent ;
+- le paiement n'est validé **que** par le prestataire (webhook Stripe signé, vérification API Konnect), jamais par le navigateur ;
+- sur la fiche et dans les emails, les libellés restent neutres (discrétion).
+
+## Stack
+
+Next.js 16 (App Router, Server Actions) · TypeScript · PostgreSQL + Prisma · Tailwind CSS 4 · Stripe · Konnect · Nodemailer · Vitest · Playwright.
+
+## Démarrage local
+
+Prérequis : Node.js 20.9+ et PostgreSQL.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env            # puis remplir DATABASE_URL, AUTH_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD
+npm install
+npx prisma migrate dev          # crée les tables
+SEED_DEMO=true npm run db:seed  # admin + données de démo (médecins, logements, créneaux)
+npm run dev                     # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Pour essayer le paiement sans Stripe, mettez `PAYMENT_MOCK="true"` (développement uniquement).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Comptes de démo (mot de passe `Demo12345!`, avec `SEED_DEMO=true`) : `patient@demo.lifedeux.com`, `dr.ben-salah@demo.lifedeux.com`, `agent@demo.lifedeux.com`. L'admin est celui défini par `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Mise en production
 
-## Learn More
+1. **Base de données** : créez une base PostgreSQL (Neon, Supabase, Railway, RDS…) et mettez son URL dans `DATABASE_URL`.
+2. **Variables d'environnement** : voir [`.env.example`](.env.example). Au minimum : `DATABASE_URL`, `AUTH_SECRET` (`openssl rand -base64 48`), `APP_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `CRON_SECRET`, et `PAYMENT_MOCK="false"`.
+3. **Stripe** :
+   - `STRIPE_SECRET_KEY` = votre clé secrète (`sk_live_…`) ;
+   - dans Stripe → *Developers → Webhooks*, ajoutez l'endpoint `https://VOTRE-DOMAINE/api/webhooks/stripe` avec les événements `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired` ;
+   - copiez le *signing secret* (`whsec_…`) dans `STRIPE_WEBHOOK_SECRET`.
+4. **Konnect** (optionnel, cartes tunisiennes) : `KONNECT_API_KEY`, `KONNECT_WALLET_ID`, `KONNECT_API_URL`. Le moyen de paiement apparaît automatiquement dès que les variables sont renseignées.
+5. **Emails** (recommandé) : `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`. Sans SMTP, les emails sont seulement écrits dans les logs (le lien d'invitation reste affiché à l'admin).
+6. **Déploiement** :
+   - **Vercel** : importez le dépôt, ajoutez les variables, puis lancez une fois `npx prisma migrate deploy && npm run db:seed` avec la `DATABASE_URL` de production. `vercel.json` appelle `/api/cron/expire` chaque jour (les réservations expirées sont aussi libérées à chaque consultation des pages).
+   - **Serveur / VPS** : `npm ci && npx prisma migrate deploy && npm run db:seed && npm run build && npm start`, derrière un proxy HTTPS. Planifiez `curl -H "Authorization: Bearer $CRON_SECRET" https://VOTRE-DOMAINE/api/cron/expire` toutes les heures.
 
-To learn more about Next.js, take a look at the following resources:
+## Tests
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run lint && npm run typecheck
+npm test                 # tests unitaires (tarifs, suivi, dates, traductions, sessions)
+npm run build
+npm run test:e2e         # parcours complet dans un vrai navigateur (base E2E_DATABASE_URL)
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Les tests de bout en bout couvrent : pages publiques FR/EN/AR, contrôle d'accès par rôle, création d'un médecin par l'admin et activation par invitation, publication de créneaux, inscription patient, demande, confirmation, choix accompagnant + logement, paiement, fiche QR, impossibilité de réserver deux fois un logement, suivi par l'agent et le médecin, versements en espèces, webhooks Stripe signés et falsifiés, tâche d'expiration.
 
-## Deploy on Vercel
+## Limites connues
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Les photos des médecins et logements sont des **liens https** (pas d'upload de fichiers).
+- Paymee et Flouci ne sont pas branchés ; l'interface `PaymentProvider` (`src/lib/payments`) permet de les ajouter.
+- La limitation des tentatives de connexion est en mémoire (une seule instance) ; utilisez Redis si vous en lancez plusieurs.
+- Stripe et Konnect n'ont pas été testés avec de vraies clés : le webhook Stripe est testé avec des signatures générées localement, la création de session Checkout et Konnect ne l'ont pas été.

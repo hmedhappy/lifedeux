@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
@@ -60,7 +61,7 @@ export async function confirmBookingAction(
     `/account/bookings/${booking.id}`,
   );
   revalidatePath(`/${locale}/doctor`);
-  return ok("doctorArea.confirmed", { vars: { reference: booking.reference } });
+  redirect(`/${locale}/doctor?done=confirmed&ref=${booking.reference}`);
 }
 
 export async function refuseBookingAction(
@@ -88,7 +89,7 @@ export async function refuseBookingAction(
   ]);
   await sendTemplate(booking.patient, "refused", { reference: booking.reference, reason }, `/account/bookings/${booking.id}`);
   revalidatePath(`/${locale}/doctor`);
-  return ok("doctorArea.refused", { vars: { reference: booking.reference } });
+  redirect(`/${locale}/doctor?done=refused&ref=${booking.reference}`);
 }
 
 export async function markOperatedAction(localeRaw: string, bookingId: string): Promise<void> {

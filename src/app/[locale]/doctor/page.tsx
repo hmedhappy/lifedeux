@@ -1,6 +1,6 @@
 import { ActionForm, SubmitButton } from "@/components/forms";
 import { StatusBadge } from "@/components/status";
-import { EmptyState, Field, Input, PageTitle } from "@/components/ui";
+import { EmptyState, Field, Input, Notice, PageTitle } from "@/components/ui";
 import { confirmBookingAction, refuseBookingAction } from "@/actions/doctor";
 import { requireDoctor } from "@/lib/auth";
 import { expireOverdueBookings } from "@/lib/bookings";
@@ -8,8 +8,15 @@ import { db } from "@/lib/db";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { getT, localized, toLocale } from "@/lib/i18n";
 
-export default async function DoctorRequestsPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function DoctorRequestsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ done?: string; ref?: string }>;
+}) {
   const locale = toLocale((await params).locale);
+  const { done, ref } = await searchParams;
   const t = getT(locale);
   const { doctor } = await requireDoctor(locale);
   await expireOverdueBookings();
@@ -31,6 +38,11 @@ export default async function DoctorRequestsPage({ params }: { params: Promise<{
     <div className="space-y-12">
       <section>
         <PageTitle title={t("doctorArea.requestsTitle")} subtitle={t("doctorArea.requestsSubtitle")} />
+        {(done === "confirmed" || done === "refused") && ref && (
+          <div className="mb-6">
+            <Notice tone="success">{t(`doctorArea.${done}`, { reference: ref })}</Notice>
+          </div>
+        )}
         {requests.length === 0 ? (
           <EmptyState title={t("doctorArea.noRequests")} />
         ) : (
