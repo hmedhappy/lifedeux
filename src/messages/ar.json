@@ -398,7 +398,9 @@
     "noSlots": "لا توجد مواعيد منشورة",
     "deleteSlot": "حذف هذا الموعد",
     "payoutsTitle": "مستحقاتي",
-    "payoutsSubtitle": "المبالغ المستحقة من LifeDeux والدفعات النقدية المستلمة."
+    "payoutsSubtitle": "المبالغ المستحقة من LifeDeux والدفعات النقدية المستلمة.",
+    "refuseConfirm": "رفض الطلب {reference} الخاص بـ {name}؟ سيتم إعلام المريض وتحرير الموعد.",
+    "confirmFor": "تأكيد لـ {name}"
   },
   "payouts": {
     "earned": "إجمالي المستحق",

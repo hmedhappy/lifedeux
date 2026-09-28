@@ -26,10 +26,14 @@ const passwordSchema = z.string().min(8).max(128);
 
 export async function loginAction(localeRaw: string, _: ActionState, formData: FormData): Promise<ActionState> {
   const locale = toLocale(localeRaw);
-  if (!rateLimit(await clientKey("login"), 10, 15 * 60 * 1000)) return fail("errors.tooManyAttempts");
-
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
+  // Per account (stops password guessing) and a looser cap per IP (a team may share one office IP).
+  const ipKey = await clientKey("login");
+  const windowMs = 15 * 60 * 1000;
+  if (!rateLimit(`${ipKey}:${email}`, 10, windowMs) || !rateLimit(ipKey, 100, windowMs)) {
+    return fail("errors.tooManyAttempts");
+  }
   const user = await db.user.findUnique({ where: { email } });
   if (!user || !user.active || !(await verifyPassword(password, user.passwordHash))) {
     return fail("errors.invalidCredentials");

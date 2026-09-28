@@ -85,13 +85,22 @@ export default async function DoctorRequestsPage({
                     <Field label={t("doctorArea.recoveryNights")} hint={t("doctorArea.recoveryHint")}>
                       <Input type="number" name="recoveryNights" min={1} max={60} defaultValue={b.recoveryNights} required />
                     </Field>
-                    <SubmitButton className="w-full">{t("doctorArea.confirm")}</SubmitButton>
+                    <SubmitButton className="w-full">
+                      {t("doctorArea.confirmFor", { name: b.patient.firstName })}
+                    </SubmitButton>
                   </ActionForm>
                   <ActionForm action={refuseBookingAction.bind(null, locale, b.id)} className="space-y-3">
                     <Field label={t("doctorArea.refuseReason")}>
                       <Input name="reason" maxLength={500} required />
                     </Field>
-                    <SubmitButton variant="danger" className="w-full">
+                    <SubmitButton
+                      variant="danger"
+                      className="w-full"
+                      confirmMessage={t("doctorArea.refuseConfirm", {
+                        name: `${b.patient.firstName} ${b.patient.lastName}`,
+                        reference: b.reference,
+                      })}
+                    >
                       {t("doctorArea.refuse")}
                     </SubmitButton>
                   </ActionForm>

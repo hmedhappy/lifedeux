@@ -398,7 +398,9 @@
     "noSlots": "No slot published",
     "deleteSlot": "Delete this slot",
     "payoutsTitle": "My payouts",
-    "payoutsSubtitle": "Amounts owed by LifeDeux and cash payouts received."
+    "payoutsSubtitle": "Amounts owed by LifeDeux and cash payouts received.",
+    "refuseConfirm": "Decline request {reference} from {name}? The patient will be notified and the slot released.",
+    "confirmFor": "Confirm for {name}"
   },
   "payouts": {
     "earned": "Total owed",

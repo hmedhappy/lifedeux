@@ -138,7 +138,7 @@ test("doctor confirms the request with the recovery length", async () => {
   const card = doctor.getByTestId("request-card").filter({ hasText: "Paul Martin" });
   await expect(card).toContainText("Arrivée depuis Paris.");
   await card.locator('input[name="recoveryNights"]').fill("6");
-  await card.getByRole("button", { name: "Confirmer le rendez-vous" }).click();
+  await card.getByRole("button", { name: "Confirmer pour Paul" }).click();
   await expect(doctor.getByRole("status").filter({ hasText: "confirmé" })).toBeVisible();
   const booking = await db.booking.findUniqueOrThrow({ where: { id: bookingId } });
   expect(booking.status).toBe("CONFIRMED");

@@ -13,6 +13,7 @@ export function SubmitButton({
   className,
   name,
   value,
+  confirmMessage,
 }: {
   children: React.ReactNode;
   variant?: "primary" | "secondary" | "ghost" | "danger" | "dark";
@@ -20,13 +21,24 @@ export function SubmitButton({
   className?: string;
   name?: string;
   value?: string;
+  /** Asks the user to confirm before submitting (for irreversible actions). */
+  confirmMessage?: string;
 }) {
   const status = useFormStatus();
   const actionPending = useContext(PendingContext);
   const pending = status.pending || actionPending;
   const { t } = useI18n();
   return (
-    <Button type="submit" variant={variant} size={size} className={className} disabled={pending} name={name} value={value}>
+    <Button
+      type="submit"
+      variant={variant}
+      size={size}
+      className={className}
+      disabled={pending}
+      name={name}
+      value={value}
+      onClick={confirmMessage ? (e) => { if (!window.confirm(confirmMessage)) e.preventDefault(); } : undefined}
+    >
       {pending ? t("common.loading") : children}
     </Button>
   );

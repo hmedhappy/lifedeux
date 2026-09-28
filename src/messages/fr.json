@@ -398,7 +398,9 @@
     "noSlots": "Aucun créneau publié",
     "deleteSlot": "Supprimer ce créneau",
     "payoutsTitle": "Mes versements",
-    "payoutsSubtitle": "Montants dus par LifeDeux et versements en espèces reçus."
+    "payoutsSubtitle": "Montants dus par LifeDeux et versements en espèces reçus.",
+    "refuseConfirm": "Refuser la demande {reference} de {name} ? Le patient sera prévenu et le créneau libéré.",
+    "confirmFor": "Confirmer pour {name}"
   },
   "payouts": {
     "earned": "Total dû",
