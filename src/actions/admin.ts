@@ -14,6 +14,7 @@ import { sendTemplate } from "@/lib/mail";
 import { stripeClient } from "@/lib/payments/stripe";
 import { appUrl } from "@/lib/settings";
 import { randomToken } from "@/lib/tokens";
+import { isPhotoRef, saveUploadedImages } from "@/lib/images";
 
 async function currentAdmin() {
   const user = await getCurrentUser();
@@ -68,7 +69,7 @@ const doctorSchema = z.object({
     .max(500)
     .optional()
     .transform((v) => v || null)
-    .refine((v) => v === null || /^https:\/\//.test(v)),
+    .refine((v) => v === null || isPhotoRef(v)),
   yearsOfExperience: z.coerce.number().int().min(0).max(70),
   locale: z.enum(["fr", "en", "ar"]),
 });
@@ -95,8 +96,10 @@ export async function createDoctorAction(localeRaw: string, _: ActionState, form
   const pricing = await readPricing(formData);
   if (!pricing || pricing.length === 0) return fail("errors.pricing");
   if (await db.user.findUnique({ where: { email: email.data } })) return fail("errors.emailTaken");
+  const upload = await saveUploadedImages(formData, "photoFile", 1);
+  if ("error" in upload) return fail(upload.error);
 
-  const d = parsed.data;
+  const d = { ...parsed.data, photoUrl: upload.paths[0] ?? parsed.data.photoUrl };
   const user = await db.user.create({
     data: {
       email: email.data,
@@ -140,8 +143,10 @@ export async function updateDoctorAction(
   if (!pricing || pricing.length === 0) return fail("errors.pricing");
   const doctor = await db.doctor.findUnique({ where: { id: doctorId } });
   if (!doctor) return fail("errors.invalid");
+  const upload = await saveUploadedImages(formData, "photoFile", 1);
+  if ("error" in upload) return fail(upload.error);
 
-  const d = parsed.data;
+  const d = { ...parsed.data, photoUrl: upload.paths[0] ?? parsed.data.photoUrl };
   const active = formData.get("active") === "on";
   await db.$transaction([
     db.user.update({
@@ -271,7 +276,10 @@ export async function saveStayAction(
   const pricePerNight = money(formData, "pricePerNight");
   if (!parsed.success || pricePerNight === null) return fail("errors.missingFields");
   const photos = list(formData.get("photos"), /\n/);
-  if (photos.some((p) => !/^https:\/\/\S+$/.test(p))) return fail("errors.photoUrls");
+  if (photos.some((p) => !isPhotoRef(p))) return fail("errors.photoUrls");
+  const upload = await saveUploadedImages(formData, "photoFiles");
+  if ("error" in upload) return fail(upload.error);
+  photos.push(...upload.paths);
 
   const data = {
     ...parsed.data,

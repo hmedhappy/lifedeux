@@ -35,25 +35,61 @@
     "searchLabel": "Procedure",
     "searchButton": "Search",
     "facts": {
-      "care": { "title": "End to end", "text": "Airport, stay, clinic" },
-      "languages": { "title": "3 languages", "text": "French, English, Arabic" },
-      "privacy": { "title": "Discretion", "text": "Protected data" }
+      "care": {
+        "title": "End to end",
+        "text": "Airport, stay, clinic"
+      },
+      "languages": {
+        "title": "3 languages",
+        "text": "French, English, Arabic"
+      },
+      "privacy": {
+        "title": "Discretion",
+        "text": "Protected data"
+      }
     },
     "services": {
-      "appointment": { "title": "Appointments", "text": "Real-time slots, confirmed by the surgeon." },
-      "transfer": { "title": "Transfer", "text": "Airport welcome and shuttle to your stay." },
-      "stay": { "title": "Accommodation", "text": "Apartments and houses selected for recovery." },
-      "payment": { "title": "Secure payment", "text": "Pay online, only after confirmation." }
+      "appointment": {
+        "title": "Appointments",
+        "text": "Real-time slots, confirmed by the surgeon."
+      },
+      "transfer": {
+        "title": "Transfer",
+        "text": "Airport welcome and shuttle to your stay."
+      },
+      "stay": {
+        "title": "Accommodation",
+        "text": "Apartments and houses selected for recovery."
+      },
+      "payment": {
+        "title": "Secure payment",
+        "text": "Pay online, only after confirmation."
+      }
     },
     "howTitle": "How it works",
     "howSubtitle": "Five simple steps, from booking to your trip home.",
     "stepLabel": "Step {n}",
     "steps": {
-      "1": { "title": "Choose", "text": "The procedure, then the surgeon that suits you." },
-      "2": { "title": "Book", "text": "Pick an available slot and send your request." },
-      "3": { "title": "Confirmation", "text": "The surgeon confirms your appointment shortly." },
-      "4": { "title": "Options & payment", "text": "Add transfer and accommodation, then pay online." },
-      "5": { "title": "Your QR pass", "text": "Show it on arrival: we take care of the rest." }
+      "1": {
+        "title": "Choose",
+        "text": "The procedure, then the surgeon that suits you."
+      },
+      "2": {
+        "title": "Book",
+        "text": "Pick an available slot and send your request."
+      },
+      "3": {
+        "title": "Confirmation",
+        "text": "The surgeon confirms your appointment shortly."
+      },
+      "4": {
+        "title": "Options & payment",
+        "text": "Add transfer and accommodation, then pay online."
+      },
+      "5": {
+        "title": "Your QR pass",
+        "text": "Show it on arrival: we take care of the rest."
+      }
     },
     "doctorsTitle": "Our surgeons",
     "doctorsSubtitle": "Experienced specialists, selected by our team.",
@@ -109,7 +145,10 @@
     "bedrooms": "{n} bedrooms",
     "perNight": "/ night"
   },
-  "accType": { "APARTMENT": "Apartment", "HOUSE": "House" },
+  "accType": {
+    "APARTMENT": "Apartment",
+    "HOUSE": "House"
+  },
   "auth": {
     "loginTitle": "Log in",
     "loginSubtitle": "Welcome back.",
@@ -124,7 +163,15 @@
     "consent": "I agree that LifeDeux processes my data to organise my procedure and shares it with the chosen surgeon.",
     "inviteTitle": "Activate your account",
     "inviteSubtitle": "Hello {name}, choose a password for {email}.",
-    "inviteButton": "Activate my account"
+    "inviteButton": "Activate my account",
+    "forgotLink": "Forgot your password?",
+    "forgotTitle": "Forgot password",
+    "forgotSubtitle": "Enter your email: we will send you a link to choose a new password.",
+    "forgotButton": "Send the link",
+    "resetSent": "If an account exists with this email, a link has just been sent (valid for 1 hour).",
+    "resetTitle": "New password",
+    "resetSubtitle": "Choose a new password for {email}.",
+    "resetButton": "Save password"
   },
   "fields": {
     "name": "Name",
@@ -165,14 +212,42 @@
     "RECOVERING": "Recovering at the stay",
     "DEPARTED": "Back to the airport"
   },
-  "slotStatus": { "FREE": "Free", "HELD": "Requested", "BOOKED": "Booked" },
-  "paymentStatus": { "PENDING": "Pending", "SUCCEEDED": "Succeeded", "FAILED": "Failed", "REFUNDED": "Refunded" },
-  "roles": { "PATIENT": "Patient", "DOCTOR": "Doctor", "ADMIN": "Administrator", "AGENT": "Field agent" },
-  "weekdays": { "0": "Sun", "1": "Mon", "2": "Tue", "3": "Wed", "4": "Thu", "5": "Fri", "6": "Sat" },
+  "slotStatus": {
+    "FREE": "Free",
+    "HELD": "Requested",
+    "BOOKED": "Booked"
+  },
+  "paymentStatus": {
+    "PENDING": "Pending",
+    "SUCCEEDED": "Succeeded",
+    "FAILED": "Failed",
+    "REFUNDED": "Refunded"
+  },
+  "roles": {
+    "PATIENT": "Patient",
+    "DOCTOR": "Doctor",
+    "ADMIN": "Administrator",
+    "AGENT": "Field agent"
+  },
+  "weekdays": {
+    "0": "Sun",
+    "1": "Mon",
+    "2": "Tue",
+    "3": "Wed",
+    "4": "Thu",
+    "5": "Fri",
+    "6": "Sat"
+  },
   "booking": {
     "reference": "Reference",
     "progress": "Booking progress",
-    "journey": { "requested": "Request", "confirmed": "Confirmation", "options": "Options", "paid": "Payment", "trip": "Stay" },
+    "journey": {
+      "requested": "Request",
+      "confirmed": "Confirmation",
+      "options": "Options",
+      "paid": "Payment",
+      "trip": "Stay"
+    },
     "requestSent": "Your request has been sent. You will get an email as soon as the surgeon confirms it.",
     "requestedTitle": "Awaiting confirmation",
     "requestedText": "{doctor} is reviewing your request. No payment is required yet.",
@@ -236,9 +311,18 @@
     "button": "Pay {amount}",
     "secure": "Secure payment. LifeDeux never stores your card details.",
     "providers": {
-      "stripe": { "title": "International bank card", "text": "Visa, Mastercard, Amex… via Stripe." },
-      "konnect": { "title": "Tunisian card or e-DINAR", "text": "Local payment via Konnect." },
-      "mock": { "title": "Test payment", "text": "Demo environment only." }
+      "stripe": {
+        "title": "International bank card",
+        "text": "Visa, Mastercard, Amex… via Stripe."
+      },
+      "konnect": {
+        "title": "Tunisian card or e-DINAR",
+        "text": "Local payment via Konnect."
+      },
+      "mock": {
+        "title": "Test payment",
+        "text": "Demo environment only."
+      }
     }
   },
   "payment": {
@@ -269,7 +353,12 @@
   },
   "doctorArea": {
     "title": "Doctor area",
-    "nav": { "requests": "Requests", "patients": "My patients", "slots": "Slots", "payouts": "Payouts" },
+    "nav": {
+      "requests": "Requests",
+      "patients": "My patients",
+      "slots": "Slots",
+      "payouts": "Payouts"
+    },
     "requestsTitle": "Appointment requests",
     "requestsSubtitle": "Confirm or decline incoming requests.",
     "noRequests": "No pending request",
@@ -409,7 +498,8 @@
       "pricingHint": "Price paid by the patient and fee paid to the doctor (in cash).",
       "price": "Patient price",
       "fee": "Doctor's share",
-      "createAndInvite": "Create and send invitation"
+      "createAndInvite": "Create and send invitation",
+      "photoUpload": "Upload a photo"
     },
     "operationsTitle": "Procedures",
     "operationsSubtitle": "Catalogue of procedures offered on the platform.",
@@ -437,7 +527,8 @@
       "photos": "Photos",
       "photosHint": "One https link per line.",
       "description": "Description",
-      "upcoming": "Upcoming bookings"
+      "upcoming": "Upcoming bookings",
+      "photoUpload": "Add photos"
     },
     "payoutsTitle": "Doctor payouts",
     "payoutsSubtitle": "Doctors are paid in cash: record every payout.",
@@ -464,7 +555,8 @@
       "enabled": "Enabled",
       "disabled": "Not configured",
       "mockWarning": "Test payment is enabled. Turn PAYMENT_MOCK off in production."
-    }
+    },
+    "photoUploadHint": "JPEG, PNG or WebP. Images are resized automatically."
   },
   "scan": {
     "title": "Scan & tracking",
@@ -523,7 +615,10 @@
     "backHome": "Back to home",
     "genericTitle": "Something went wrong",
     "genericText": "Please try again. If the problem persists, contact us.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "resetInvalid": "This link is invalid or has expired.",
+    "imageInvalid": "Image format not accepted (JPEG, PNG or WebP).",
+    "imageTooLarge": "Image too large (3 MB maximum)."
   },
   "email": {
     "invite": {
@@ -567,6 +662,12 @@
       "title": "Hello {name}",
       "body": "As the payment was not received in time, the slot has been released. You can send a new request.",
       "cta": "View"
+    },
+    "reset": {
+      "subject": "Reset your password",
+      "title": "Hello {name}",
+      "body": "You asked to change your LifeDeux password. This link is valid for 1 hour. If you did not make this request, ignore this email.",
+      "cta": "Choose a new password"
     }
   }
 }

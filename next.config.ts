@@ -10,6 +10,10 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    // Photo uploads go through Server Actions (images are resized in the browser first).
+    serverActions: { bodySizeLimit: "4mb" },
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

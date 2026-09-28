@@ -274,3 +274,13 @@ model Setting {
   supportPhone           String @default("+216 00 000 000")
   supportEmail           String @default("contact@lifedeux.com")
 }
+
+/// Uploaded pictures (stays, doctors), served by /api/images/[id]. Stored in the
+/// database so the app works on any host without extra file storage.
+model Image {
+  id        String   @id @default(cuid())
+  mime      String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
+}

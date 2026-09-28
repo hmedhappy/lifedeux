@@ -35,25 +35,61 @@
     "searchLabel": "Intervention",
     "searchButton": "Rechercher",
     "facts": {
-      "care": { "title": "De bout en bout", "text": "Aéroport, logement, clinique" },
-      "languages": { "title": "3 langues", "text": "Français, anglais, arabe" },
-      "privacy": { "title": "Discrétion", "text": "Données protégées" }
+      "care": {
+        "title": "De bout en bout",
+        "text": "Aéroport, logement, clinique"
+      },
+      "languages": {
+        "title": "3 langues",
+        "text": "Français, anglais, arabe"
+      },
+      "privacy": {
+        "title": "Discrétion",
+        "text": "Données protégées"
+      }
     },
     "services": {
-      "appointment": { "title": "Rendez-vous", "text": "Créneaux en temps réel, confirmés par le chirurgien." },
-      "transfer": { "title": "Transfert", "text": "Accueil à l'aéroport et navette jusqu'au logement." },
-      "stay": { "title": "Hébergement", "text": "Appartements et maisons sélectionnés pour la convalescence." },
-      "payment": { "title": "Paiement sécurisé", "text": "Paiement en ligne, uniquement après confirmation." }
+      "appointment": {
+        "title": "Rendez-vous",
+        "text": "Créneaux en temps réel, confirmés par le chirurgien."
+      },
+      "transfer": {
+        "title": "Transfert",
+        "text": "Accueil à l'aéroport et navette jusqu'au logement."
+      },
+      "stay": {
+        "title": "Hébergement",
+        "text": "Appartements et maisons sélectionnés pour la convalescence."
+      },
+      "payment": {
+        "title": "Paiement sécurisé",
+        "text": "Paiement en ligne, uniquement après confirmation."
+      }
     },
     "howTitle": "Comment ça marche",
     "howSubtitle": "Cinq étapes simples, de la réservation à votre retour.",
     "stepLabel": "Étape {n}",
     "steps": {
-      "1": { "title": "Choisissez", "text": "L'intervention puis le chirurgien qui vous convient." },
-      "2": { "title": "Réservez", "text": "Sélectionnez un créneau disponible et envoyez votre demande." },
-      "3": { "title": "Confirmation", "text": "Le chirurgien valide votre rendez-vous sous peu." },
-      "4": { "title": "Options et paiement", "text": "Ajoutez transfert et hébergement, puis payez en ligne." },
-      "5": { "title": "Votre fiche QR", "text": "Présentez-la à votre arrivée : nous nous occupons du reste." }
+      "1": {
+        "title": "Choisissez",
+        "text": "L'intervention puis le chirurgien qui vous convient."
+      },
+      "2": {
+        "title": "Réservez",
+        "text": "Sélectionnez un créneau disponible et envoyez votre demande."
+      },
+      "3": {
+        "title": "Confirmation",
+        "text": "Le chirurgien valide votre rendez-vous sous peu."
+      },
+      "4": {
+        "title": "Options et paiement",
+        "text": "Ajoutez transfert et hébergement, puis payez en ligne."
+      },
+      "5": {
+        "title": "Votre fiche QR",
+        "text": "Présentez-la à votre arrivée : nous nous occupons du reste."
+      }
     },
     "doctorsTitle": "Nos chirurgiens",
     "doctorsSubtitle": "Des spécialistes expérimentés, sélectionnés par notre équipe.",
@@ -109,7 +145,10 @@
     "bedrooms": "{n} chambres",
     "perNight": "/ nuit"
   },
-  "accType": { "APARTMENT": "Appartement", "HOUSE": "Maison" },
+  "accType": {
+    "APARTMENT": "Appartement",
+    "HOUSE": "Maison"
+  },
   "auth": {
     "loginTitle": "Connexion",
     "loginSubtitle": "Heureux de vous revoir.",
@@ -124,7 +163,15 @@
     "consent": "J'accepte que LifeDeux traite mes données pour organiser mon intervention et les partage avec le chirurgien choisi.",
     "inviteTitle": "Activer votre compte",
     "inviteSubtitle": "Bonjour {name}, choisissez un mot de passe pour {email}.",
-    "inviteButton": "Activer mon compte"
+    "inviteButton": "Activer mon compte",
+    "forgotLink": "Mot de passe oublié ?",
+    "forgotTitle": "Mot de passe oublié",
+    "forgotSubtitle": "Indiquez votre email : nous vous enverrons un lien pour choisir un nouveau mot de passe.",
+    "forgotButton": "Envoyer le lien",
+    "resetSent": "Si un compte existe avec cet email, un lien vient de vous être envoyé (valable 1 heure).",
+    "resetTitle": "Nouveau mot de passe",
+    "resetSubtitle": "Choisissez un nouveau mot de passe pour {email}.",
+    "resetButton": "Enregistrer le mot de passe"
   },
   "fields": {
     "name": "Nom",
@@ -165,14 +212,42 @@
     "RECOVERING": "En convalescence au logement",
     "DEPARTED": "Reparti vers l'aéroport"
   },
-  "slotStatus": { "FREE": "Libre", "HELD": "Demandé", "BOOKED": "Réservé" },
-  "paymentStatus": { "PENDING": "En attente", "SUCCEEDED": "Réussi", "FAILED": "Échoué", "REFUNDED": "Remboursé" },
-  "roles": { "PATIENT": "Patient", "DOCTOR": "Médecin", "ADMIN": "Administrateur", "AGENT": "Agent terrain" },
-  "weekdays": { "0": "Dim", "1": "Lun", "2": "Mar", "3": "Mer", "4": "Jeu", "5": "Ven", "6": "Sam" },
+  "slotStatus": {
+    "FREE": "Libre",
+    "HELD": "Demandé",
+    "BOOKED": "Réservé"
+  },
+  "paymentStatus": {
+    "PENDING": "En attente",
+    "SUCCEEDED": "Réussi",
+    "FAILED": "Échoué",
+    "REFUNDED": "Remboursé"
+  },
+  "roles": {
+    "PATIENT": "Patient",
+    "DOCTOR": "Médecin",
+    "ADMIN": "Administrateur",
+    "AGENT": "Agent terrain"
+  },
+  "weekdays": {
+    "0": "Dim",
+    "1": "Lun",
+    "2": "Mar",
+    "3": "Mer",
+    "4": "Jeu",
+    "5": "Ven",
+    "6": "Sam"
+  },
   "booking": {
     "reference": "Référence",
     "progress": "Avancement de la réservation",
-    "journey": { "requested": "Demande", "confirmed": "Confirmation", "options": "Options", "paid": "Paiement", "trip": "Séjour" },
+    "journey": {
+      "requested": "Demande",
+      "confirmed": "Confirmation",
+      "options": "Options",
+      "paid": "Paiement",
+      "trip": "Séjour"
+    },
     "requestSent": "Votre demande a été envoyée. Vous recevrez un email dès que le chirurgien l'aura confirmée.",
     "requestedTitle": "En attente de confirmation",
     "requestedText": "{doctor} étudie votre demande. Aucun paiement n'est requis pour l'instant.",
@@ -236,9 +311,18 @@
     "button": "Payer {amount}",
     "secure": "Paiement sécurisé. Aucune donnée bancaire n'est stockée par LifeDeux.",
     "providers": {
-      "stripe": { "title": "Carte bancaire internationale", "text": "Visa, Mastercard, Amex… via Stripe." },
-      "konnect": { "title": "Carte tunisienne ou e-DINAR", "text": "Paiement local via Konnect." },
-      "mock": { "title": "Paiement de test", "text": "Environnement de démonstration uniquement." }
+      "stripe": {
+        "title": "Carte bancaire internationale",
+        "text": "Visa, Mastercard, Amex… via Stripe."
+      },
+      "konnect": {
+        "title": "Carte tunisienne ou e-DINAR",
+        "text": "Paiement local via Konnect."
+      },
+      "mock": {
+        "title": "Paiement de test",
+        "text": "Environnement de démonstration uniquement."
+      }
     }
   },
   "payment": {
@@ -269,7 +353,12 @@
   },
   "doctorArea": {
     "title": "Espace médecin",
-    "nav": { "requests": "Demandes", "patients": "Mes patients", "slots": "Créneaux", "payouts": "Versements" },
+    "nav": {
+      "requests": "Demandes",
+      "patients": "Mes patients",
+      "slots": "Créneaux",
+      "payouts": "Versements"
+    },
     "requestsTitle": "Demandes de rendez-vous",
     "requestsSubtitle": "Confirmez ou refusez les demandes reçues.",
     "noRequests": "Aucune demande en attente",
@@ -409,7 +498,8 @@
       "pricingHint": "Prix payé par le patient et rémunération versée au médecin (en espèces).",
       "price": "Prix patient",
       "fee": "Part médecin",
-      "createAndInvite": "Créer et envoyer l'invitation"
+      "createAndInvite": "Créer et envoyer l'invitation",
+      "photoUpload": "Envoyer une photo"
     },
     "operationsTitle": "Interventions",
     "operationsSubtitle": "Catalogue des interventions proposées sur la plateforme.",
@@ -437,7 +527,8 @@
       "photos": "Photos",
       "photosHint": "Un lien https par ligne.",
       "description": "Description",
-      "upcoming": "Réservations à venir"
+      "upcoming": "Réservations à venir",
+      "photoUpload": "Ajouter des photos"
     },
     "payoutsTitle": "Versements aux médecins",
     "payoutsSubtitle": "Les médecins sont payés en espèces : enregistrez chaque versement.",
@@ -464,7 +555,8 @@
       "enabled": "Activé",
       "disabled": "Non configuré",
       "mockWarning": "Le paiement de test est actif. Désactivez PAYMENT_MOCK en production."
-    }
+    },
+    "photoUploadHint": "JPEG, PNG ou WebP. Les images sont redimensionnées automatiquement."
   },
   "scan": {
     "title": "Scan & suivi",
@@ -523,7 +615,10 @@
     "backHome": "Retour à l'accueil",
     "genericTitle": "Une erreur est survenue",
     "genericText": "Veuillez réessayer. Si le problème persiste, contactez-nous.",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "resetInvalid": "Ce lien est invalide ou a expiré.",
+    "imageInvalid": "Format d'image non accepté (JPEG, PNG ou WebP).",
+    "imageTooLarge": "Image trop lourde (3 Mo maximum)."
   },
   "email": {
     "invite": {
@@ -567,6 +662,12 @@
       "title": "Bonjour {name}",
       "body": "Le paiement n'ayant pas été reçu à temps, le créneau a été libéré. Vous pouvez effectuer une nouvelle demande.",
       "cta": "Voir"
+    },
+    "reset": {
+      "subject": "Réinitialisation de votre mot de passe",
+      "title": "Bonjour {name}",
+      "body": "Vous avez demandé à changer votre mot de passe LifeDeux. Ce lien est valable 1 heure. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.",
+      "cta": "Choisir un nouveau mot de passe"
     }
   }
 }

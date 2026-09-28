@@ -7,7 +7,9 @@ import { db } from "@/lib/db";
 import { createSession, destroySession, hashPassword, homeFor, verifyPassword } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { toLocale } from "@/lib/i18n";
-import { fail, type ActionState } from "@/lib/action-state";
+import { fail, ok, type ActionState } from "@/lib/action-state";
+import { sendTemplate } from "@/lib/mail";
+import { randomToken } from "@/lib/tokens";
 
 /** Only same-site relative paths are accepted as post-login destinations. */
 function safeNext(next: FormDataEntryValue | null, locale: string): string | null {
@@ -91,7 +93,7 @@ export async function acceptInviteAction(
   if (password !== confirm) return fail("errors.passwordMismatch");
 
   const user = await db.user.findUnique({ where: { inviteToken: token } });
-  if (!user || !user.inviteExpiresAt || user.inviteExpiresAt < new Date()) return fail("errors.inviteInvalid");
+  if (!user || !user.active || !user.inviteExpiresAt || user.inviteExpiresAt < new Date()) return fail("errors.inviteInvalid");
 
   const updated = await db.user.update({
     where: { id: user.id },
@@ -105,6 +107,25 @@ export async function acceptInviteAction(
   });
   await createSession(updated);
   redirect(`/${locale}${homeFor(updated.role)}`);
+}
+
+const RESET_TTL_MS = 60 * 60 * 1000;
+
+/** Always answers the same way so the form cannot be used to discover accounts. */
+export async function requestPasswordResetAction(localeRaw: string, _: ActionState, formData: FormData): Promise<ActionState> {
+  const locale = toLocale(localeRaw);
+  if (!rateLimit(await clientKey("reset"), 5, 60 * 60 * 1000)) return fail("errors.tooManyAttempts");
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const user = email ? await db.user.findUnique({ where: { email } }) : null;
+  if (user && user.active) {
+    const token = randomToken(24);
+    await db.user.update({
+      where: { id: user.id },
+      data: { inviteToken: token, inviteExpiresAt: new Date(Date.now() + RESET_TTL_MS) },
+    });
+    await sendTemplate({ ...user, locale }, "reset", {}, `/reset/${token}`);
+  }
+  return ok("auth.resetSent");
 }
 
 export async function logoutAction(localeRaw: string): Promise<void> {

@@ -33,7 +33,7 @@ const DYNAMIC_KEYS = [
   ...["appointment", "transfer", "stay", "payment"].flatMap((s) => [`home.services.${s}.title`, `home.services.${s}.text`]),
   ...[1, 2, 3, 4, 5].flatMap((n) => [`home.steps.${n}.title`, `home.steps.${n}.text`]),
   ...["stripe", "konnect", "mock"].flatMap((s) => [`pay.providers.${s}.title`, `pay.providers.${s}.text`]),
-  ...["invite", "requestReceived", "newRequest", "confirmed", "refused", "paid", "expired"].flatMap((s) =>
+  ...["invite", "reset", "requestReceived", "newRequest", "confirmed", "refused", "paid", "expired"].flatMap((s) =>
     ["subject", "title", "body", "cta"].map((f) => `email.${s}.${f}`),
   ),
 ];

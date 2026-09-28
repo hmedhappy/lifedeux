@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { createContext, startTransition, useActionState, useContext, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { Button, Notice } from "./ui";
 import { useI18n } from "./i18n-provider";
@@ -21,7 +21,9 @@ export function SubmitButton({
   name?: string;
   value?: string;
 }) {
-  const { pending } = useFormStatus();
+  const status = useFormStatus();
+  const actionPending = useContext(PendingContext);
+  const pending = status.pending || actionPending;
   const { t } = useI18n();
   return (
     <Button type="submit" variant={variant} size={size} className={className} disabled={pending} name={name} value={value}>
@@ -30,7 +32,13 @@ export function SubmitButton({
   );
 }
 
-/** A form bound to a server action returning { error | success } message keys. */
+const PendingContext = createContext(false);
+
+/**
+ * A form bound to a server action returning { error | success } message keys.
+ * Submissions go through startTransition instead of the native form action so
+ * React does not clear the fields: after an error the user keeps what they typed.
+ */
 export function ActionForm({
   action,
   children,
@@ -42,13 +50,25 @@ export function ActionForm({
   className?: string;
   resetOnSuccess?: boolean;
 }) {
-  const [state, formAction] = useActionState(action, undefined);
+  const [state, formAction, pending] = useActionState(action, undefined);
+  const formRef = useRef<HTMLFormElement>(null);
   const { t } = useI18n();
+
+  useEffect(() => {
+    if (resetOnSuccess && state?.success) formRef.current?.reset();
+  }, [resetOnSuccess, state]);
+
   return (
     <form
+      ref={formRef}
       action={formAction}
       className={className}
-      key={resetOnSuccess && state?.success ? state.nonce : undefined}
+      onSubmit={(e) => {
+        e.preventDefault();
+        const submitter = (e.nativeEvent as SubmitEvent).submitter;
+        const data = new FormData(e.currentTarget, submitter);
+        startTransition(() => formAction(data));
+      }}
     >
       {state?.error && (
         <div className="mb-4">
@@ -63,7 +83,7 @@ export function ActionForm({
           </Notice>
         </div>
       )}
-      {children}
+      <PendingContext.Provider value={pending}>{children}</PendingContext.Provider>
     </form>
   );
 }

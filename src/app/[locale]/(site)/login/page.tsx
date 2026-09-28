@@ -36,6 +36,11 @@ export default async function LoginPage({
           <Field label={t("fields.password")}>
             <Input type="password" name="password" autoComplete="current-password" required />
           </Field>
+          <p className="text-end text-sm">
+            <Link href={`/${locale}/forgot`} className="text-ink underline">
+              {t("auth.forgotLink")}
+            </Link>
+          </p>
           <SubmitButton size="lg" className="w-full">
             {t("auth.loginButton")}
           </SubmitButton>

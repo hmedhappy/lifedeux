@@ -4,6 +4,7 @@ import { centsToInput } from "@/lib/format";
 import { localized, type Locale, type TFunction } from "@/lib/i18n";
 import { ActionForm, SubmitButton } from "./forms";
 import { Field, Input, Select, Textarea } from "./ui";
+import { ImageInput } from "./image-input";
 
 type Action = (state: ActionState, formData: FormData) => Promise<ActionState>;
 
@@ -70,8 +71,11 @@ export function DoctorForm({
             <option value="ar">العربية</option>
           </Select>
         </Field>
-        <Field label={t("admin.doctor.photo")} hint={t("admin.httpsHint")} className="sm:col-span-2">
-          <Input type="url" name="photoUrl" defaultValue={doctor?.photoUrl ?? ""} placeholder="https://" />
+        <Field label={t("admin.doctor.photoUpload")} hint={t("admin.photoUploadHint")}>
+          <ImageInput name="photoFile" />
+        </Field>
+        <Field label={t("admin.doctor.photo")} hint={t("admin.httpsHint")}>
+          <Input name="photoUrl" defaultValue={doctor?.photoUrl ?? ""} placeholder="https://" />
         </Field>
         <Field label={t("admin.doctor.bio")} className="sm:col-span-2">
           <Textarea name="bio" rows={5} defaultValue={doctor?.bio} required />
@@ -182,6 +186,9 @@ export function StayForm({ action, t, stay }: { action: Action; t: TFunction; st
         </div>
         <Field label={t("admin.stay.amenities")} hint={t("admin.commaHint")} className="sm:col-span-2">
           <Input name="amenities" defaultValue={stay?.amenities.join(", ")} placeholder="Wi-Fi, Climatisation, Ascenseur" />
+        </Field>
+        <Field label={t("admin.stay.photoUpload")} hint={t("admin.photoUploadHint")} className="sm:col-span-2">
+          <ImageInput name="photoFiles" multiple />
         </Field>
         <Field label={t("admin.stay.photos")} hint={t("admin.stay.photosHint")} className="sm:col-span-2">
           <Textarea name="photos" rows={3} defaultValue={stay?.photos.join("\n")} placeholder="https://…" />

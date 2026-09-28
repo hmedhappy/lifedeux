@@ -63,11 +63,11 @@ npm run build
 npm run test:e2e         # parcours complet dans un vrai navigateur (base E2E_DATABASE_URL)
 ```
 
-Les tests de bout en bout couvrent : pages publiques FR/EN/AR, contrôle d'accès par rôle, création d'un médecin par l'admin et activation par invitation, publication de créneaux, inscription patient, demande, confirmation, choix accompagnant + logement, paiement, fiche QR, impossibilité de réserver deux fois un logement, suivi par l'agent et le médecin, versements en espèces, webhooks Stripe signés et falsifiés, tâche d'expiration.
+Les tests de bout en bout couvrent : pages publiques FR/EN/AR, contrôle d'accès par rôle, création d'un médecin par l'admin et activation par invitation, publication de créneaux, inscription patient, mot de passe oublié, envoi de photos (et rejet des faux fichiers image), demande, confirmation, choix accompagnant + logement, paiement, fiche QR, impossibilité de réserver deux fois un logement, suivi par l'agent et le médecin, versements en espèces, webhooks Stripe signés et falsifiés, tâche d'expiration.
 
 ## Limites connues
 
-- Les photos des médecins et logements sont des **liens https** (pas d'upload de fichiers).
+- Les photos envoyées sont stockées dans PostgreSQL (redimensionnées à 1600 px dans le navigateur). C'est simple et suffisant pour quelques centaines de photos ; au-delà, un stockage objet (S3, Vercel Blob) serait préférable.
 - Paymee et Flouci ne sont pas branchés ; l'interface `PaymentProvider` (`src/lib/payments`) permet de les ajouter.
 - La limitation des tentatives de connexion est en mémoire (une seule instance) ; utilisez Redis si vous en lancez plusieurs.
 - Stripe et Konnect n'ont pas été testés avec de vraies clés : le webhook Stripe est testé avec des signatures générées localement, la création de session Checkout et Konnect ne l'ont pas été.
