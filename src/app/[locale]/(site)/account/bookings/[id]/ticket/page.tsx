@@ -38,9 +38,7 @@ export default async function TicketPage({ params }: { params: Promise<{ locale:
       </div>
       <article className="mx-auto max-w-3xl overflow-hidden rounded-3xl border border-line bg-white print:border-0" data-testid="ticket">
         <header className="flex flex-wrap items-center justify-between gap-4 bg-gradient-to-r from-brand to-brand-dark px-8 py-6 text-white">
-          <div className="[&_*]:!text-white">
-            <Logo locale={locale} />
-          </div>
+          <Logo locale={locale} inverted />
           <div className="text-end">
             <p className="text-xs uppercase tracking-wider text-white/80">{t("ticket.title")}</p>
             <p className="font-mono text-xl font-bold">{booking.reference}</p>

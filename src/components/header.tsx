@@ -6,15 +6,15 @@ import { logoutAction } from "@/actions/auth";
 import { LanguageSwitcher } from "./language-switcher";
 import { Avatar, Container } from "./ui";
 
-export function Logo({ locale }: { locale: Locale }) {
+export function Logo({ locale, inverted = false }: { locale: Locale; inverted?: boolean }) {
   return (
-    <Link href={`/${locale}`} className="flex items-center gap-2 text-brand" aria-label="LifeDeux">
+    <Link href={`/${locale}`} className={`flex items-center gap-2 ${inverted ? "text-white" : "text-brand"}`} aria-label="LifeDeux">
       <svg viewBox="0 0 32 32" className="h-8 w-8" aria-hidden>
         <path
           fill="currentColor"
           d="M16 29s-11-6.6-11-15.1C5 9.3 8.5 6 12.6 6c1.4 0 2.6.4 3.4 1.2C16.8 6.4 18 6 19.4 6 23.5 6 27 9.3 27 13.9 27 22.4 16 29 16 29z"
         />
-        <path fill="#fff" d="M14.6 11h2.8v3.6H21v2.8h-3.6V21h-2.8v-3.6H11v-2.8h3.6z" />
+        <path fill={inverted ? "#e31c5f" : "#fff"} d="M14.6 11h2.8v3.6H21v2.8h-3.6V21h-2.8v-3.6H11v-2.8h3.6z" />
       </svg>
       <span className="text-xl font-bold tracking-tight">lifedeux</span>
     </Link>
