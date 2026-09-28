@@ -32,13 +32,25 @@ Prérequis : Node.js 20.9+ et PostgreSQL.
 cp .env.example .env            # puis remplir DATABASE_URL, AUTH_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD
 npm install
 npx prisma migrate dev          # crée les tables
-SEED_DEMO=true npm run db:seed  # admin + données de démo (médecins, logements, créneaux)
+npm run db:seed:demo            # admin + 3 médecins, 5 patients, agent, logements, créneaux, réservations d'exemple
 npm run dev                     # http://localhost:3000
 ```
 
 Pour essayer le paiement sans Stripe, mettez `PAYMENT_MOCK="true"` (développement uniquement).
 
-Comptes de démo (mot de passe `Demo12345!`, avec `SEED_DEMO=true`) : `patient@demo.lifedeux.com`, `dr.ben-salah@demo.lifedeux.com`, `agent@demo.lifedeux.com`. L'admin est celui défini par `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
+Comptes de démo (mot de passe `Demo12345!`) :
+
+| Rôle | Email | Ce qu'on y voit |
+|---|---|---|
+| Médecin | `dr.ben-salah@demo.lifedeux.com`, `dr.trabelsi@demo.lifedeux.com`, `dr.gharbi@demo.lifedeux.com` | demandes, créneaux, patients |
+| Agent | `agent@demo.lifedeux.com` | scan et suivi |
+| Patient | `patient@demo.lifedeux.com` | aucune réservation, pour tester le parcours |
+| Patient | `sara@demo.lifedeux.com` | demande en attente (LD-DEMO01, Dr Trabelsi) |
+| Patient | `luca@demo.lifedeux.com` | confirmé, à payer (LD-DEMO02, Dr Ben Salah) |
+| Patient | `youssef@demo.lifedeux.com` | payé, villa + accompagnant, fiche QR (LD-DEMO03, Dr Gharbi) |
+| Patient | `nadia@demo.lifedeux.com` | aucune réservation |
+
+L'admin est celui défini par `ADMIN_EMAIL` / `ADMIN_PASSWORD`. La commande peut être relancée sans créer de doublons ; ne l'utilisez pas en production (utilisez `npm run db:seed`).
 
 ## Mise en production
 

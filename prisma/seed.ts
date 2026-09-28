@@ -1,10 +1,12 @@
 /**
  * Seeds the platform settings, the first admin account and the base operation.
- * With SEED_DEMO=true it also creates clearly-marked demo doctors, stays,
- * slots, an agent and a patient so the whole flow can be tried locally.
+ * With SEED_DEMO=true (or `npm run db:seed:demo`) it also creates clearly-marked
+ * demo doctors, stays, slots, an agent, patients and sample bookings in several
+ * states so every dashboard can be tried locally. Safe to run several times.
  */
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "node:crypto";
 
 const db = new PrismaClient();
 
@@ -59,7 +61,8 @@ async function main() {
     },
   });
 
-  if (process.env.SEED_DEMO !== "true") {
+  const demo = process.env.SEED_DEMO === "true" || process.argv.includes("--demo");
+  if (!demo) {
     console.log("Seed done (production mode: no demo data).");
     return;
   }
@@ -206,17 +209,123 @@ async function main() {
     lastName: "Agent",
     phone: "+216 00 000 001",
   });
-  await upsertUser({
-    email: "patient@demo.lifedeux.com",
-    password: demoPassword,
-    role: "PATIENT",
-    firstName: "Jean",
-    lastName: "Dupont",
-    phone: "+33 6 00 00 00 00",
-    country: "France",
-  });
+  const patients = [
+    { email: "patient@demo.lifedeux.com", firstName: "Jean", lastName: "Dupont", phone: "+33 6 00 00 00 00", country: "France", locale: "fr" },
+    { email: "sara@demo.lifedeux.com", firstName: "Sara", lastName: "Haddad", phone: "+1 514 000 0000", country: "Canada", locale: "fr" },
+    { email: "luca@demo.lifedeux.com", firstName: "Luca", lastName: "Rossi", phone: "+39 300 000 0000", country: "Italie", locale: "en" },
+    { email: "youssef@demo.lifedeux.com", firstName: "Youssef", lastName: "Amrani", phone: "+212 600 000 000", country: "Maroc", locale: "ar" },
+    { email: "nadia@demo.lifedeux.com", firstName: "Nadia", lastName: "Ben Ali", phone: "+216 20 000 000", country: "Tunisie", locale: "fr" },
+  ];
+  const patientIds: Record<string, string> = {};
+  for (const p of patients) {
+    const user = await upsertUser({ ...p, password: demoPassword, role: "PATIENT" });
+    patientIds[p.email] = user.id;
+  }
 
-  console.log(`Seed done with demo data (demo password: ${demoPassword}).`);
+  await seedSampleBookings(patientIds);
+
+  console.log(`\nSeed done with demo data. Password for every demo account: ${demoPassword}\n`);
+  console.table([
+    { role: "ADMIN", email: adminEmail.toLowerCase(), password: "(ADMIN_PASSWORD)" },
+    ...doctors.map((d) => ({ role: "DOCTOR", email: d.email, password: demoPassword })),
+    { role: "AGENT", email: "agent@demo.lifedeux.com", password: demoPassword },
+    ...patients.map((p) => ({ role: "PATIENT", email: p.email, password: demoPassword })),
+  ]);
+}
+
+/**
+ * One booking per state so each dashboard has something to show:
+ * a request waiting for the doctor, a confirmed booking waiting for payment,
+ * and a paid stay with accommodation and a companion (QR pass ready).
+ */
+async function seedSampleBookings(patientIds: Record<string, string>) {
+  const settings = await db.setting.findUniqueOrThrow({ where: { id: 1 } });
+  const operation = await db.operation.findUniqueOrThrow({ where: { slug: "prothese-penienne" } });
+  const doctorByEmail = async (email: string) =>
+    db.doctor.findFirstOrThrow({ where: { user: { email } }, include: { operations: true } });
+
+  async function freeSlot(doctorId: string, minDays: number) {
+    return db.slot.findFirstOrThrow({
+      where: { doctorId, status: "FREE", startsAt: { gt: new Date(Date.now() + minDays * DAY) } },
+      orderBy: { startsAt: "asc" },
+    });
+  }
+
+  const samples = [
+    { reference: "LD-DEMO01", patient: "sara@demo.lifedeux.com", doctor: "dr.trabelsi@demo.lifedeux.com", minDays: 6, state: "REQUESTED" as const },
+    { reference: "LD-DEMO02", patient: "luca@demo.lifedeux.com", doctor: "dr.ben-salah@demo.lifedeux.com", minDays: 9, state: "CONFIRMED" as const },
+    { reference: "LD-DEMO03", patient: "youssef@demo.lifedeux.com", doctor: "dr.gharbi@demo.lifedeux.com", minDays: 20, state: "PAID" as const },
+  ];
+
+  for (const sample of samples) {
+    if (await db.booking.findUnique({ where: { reference: sample.reference } })) continue;
+    const doctor = await doctorByEmail(sample.doctor);
+    const offer = doctor.operations.find((o) => o.operationId === operation.id);
+    if (!offer) continue;
+    const slot = await freeSlot(doctor.id, sample.minDays);
+    const recoveryNights = operation.defaultRecoveryNights;
+    const base = {
+      reference: sample.reference,
+      patientId: patientIds[sample.patient],
+      doctorId: doctor.id,
+      operationId: operation.id,
+      slotId: slot.id,
+      recoveryNights,
+      operationPrice: offer.price,
+      totalAmount: offer.price,
+      doctorFee: offer.doctorFee,
+      currency: settings.currency,
+    };
+
+    if (sample.state === "REQUESTED") {
+      await db.$transaction([
+        db.slot.update({ where: { id: slot.id }, data: { status: "HELD" } }),
+        db.booking.create({ data: { ...base, patientNote: "Je voyage depuis Montréal, arrivée possible la veille au soir." } }),
+      ]);
+    } else if (sample.state === "CONFIRMED") {
+      await db.$transaction([
+        db.slot.update({ where: { id: slot.id }, data: { status: "HELD" } }),
+        db.booking.create({
+          data: {
+            ...base,
+            status: "CONFIRMED",
+            confirmedAt: new Date(),
+            paymentDeadline: new Date(Date.now() + settings.paymentDeadlineHours * 60 * 60 * 1000),
+          },
+        }),
+      ]);
+    } else {
+      const villa = await db.accommodation.findFirst({ where: { title: "Villa familiale à Sousse" } });
+      const nights = recoveryNights + 1;
+      const transportPrice = settings.transportPricePerPerson * 2;
+      const accommodationPrice = villa ? villa.pricePerNight * nights : 0;
+      const totalAmount = offer.price + transportPrice + accommodationPrice;
+      await db.$transaction([
+        db.slot.update({ where: { id: slot.id }, data: { status: "BOOKED" } }),
+        db.booking.create({
+          data: {
+            ...base,
+            status: "PAID",
+            optionsChosen: true,
+            withTransport: true,
+            accommodationId: villa?.id ?? null,
+            companionsCount: 1,
+            arrivalDate: new Date(slot.startsAt.getTime() - DAY),
+            departureDate: new Date(slot.startsAt.getTime() + recoveryNights * DAY),
+            nights,
+            transportPrice,
+            accommodationPrice,
+            totalAmount,
+            confirmedAt: new Date(),
+            paidAt: new Date(),
+            qrToken: `demo-${randomBytes(18).toString("base64url")}`,
+            companions: { create: { firstName: "Salma", lastName: "Amrani", passportNumber: "MA1234567" } },
+            payments: { create: { provider: "mock", providerRef: `mock_${sample.reference}`, amount: totalAmount, currency: settings.currency, status: "SUCCEEDED" } },
+          },
+        }),
+      ]);
+    }
+  }
 }
 
 main()
