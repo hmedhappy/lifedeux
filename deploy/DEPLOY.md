@@ -58,7 +58,7 @@ Si le dépôt est privé, GitHub demande un identifiant : utilisez votre nom d'u
 
 ```bash
 cp deploy/.env.production.example .env.production
-openssl rand -base64 36   # lancez-le 3 fois : POSTGRES_PASSWORD, AUTH_SECRET, CRON_SECRET
+openssl rand -hex 24      # lancez-le 3 fois : POSTGRES_PASSWORD, AUTH_SECRET, CRON_SECRET
 nano .env.production
 ```
 
@@ -122,4 +122,5 @@ Repartir d'une base **vide** (efface toutes les données, irréversible) : `$C d
 | La construction s'arrête (« Killed », « JavaScript heap out of memory ») | VPS avec moins de 2 Go de RAM | Ajouter 2 Go de swap : `sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile` puis relancer |
 | Pas de HTTPS / erreur de certificat | DNS pas encore propagé, ou ports 80/443 fermés | Vérifier `dig +short lifedeux.afdev.site` et le pare-feu, puis `$C restart caddy` |
 | `port is already allocated` pour 80/443 | nginx déjà présent | Mettre `USE_CADDY=0` et faire l'étape 5 bis |
+| Le conteneur `app` redémarre en boucle (`is restarting`) | Mot de passe PostgreSQL avec `/`, `+` ou `=` | Voir les journaux (`$C logs --tail 40 app`) ; sur une installation neuve : `$C down -v`, régénérer `POSTGRES_PASSWORD` avec `openssl rand -hex 24`, relancer le script |
 | Impossible de se connecter, la page revient au login | `APP_URL` n'est pas en `https://…` | Corriger `APP_URL` et relancer le script |
