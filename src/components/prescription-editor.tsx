@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { FileSignature, Loader2, Pill, Plus, Search, Trash2, X } from "lucide-react";
+import { Expand, FileSignature, FileText, Loader2, Pill, Plus, Search, Trash2, X } from "lucide-react";
 import { issuePrescriptionAction, savePrescriptionDraftAction, type PrescriptionDraft } from "@/actions/prescription";
 import type { MedicationHit } from "@/lib/medications";
 import { useI18n } from "./i18n-provider";
-import { Button, Input, Notice, Textarea } from "./ui";
+import { Button, Input, Notice, Select, Textarea } from "./ui";
 
 type Item = PrescriptionDraft["items"][number] & { key: string };
 
@@ -20,19 +20,37 @@ const blank = (name = "", medicationId: string | null = null): Item => ({
 });
 
 const label = (m: MedicationHit) => [m.name, m.strength, m.form].filter((v) => v && v !== "—").join(" · ");
+const PREVIEW_DELAY_MS = 400;
 
-export function PrescriptionEditor({ consultationId, hasStamp }: { consultationId: string; hasStamp: boolean }) {
+/** The rendered page (SVG made by the server from the same layout as the PDF). */
+function Sheet({ svg, className = "" }: { svg: string; className?: string }) {
+  return <div className={`[&>svg]:block [&>svg]:h-auto [&>svg]:w-full ${className}`} dangerouslySetInnerHTML={{ __html: svg }} />;
+}
+
+export function PrescriptionEditor({
+  consultationId,
+  hasStamp,
+  templates,
+  defaultTemplate,
+}: {
+  consultationId: string;
+  hasStamp: boolean;
+  templates: { ref: string; name: string }[];
+  defaultTemplate: string;
+}) {
   const { t } = useI18n();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<MedicationHit[]>([]);
   const [searching, setSearching] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
   const [notes, setNotes] = useState("");
-  const [draftId, setDraftId] = useState<string | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [templateRef, setTemplateRef] = useState(defaultTemplate);
+  const [svg, setSvg] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
   const [message, setMessage] = useState<{ tone: "error" | "success"; text: string } | null>(null);
   const [pending, start] = useTransition();
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const previewTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     clearTimeout(timer.current);
@@ -46,59 +64,122 @@ export function PrescriptionEditor({ consultationId, hasStamp }: { consultationI
     return () => clearTimeout(timer.current);
   }, [query]);
 
+  const payload = () => ({
+    items: items.map((i) => ({
+      medicationId: i.medicationId,
+      name: i.name,
+      dosage: i.dosage,
+      frequency: i.frequency,
+      duration: i.duration,
+      instructions: i.instructions,
+    })),
+    notes,
+    templateRef,
+  });
+
+  // Live preview: re-rendered shortly after every change, as soon as there is a medicine.
+  const snapshot = JSON.stringify(payload());
+  useEffect(() => {
+    clearTimeout(previewTimer.current);
+    if (items.length === 0) return;
+    previewTimer.current = setTimeout(async () => {
+      const res = await fetch("/api/prescriptions/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ consultationId, ...JSON.parse(snapshot) }),
+      }).catch(() => null);
+      if (res?.ok) setSvg(await res.text());
+    }, PREVIEW_DELAY_MS);
+    return () => clearTimeout(previewTimer.current);
+  }, [snapshot, consultationId, items.length]);
+
   const shown = query.trim().length < 2 ? [] : results;
+  const liveSvg = items.length > 0 ? svg : null;
 
   if (!hasStamp) {
     return <Notice tone="warning">{t("rx.stampMissing")}</Notice>;
   }
 
-  const update = (key: string, patch: Partial<Item>) => {
-    setItems((list) => list.map((i) => (i.key === key ? { ...i, ...patch } : i)));
-    setDraftId(null);
-  };
+  const update = (key: string, patch: Partial<Item>) => setItems((list) => list.map((i) => (i.key === key ? { ...i, ...patch } : i)));
 
   function add(item: Item) {
     setItems((list) => [...list, item]);
     setQuery("");
     setResults([]);
-    setDraftId(null);
   }
 
-  function doPreview() {
+  async function saveDraft(): Promise<string | null> {
+    const res = await savePrescriptionDraftAction(consultationId, payload());
+    if (!res.ok) {
+      setMessage({ tone: "error", text: t(res.error) });
+      return null;
+    }
+    return res.id;
+  }
+
+  function openPdf() {
     setMessage(null);
+    // Opened right away (inside the click) so the browser does not block it as a pop-up.
+    const tab = window.open("about:blank", "_blank");
     start(async () => {
-      const res = await savePrescriptionDraftAction(consultationId, {
-        items: items.map((i) => ({
-          medicationId: i.medicationId,
-          name: i.name,
-          dosage: i.dosage,
-          frequency: i.frequency,
-          duration: i.duration,
-          instructions: i.instructions,
-        })),
-        notes,
-      });
-      if (!res.ok) return setMessage({ tone: "error", text: t(res.error) });
-      setDraftId(res.id);
-      setPreview(`/api/prescriptions/${res.id}/pdf?v=${Date.now()}`);
+      const id = await saveDraft();
+      if (!id) {
+        tab?.close();
+        return;
+      }
+      const url = `/api/prescriptions/${id}/pdf?v=${Date.now()}`;
+      if (tab) tab.location.href = url;
+      else window.open(url, "_self");
     });
   }
 
   function send() {
-    if (!draftId) return;
+    setMessage(null);
+    if (!window.confirm(t("rx.sendConfirm"))) return;
     start(async () => {
-      const res = await issuePrescriptionAction(draftId);
-      if (!res.ok) return setMessage({ tone: "error", text: t(res.error) });
-      setPreview(null);
-      setDraftId(null);
+      const id = await saveDraft();
+      if (!id) return;
+      const res = await issuePrescriptionAction(id);
+      if (!res.ok) {
+        setMessage({ tone: "error", text: t(res.error) });
+        return;
+      }
+      setExpanded(false);
       setItems([]);
       setNotes("");
+      setSvg(null);
       setMessage({ tone: "success", text: t("rx.sent") });
     });
   }
 
+  const actions = (
+    <div className="grid grid-cols-2 gap-2">
+      <Button type="button" variant="secondary" onClick={openPdf} disabled={pending || items.length === 0}>
+        <FileText className="h-4 w-4" aria-hidden />
+        {t("rx.openPdf")}
+      </Button>
+      <Button type="button" onClick={send} disabled={pending || items.length === 0}>
+        {pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <FileSignature className="h-4 w-4" aria-hidden />}
+        {t("rx.send")}
+      </Button>
+    </div>
+  );
+
   return (
     <div className="space-y-4" data-testid="rx-editor">
+      {templates.length > 1 && (
+        <label className="block text-sm">
+          <span className="mb-1 block font-medium text-ink">{t("rx.template")}</span>
+          <Select value={templateRef} onChange={(e) => setTemplateRef(e.target.value)} data-testid="rx-template">
+            {templates.map((tpl) => (
+              <option key={tpl.ref} value={tpl.ref}>
+                {tpl.name}
+              </option>
+            ))}
+          </Select>
+        </label>
+      )}
+
       <div className="relative">
         <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
         <Input
@@ -171,37 +252,63 @@ export function PrescriptionEditor({ consultationId, hasStamp }: { consultationI
         </ol>
       )}
 
-      <Textarea value={notes} onChange={(e) => { setNotes(e.target.value); setDraftId(null); }} placeholder={t("rx.notes")} aria-label={t("rx.notes")} rows={2} />
+      <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("rx.notes")} aria-label={t("rx.notes")} rows={2} />
 
-      {message && <Notice tone={message.tone}>{message.text}</Notice>}
+      {items.length > 0 && (
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-sm font-medium text-ink">{t("rx.livePreview")}</p>
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              className="inline-flex items-center gap-1 text-sm font-medium text-ink underline disabled:opacity-40"
+              disabled={!liveSvg}
+            >
+              <Expand className="h-4 w-4" aria-hidden />
+              {t("rx.preview")}
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => liveSvg && setExpanded(true)}
+            className="block w-full overflow-hidden rounded-lg border border-line bg-surface text-start shadow-sm"
+            aria-label={t("rx.preview")}
+            data-testid="rx-live-preview"
+          >
+            {liveSvg ? (
+              <Sheet svg={liveSvg} />
+            ) : (
+              <span className="flex aspect-[595/842] items-center justify-center text-muted">
+                <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+              </span>
+            )}
+          </button>
+        </div>
+      )}
 
-      <div className="grid grid-cols-2 gap-2">
-        <Button type="button" variant="secondary" onClick={doPreview} disabled={pending || items.length === 0}>
-          {pending && !draftId ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
-          {t("rx.preview")}
-        </Button>
-        <Button type="button" onClick={send} disabled={pending || !draftId}>
-          <FileSignature className="h-4 w-4" aria-hidden />
-          {t("rx.send")}
-        </Button>
-      </div>
+      {message && !expanded && <Notice tone={message.tone}>{message.text}</Notice>}
+      {actions}
       <p className="text-xs text-muted">{t("rx.previewFirst")}</p>
 
-      {preview && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-black/70 p-4" role="dialog" aria-modal aria-label={t("rx.preview")}>
-          <div className="mx-auto flex w-full max-w-3xl items-center justify-between rounded-t-2xl bg-white px-4 py-3">
+      {expanded && liveSvg && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-black/70 p-2 sm:p-4" role="dialog" aria-modal aria-label={t("rx.preview")}>
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 rounded-t-2xl bg-white px-4 py-3">
             <p className="font-semibold text-ink">{t("rx.preview")}</p>
-            <div className="flex items-center gap-2">
-              <Button type="button" size="sm" onClick={send} disabled={pending || !draftId}>
-                <FileSignature className="h-4 w-4" aria-hidden />
-                {t("rx.send")}
-              </Button>
-              <button type="button" onClick={() => setPreview(null)} aria-label={t("common.close")} className="rounded-lg p-2 hover:bg-surface">
-                <X className="h-5 w-5" aria-hidden />
-              </button>
-            </div>
+            <button type="button" onClick={() => setExpanded(false)} aria-label={t("common.close")} className="rounded-lg p-2 hover:bg-surface">
+              <X className="h-5 w-5" aria-hidden />
+            </button>
           </div>
-          <iframe src={preview} title={t("rx.preview")} className="mx-auto w-full max-w-3xl flex-1 rounded-b-2xl bg-white" data-testid="rx-preview" />
+          <div className="mx-auto w-full max-w-3xl flex-1 overflow-y-auto bg-surface p-3 sm:p-6">
+            <Sheet svg={liveSvg} className="mx-auto max-w-2xl bg-white shadow-float" />
+          </div>
+          <div className="mx-auto w-full max-w-3xl rounded-b-2xl bg-white p-4" data-testid="rx-preview">
+            {message && (
+              <div className="mb-3">
+                <Notice tone={message.tone}>{message.text}</Notice>
+              </div>
+            )}
+            {actions}
+          </div>
         </div>
       )}
     </div>

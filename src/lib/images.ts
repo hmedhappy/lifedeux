@@ -61,3 +61,23 @@ export async function saveUploadedImages(
   }
   return { paths };
 }
+
+/** Pixel size of a PNG or JPEG, read from its header (null if unknown). */
+export function imageSize(bytes: Uint8Array, mime: string): { width: number; height: number } | null {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  if (mime === "image/png" && bytes.length > 24) return { width: view.getUint32(16), height: view.getUint32(20) };
+  if (mime === "image/jpeg") {
+    let i = 2;
+    while (i + 9 < bytes.length) {
+      if (bytes[i] !== 0xff) return null;
+      const marker = bytes[i + 1];
+      const length = view.getUint16(i + 2);
+      // Start-of-frame markers carry the dimensions (C4, C8 and CC are not frames).
+      if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) {
+        return { width: view.getUint16(i + 7), height: view.getUint16(i + 5) };
+      }
+      i += 2 + length;
+    }
+  }
+  return null;
+}

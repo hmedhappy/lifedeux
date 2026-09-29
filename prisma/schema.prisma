@@ -123,22 +123,25 @@ model Doctor {
   active            Boolean  @default(true)
   createdAt         DateTime @default(now())
 
-  specialtyId         String?
-  specialty_          Specialty? @relation(fields: [specialtyId], references: [id])
+  specialtyId           String?
+  specialty_            Specialty?             @relation(fields: [specialtyId], references: [id])
   /// Registration number with the medical council, printed on prescriptions.
-  licenseNumber       String?
-  offersConsultation  Boolean    @default(true)
+  licenseNumber         String?
+  offersConsultation    Boolean                @default(true)
   /// Price paid by the patient and share owed to the doctor, per online consultation (cents).
-  consultationPrice   Int?
-  consultationFee     Int?
-  consultationMinutes Int        @default(30)
-  stampImageId        String?
-  signatureImageId    String?
+  consultationPrice     Int?
+  consultationFee       Int?
+  consultationMinutes   Int                    @default(30)
+  stampImageId          String?
+  signatureImageId      String?
   /// Set for super-doctors: code used in their referral link.
-  referralCode        String?    @unique
-  referredById        String?
-  referredBy          Doctor?    @relation("Referrals", fields: [referredById], references: [id])
-  referrals           Doctor[]   @relation("Referrals")
+  referralCode          String?                @unique
+  referredById          String?
+  referredBy            Doctor?                @relation("Referrals", fields: [referredById], references: [id])
+  referrals             Doctor[]               @relation("Referrals")
+  /// Default prescription design: "builtin:teal", "builtin:rose" or a PrescriptionTemplate id.
+  prescriptionTemplate  String?
+  prescriptionTemplates PrescriptionTemplate[]
 
   operations    DoctorOperation[]
   slots         Slot[]
@@ -268,10 +271,32 @@ model Prescription {
   /// SHA-256 of the canonical content, fixed when the prescription is issued.
   contentHash    String?
   issuedAt       DateTime?
+  /// Design used for the PDF, frozen when the prescription is issued.
+  templateRef    String?
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
 
   items PrescriptionItem[]
+}
+
+/// A doctor's own prescription design, based on one of the built-in layouts.
+model PrescriptionTemplate {
+  id                String   @id @default(cuid())
+  doctorId          String
+  doctor            Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  name              String
+  /// "teal", "rose" or "letterhead" (the doctor's own scanned letterhead as background).
+  layout            String
+  color             String   @default("#0f8f7e")
+  backgroundImageId String?
+  /// Blank space to leave around the content on a letterhead, in millimetres.
+  marginTop         Int      @default(45)
+  marginBottom      Int      @default(30)
+  marginLeft        Int      @default(18)
+  marginRight       Int      @default(18)
+  createdAt         DateTime @default(now())
+
+  @@index([doctorId])
 }
 
 model PrescriptionItem {

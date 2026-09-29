@@ -12,6 +12,7 @@ import { requireDoctor } from "@/lib/auth";
 import { CHAT_OPENS_MINUTES_BEFORE } from "@/lib/consultation-rules";
 import { getConsultationForUser, loadMessages } from "@/lib/consultations";
 import { db } from "@/lib/db";
+import { defaultTemplateRef, templateOptions } from "@/lib/prescriptions";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { getT, toLocale } from "@/lib/i18n";
 
@@ -24,9 +25,10 @@ export default async function DoctorConsultationPage({ params }: { params: Promi
   if (!found || found.as !== "doctor") notFound();
   const { consultation: c, chat } = found;
   const patientName = `${c.patient.firstName} ${c.patient.lastName}`;
-  const [messages, issued] = await Promise.all([
+  const [messages, issued, templates] = await Promise.all([
     c.status === "PAID" || c.status === "COMPLETED" ? loadMessages(c.id, user.id) : Promise.resolve([]),
     db.prescription.findMany({ where: { consultationId: c.id, status: "ISSUED" }, orderBy: { issuedAt: "asc" } }),
+    templateOptions(doctor.id),
   ]);
   const canPrescribe = c.status === "PAID" || c.status === "COMPLETED";
   const subtitle = [c.patient.country, c.patient.birthDate ? formatDate(c.patient.birthDate, locale) : null].filter(Boolean).join(" · ");
@@ -45,7 +47,15 @@ export default async function DoctorConsultationPage({ params }: { params: Promi
             <FileText className="h-5 w-5 text-brand" aria-hidden />
             {t("rx.title")}
           </h2>
-          <PrescriptionEditor consultationId={c.id} hasStamp={!!doctor.stampImageId} />
+          <PrescriptionEditor
+            consultationId={c.id}
+            hasStamp={!!doctor.stampImageId}
+            templates={templates.map(({ ref, name }) => ({ ref, name }))}
+            defaultTemplate={defaultTemplateRef(doctor)}
+          />
+          <Link href={`/${locale}/doctor/prescription`} className="mt-3 inline-block text-xs font-medium text-muted underline">
+            {t("rx.manageTemplates")}
+          </Link>
           {issued.length > 0 && (
             <ul className="mt-5 space-y-2 border-t border-line pt-4 text-sm">
               {issued.map((p) => (

@@ -412,7 +412,8 @@
       "slots": "Slots",
       "payouts": "Payouts",
       "consultations": "Consultations",
-      "referrals": "Referrals"
+      "referrals": "Referrals",
+      "prescription": "Prescription template"
     },
     "requestsTitle": "Appointment requests",
     "requestsSubtitle": "Confirm or decline incoming requests.",
@@ -732,7 +733,9 @@
     "prescriptionInvalid": "Complete every line: medication, dose, frequency and duration.",
     "referralInvalid": "This referral link is not valid.",
     "noService": "Enable online consultations or at least one procedure.",
-    "medicationExists": "This medication already exists."
+    "medicationExists": "This medication already exists.",
+    "tooManyTemplates": "You have reached the maximum number of templates (10).",
+    "letterheadRequired": "Add the image of your letterhead."
   },
   "email": {
     "invite": {
@@ -877,10 +880,15 @@
     "remove": "Remove",
     "preview": "Preview",
     "send": "Sign and send",
-    "previewFirst": "Check the preview before sending: a sent prescription can no longer be edited.",
+    "previewFirst": "The preview updates as you type. A sent prescription can no longer be edited.",
     "sent": "Prescription sent to the patient.",
     "stampMissing": "No stamp is saved on your profile. Contact the administrator to be able to write prescriptions.",
-    "count": "{n} prescription(s)"
+    "count": "{n} prescription(s)",
+    "template": "Prescription template",
+    "livePreview": "Live preview",
+    "openPdf": "View PDF",
+    "sendConfirm": "Sign and send this prescription to the patient? It can no longer be changed.",
+    "manageTemplates": "Manage my prescription templates"
   },
   "verify": {
     "title": "Prescription check",
@@ -911,5 +919,41 @@
     "consent": "I certify that I am registered with the medical council and I accept the terms of use.",
     "joinButton": "Create my doctor account",
     "welcome": "Welcome to LifeDeux! Add your first slots to start receiving patients."
+  },
+  "rxTemplates": {
+    "title": "Prescription template",
+    "subtitle": "Choose the design of your prescriptions or create your own from your letterhead.",
+    "saved": "saved",
+    "missing": "missing — contact the administrator",
+    "default": "Default",
+    "useDefault": "Use as default",
+    "deleteConfirm": "Delete the {name} template? Prescriptions already sent keep their design.",
+    "newTitle": "New template",
+    "newHint": "Start from an existing design with your colour, or use your own letterhead (scanned A4 image).",
+    "create": "Create template",
+    "created": "Template {name} created.",
+    "name": "Template name",
+    "namePlaceholder": "E.g. Sfax practice",
+    "color": "Colour",
+    "base": "Base",
+    "layout": {
+      "teal": "Classic teal",
+      "rose": "LifeDeux banner",
+      "letterhead": "My letterhead"
+    },
+    "layoutHint": {
+      "teal": "Doctor and clinic header, reason column, footer with QR code.",
+      "rose": "Coloured top banner, airy layout.",
+      "letterhead": "Your image as background, text in the free area."
+    },
+    "background": "Letterhead image (A4, PNG or JPEG, 3 MB max)",
+    "backgroundHint": "Scan or export your blank letterhead in portrait.",
+    "margins": "Free area for the text (mm)",
+    "marginsHint": "Space left empty around the text so it does not cover your header and footer.",
+    "marginTop": "Top",
+    "marginBottom": "Bottom",
+    "marginLeft": "Left",
+    "marginRight": "Right",
+    "makeDefault": "Use this template by default"
   }
 }

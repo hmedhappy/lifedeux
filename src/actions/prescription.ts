@@ -4,7 +4,8 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { sendTemplate } from "@/lib/mail";
-import { contentHash, loadPrescription, prescriptionNumber } from "@/lib/prescriptions";
+import { contentHash, defaultTemplateRef, loadPrescription, prescriptionNumber, resolveTemplate } from "@/lib/prescriptions";
+import { builtinConfig } from "@/lib/rx-sheet";
 import { isDoctorRole } from "@/lib/roles";
 
 const itemSchema = z.object({
@@ -19,6 +20,7 @@ const itemSchema = z.object({
 const draftSchema = z.object({
   items: z.array(itemSchema).min(1).max(15),
   notes: z.string().trim().max(1500).optional().nullable(),
+  templateRef: z.string().max(60).optional().nullable(),
 });
 
 export type PrescriptionDraft = z.infer<typeof draftSchema>;
@@ -42,6 +44,12 @@ export async function savePrescriptionDraftAction(consultationId: string, input:
   const parsed = draftSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "errors.prescriptionInvalid" };
   const { items, notes } = parsed.data;
+  // Only a built-in design or one of this doctor's own templates can be used.
+  const ref = parsed.data.templateRef;
+  const templateRef =
+    ref && (builtinConfig(ref) || (await db.prescriptionTemplate.findFirst({ where: { id: ref, doctorId: ctx.consultation.doctorId } })))
+      ? ref
+      : null;
 
   const existing = await db.prescription.findFirst({ where: { consultationId, status: "DRAFT" } });
   const data = items.map((i, position) => ({
@@ -56,7 +64,7 @@ export async function savePrescriptionDraftAction(consultationId: string, input:
   if (existing) {
     await db.$transaction([
       db.prescriptionItem.deleteMany({ where: { prescriptionId: existing.id } }),
-      db.prescription.update({ where: { id: existing.id }, data: { notes: notes || null, items: { create: data } } }),
+      db.prescription.update({ where: { id: existing.id }, data: { notes: notes || null, templateRef, items: { create: data } } }),
     ]);
     return { ok: true, id: existing.id };
   }
@@ -66,6 +74,7 @@ export async function savePrescriptionDraftAction(consultationId: string, input:
       doctorId: ctx.consultation.doctorId,
       patientId: ctx.consultation.patientId,
       notes: notes || null,
+      templateRef,
       items: { create: data },
     },
   });
@@ -85,9 +94,14 @@ export async function issuePrescriptionAction(prescriptionId: string): Promise<R
   const full = await loadPrescription({ id: prescriptionId });
   if (!full || full.items.length === 0) return { ok: false, error: "errors.prescriptionInvalid" };
   const hash = contentHash({ ...full, number, issuedAt });
+  // Freeze the design: later template edits or deletions never change a sent prescription.
+  const frozen = JSON.stringify(await resolveTemplate(full.templateRef ?? defaultTemplateRef(full.doctor), full.doctorId));
 
   await db.$transaction([
-    db.prescription.update({ where: { id: prescriptionId }, data: { status: "ISSUED", number, issuedAt, contentHash: hash } }),
+    db.prescription.update({
+      where: { id: prescriptionId },
+      data: { status: "ISSUED", number, issuedAt, contentHash: hash, templateRef: frozen },
+    }),
     db.message.create({
       data: { consultationId: draft.consultationId, senderId: ctx.user.id, kind: "PRESCRIPTION", prescriptionId },
     }),

@@ -412,7 +412,8 @@
       "slots": "Créneaux",
       "payouts": "Versements",
       "consultations": "Consultations",
-      "referrals": "Parrainage"
+      "referrals": "Parrainage",
+      "prescription": "Modèle d'ordonnance"
     },
     "requestsTitle": "Demandes de rendez-vous",
     "requestsSubtitle": "Confirmez ou refusez les demandes reçues.",
@@ -732,7 +733,9 @@
     "prescriptionInvalid": "Complétez chaque ligne : médicament, dose, fréquence et durée.",
     "referralInvalid": "Ce lien de parrainage n'est pas valide.",
     "noService": "Activez la consultation en ligne ou au moins une intervention.",
-    "medicationExists": "Ce médicament existe déjà."
+    "medicationExists": "Ce médicament existe déjà.",
+    "tooManyTemplates": "Vous avez atteint le nombre maximal de modèles (10).",
+    "letterheadRequired": "Ajoutez l'image de votre papier à en-tête."
   },
   "email": {
     "invite": {
@@ -877,10 +880,15 @@
     "remove": "Retirer",
     "preview": "Aperçu",
     "send": "Signer et envoyer",
-    "previewFirst": "Vérifiez l'aperçu avant l'envoi : une ordonnance envoyée ne peut plus être modifiée.",
+    "previewFirst": "L'aperçu se met à jour pendant que vous écrivez. Une ordonnance envoyée ne peut plus être modifiée.",
     "sent": "Ordonnance envoyée au patient.",
     "stampMissing": "Aucun cachet n'est enregistré sur votre profil. Contactez l'administrateur pour pouvoir rédiger des ordonnances.",
-    "count": "{n} ordonnance(s)"
+    "count": "{n} ordonnance(s)",
+    "template": "Modèle d'ordonnance",
+    "livePreview": "Aperçu en direct",
+    "openPdf": "Voir le PDF",
+    "sendConfirm": "Signer et envoyer cette ordonnance au patient ? Elle ne pourra plus être modifiée.",
+    "manageTemplates": "Gérer mes modèles d'ordonnance"
   },
   "verify": {
     "title": "Vérification d'ordonnance",
@@ -911,5 +919,41 @@
     "consent": "Je certifie être inscrit(e) à l'Ordre des médecins et j'accepte les conditions d'utilisation.",
     "joinButton": "Créer mon compte médecin",
     "welcome": "Bienvenue sur LifeDeux ! Ajoutez vos premiers créneaux pour recevoir des patients."
+  },
+  "rxTemplates": {
+    "title": "Modèle d'ordonnance",
+    "subtitle": "Choisissez le design de vos ordonnances ou créez le vôtre à partir de votre papier à en-tête.",
+    "saved": "enregistré",
+    "missing": "manquant — contactez l'administrateur",
+    "default": "Par défaut",
+    "useDefault": "Utiliser par défaut",
+    "deleteConfirm": "Supprimer le modèle {name} ? Les ordonnances déjà envoyées gardent leur design.",
+    "newTitle": "Nouveau modèle",
+    "newHint": "Partez d'un design existant avec votre couleur, ou utilisez votre propre papier à en-tête (image A4 scannée).",
+    "create": "Créer le modèle",
+    "created": "Modèle {name} créé.",
+    "name": "Nom du modèle",
+    "namePlaceholder": "Ex. Cabinet de Sfax",
+    "color": "Couleur",
+    "base": "Base",
+    "layout": {
+      "teal": "Classique turquoise",
+      "rose": "Bandeau LifeDeux",
+      "letterhead": "Mon papier à en-tête"
+    },
+    "layoutHint": {
+      "teal": "En-tête médecin et clinique, colonne motif, pied de page avec QR.",
+      "rose": "Bandeau coloré en haut, mise en page aérée.",
+      "letterhead": "Votre image en fond, le texte dans la zone libre."
+    },
+    "background": "Image du papier à en-tête (A4, PNG ou JPEG, 3 Mo max)",
+    "backgroundHint": "Scannez ou exportez votre papier à en-tête vierge en portrait.",
+    "margins": "Zone libre pour le texte (mm)",
+    "marginsHint": "Espace laissé vide autour du texte pour ne pas recouvrir votre en-tête et votre pied de page.",
+    "marginTop": "Haut",
+    "marginBottom": "Bas",
+    "marginLeft": "Gauche",
+    "marginRight": "Droite",
+    "makeDefault": "Utiliser ce modèle par défaut"
   }
 }

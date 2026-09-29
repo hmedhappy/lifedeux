@@ -132,37 +132,88 @@ test("at the scheduled time both sides chat with text and photos", async () => {
   expect((await stranger.request.get(`/api/consultations/${consultationId}/messages`)).status()).toBe(404);
 });
 
-test("doctor writes, previews and sends a certified prescription", async () => {
+test("doctor designs a prescription template from a letterhead", async () => {
+  const amira = await db.doctor.findFirstOrThrow({ where: { user: { email: "dr.amira@demo.lifedeux.com" } } });
+  await db.doctor.update({ where: { id: amira.id }, data: { prescriptionTemplate: null } });
+  await db.prescriptionTemplate.deleteMany({ where: { doctorId: amira.id } });
+
+  const page = await doctor.context().newPage();
+  await page.goto("/fr/doctor/prescription");
+  // The two built-in designs, the turquoise one being the default.
+  await expect(page.getByTestId("rx-template")).toHaveCount(2);
+  await expect(page.getByTestId("rx-template").filter({ hasText: "Turquoise" })).toContainText("Par défaut");
+  await expect(page.getByTestId("rx-template").first().locator("svg[role=img]")).toContainText("Dr Amira Trabelsi");
+
+  await page.locator('input[name="name"]').fill("Papier du cabinet");
+  await page.locator('input[name="layout"][value="letterhead"]').check();
+  await page.getByTestId("letterhead-file").setInputFiles({ name: "entete.png", mimeType: "image/png", buffer: Buffer.from(demoPhoto()) });
+  await page.getByRole("button", { name: "Créer le modèle" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Modèle Papier du cabinet créé." })).toBeVisible();
+
+  const card = page.getByTestId("rx-template").filter({ hasText: "Papier du cabinet" });
+  await expect(card).toContainText("Par défaut");
+  // The letterhead is drawn behind the text and stays private.
+  const bg = card.locator("svg image").first();
+  const href = await bg.getAttribute("href");
+  expect(href).toMatch(/\/api\/doctors\/\w+\/letterhead\/\w+$/);
+  expect((await page.request.get(href!)).status()).toBe(200);
+  expect((await patient.request.get(href!)).status()).toBe(404);
+  await page.close();
+});
+
+test("doctor writes a prescription with a live preview and sends it", async () => {
+  await doctor.reload();
   const editor = doctor.getByTestId("rx-editor");
+  const template = await db.prescriptionTemplate.findFirstOrThrow({ where: { name: "Papier du cabinet", doctor: { user: { email: "dr.amira@demo.lifedeux.com" } } } });
+  await expect(editor.getByTestId("rx-template")).toHaveValue(template.id);
+
   await editor.getByTestId("rx-search").fill("amox");
   await editor.getByTestId("rx-result").filter({ hasText: "Clamoxyl" }).click();
   const item = editor.getByTestId("rx-item");
   await expect(item).toHaveCount(1);
+  // The page is drawn as soon as a medicine is added, and follows what the doctor types.
+  const live = editor.getByTestId("rx-live-preview");
+  await expect(live.locator("svg[role=img]")).toContainText("Clamoxyl");
+  await expect(live.locator("svg[role=img]")).toContainText("APERÇU");
 
   // Incomplete lines are refused.
-  await editor.getByRole("button", { name: "Aperçu" }).click();
+  doctor.once("dialog", (d) => void d.accept());
+  await editor.getByRole("button", { name: "Signer et envoyer" }).click();
   await expect(editor.getByRole("alert").filter({ hasText: /./ })).toContainText("Complétez chaque ligne");
 
   await item.locator('input[name="dosage"]').fill("1 gélule");
   await item.locator('input[name="frequency"]').fill("3 fois par jour");
   await item.locator('input[name="duration"]').fill("7 jours");
-  await editor.getByRole("button", { name: "Aperçu" }).click();
-  const dialog = doctor.getByRole("dialog");
-  await expect(dialog.getByTestId("rx-preview")).toBeVisible();
+  await expect(live.locator("svg[role=img]")).toContainText("pendant 7 jours");
 
+  // Switching design updates the preview too.
+  await editor.getByTestId("rx-template").selectOption({ label: "Turquoise" });
+  await expect(live.locator("svg[role=img]")).toContainText("C/C");
+  await editor.getByTestId("rx-template").selectOption(template.id);
+
+  // "View PDF" saves a draft and opens it; the patient cannot open a draft.
+  const [tab] = await Promise.all([doctor.waitForEvent("popup"), editor.getByRole("button", { name: "Voir le PDF" }).click()]);
+  await tab.waitForURL(/\/api\/prescriptions\/\w+\/pdf/);
+  await tab.close();
   const draft = await db.prescription.findFirstOrThrow({ where: { consultationId, status: "DRAFT" } });
+  expect(draft.templateRef).toBe(template.id);
   const preview = await doctor.request.get(`/api/prescriptions/${draft.id}/pdf`);
   expect(preview.headers()["content-type"]).toBe("application/pdf");
-  // The patient cannot open a draft.
   expect((await patient.request.get(`/api/prescriptions/${draft.id}/pdf`)).status()).toBe(404);
 
-  await dialog.getByRole("button", { name: "Signer et envoyer" }).click();
+  await live.click();
+  const dialog = doctor.getByRole("dialog");
+  await expect(dialog.locator("svg[role=img]")).toContainText("Clamoxyl");
+  doctor.once("dialog", (d) => void d.accept());
+  await dialog.getByTestId("rx-preview").getByRole("button", { name: "Signer et envoyer" }).click();
   await expect(doctor.getByText("Ordonnance envoyée au patient.")).toBeVisible();
 
   const issued = await db.prescription.findUniqueOrThrow({ where: { id: draft.id } });
   expect(issued.status).toBe("ISSUED");
   expect(issued.number).toMatch(/^RX-\d{8}-[0-9A-F]{8}$/);
   expect(issued.contentHash).toMatch(/^[0-9a-f]{64}$/);
+  // The design is frozen into the prescription.
+  expect(JSON.parse(issued.templateRef!).layout).toBe("letterhead");
   prescriptionNumber = issued.number!;
 
   const card = patient.getByTestId("chat-prescription");
@@ -171,6 +222,10 @@ test("doctor writes, previews and sends a certified prescription", async () => {
   expect(pdf.status()).toBe(200);
   expect(pdf.headers()["content-type"]).toBe("application/pdf");
   expect((await pdf.body()).subarray(0, 5).toString()).toBe("%PDF-");
+
+  // Deleting the template later does not break the sent prescription.
+  await db.prescriptionTemplate.delete({ where: { id: template.id } });
+  expect((await patient.request.get((await card.getAttribute("href"))!)).status()).toBe(200);
 });
 
 test("a pharmacist verifies the prescription from its QR link", async ({ page }) => {

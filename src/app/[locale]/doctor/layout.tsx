@@ -34,6 +34,7 @@ export default async function DoctorLayout({
       items={[
         { href: base, label: t("doctorArea.nav.requests"), exact: true, badge: pending },
         { href: `${base}/consultations`, label: t("doctorArea.nav.consultations"), badge: live },
+        { href: `${base}/prescription`, label: t("doctorArea.nav.prescription") },
         { href: `${base}/patients`, label: t("doctorArea.nav.patients") },
         { href: `${base}/slots`, label: t("doctorArea.nav.slots") },
         { href: `${base}/payouts`, label: t("doctorArea.nav.payouts") },

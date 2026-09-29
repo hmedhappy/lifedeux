@@ -26,6 +26,8 @@ const DYNAMIC_KEYS = [
   ...["PATIENT", "DOCTOR", "SUPER_DOCTOR", "ADMIN", "AGENT"].map((s) => `roles.${s}`),
   ...["CONSULTATION", "OPERATION"].map((s) => `slotKind.${s}`),
   ...["consultation", "operation"].map((s) => `doctor.service.${s}`),
+  ...["teal", "rose", "letterhead"].flatMap((s) => [`rxTemplates.layout.${s}`, `rxTemplates.layoutHint.${s}`]),
+  ...["marginTop", "marginBottom", "marginLeft", "marginRight"].map((s) => `rxTemplates.${s}`),
   ...["stamp", "signature"].map((s) => `admin.doctor.${s}`),
   ...[0, 1, 2, 3, 4, 5, 6].map((d) => `weekdays.${d}`),
   "accType.APARTMENT",
