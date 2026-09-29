@@ -16,7 +16,10 @@
     "postinstall": "prisma generate",
     "db:seed:demo": "tsx prisma/seed.ts --demo",
     "db:seed:reference": "tsx prisma/seed-reference.ts",
-    "db:reset-users": "tsx prisma/reset-users.ts"
+    "db:reset-users": "tsx prisma/reset-users.ts",
+    "vps:backup": "bash deploy/backup.sh",
+    "vps:restore": "bash deploy/restore.sh",
+    "vps:go-live": "bash deploy/go-live.sh"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

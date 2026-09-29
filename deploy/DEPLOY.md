@@ -96,7 +96,7 @@ cd lifedeux
 1. Dans `.env.production` : `PAYMENT_MOCK=false`, `STRIPE_SECRET_KEY=sk_live_…`.
 2. Stripe → Developers → Webhooks → ajouter l'endpoint `https://lifedeux.afdev.site/api/webhooks/stripe` avec les événements `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`.
 3. Copier le *signing secret* dans `STRIPE_WEBHOOK_SECRET`, puis relancer `./deploy/deploy.sh`.
-4. Avant l'ouverture au public : `SEED_DEMO=false`, puis supprimez tous les comptes de test avec `db:reset-users` (voir plus bas) : spécialités, médicaments, interventions et logements sont conservés.
+4. Avant l'ouverture au public, lance `./deploy/go-live.sh` (voir plus bas).
 
 ## Commandes utiles
 
@@ -105,24 +105,27 @@ C="docker compose --env-file .env.production -f docker-compose.prod.yml"
 $C ps                                  # état des services
 $C logs -f app                         # journaux de l'application (Ctrl+C pour quitter)
 $C restart app                         # redémarrer l'application
-
-# Sauvegarde de la base (à planifier, par exemple chaque nuit)
-$C exec -T db pg_dump -U lifedeux lifedeux | gzip > backup-$(date +%F).sql.gz
-
-# Restauration d'une sauvegarde
-gunzip -c backup-AAAA-MM-JJ.sql.gz | $C exec -T db psql -U lifedeux -d lifedeux
-
-# Données de référence seules (spécialités, interventions, médicaments) — sans risque, relançable
-$C exec -T app npm run db:seed:reference
-
-# Données de démo complètes (médecins de toutes spécialités, patients, consultations dans chaque état)
-$C exec -T app npm run db:seed:demo
-
-# Mise en production : supprime TOUS les utilisateurs et leurs données (réservations, consultations,
-# ordonnances, paiements…), garde spécialités, médicaments, interventions, logements et paramètres,
-# puis recrée l'admin défini dans .env.production. Faites une sauvegarde avant.
-$C exec -T app npm run db:reset-users -- --yes
 ```
+
+## Sauvegardes, restauration, ouverture au public
+
+À lancer depuis le dossier LifeDeux sur le VPS. Si Node.js est installé sur le VPS, `npm run vps:…` marche aussi. Sinon, utilise `./deploy/…`, qui ne demande que Docker.
+
+| Commande | Ce qu'elle fait |
+|---|---|
+| `./deploy/backup.sh` (`npm run vps:backup`) | Sauvegarde toute la base dans `backups/lifedeux-DATE_HEURE.sql.gz` ; garde les 30 dernières (`BACKUP_KEEP=60 ./deploy/backup.sh` pour en garder plus). L'app continue de tourner. |
+| `./deploy/restore.sh backups/lifedeux-….sql.gz` (`npm run vps:restore -- backups/…`) | Remet la base dans l'état de cette sauvegarde. Demande de taper `OUI` et fait d'abord une sauvegarde de l'état actuel. |
+| `./deploy/go-live.sh` (`npm run vps:go-live`) | **Ouverture au public** : demande `OUI`, sauvegarde, passe `SEED_DEMO=false`, supprime **tous** les comptes de test et leurs données, garde spécialités, médicaments, interventions, logements et paramètres, puis recrée l'admin de `.env.production`. |
+
+Sauvegarde automatique chaque nuit à 3 h (`crontab -e`, puis ajouter la ligne) :
+
+```bash
+0 3 * * * cd /CHEMIN/VERS/lifedeux && mkdir -p backups && ./deploy/backup.sh >> backups/backup.log 2>&1
+```
+
+Copie aussi de temps en temps le dossier `backups/` hors du VPS, par exemple avec `scp` depuis ton ordinateur.
+
+Ordre conseillé : `deploy.sh`, puis tu testes avec les comptes de démo. Quand tout est bon, tu lances `go-live.sh`, **une seule fois**. Ensuite, chaque mise à jour se fait avec `deploy.sh`.
 
 Repartir d'une base **vide** (efface toutes les données, irréversible) : `$C down -v` puis `./deploy/deploy.sh`.
 

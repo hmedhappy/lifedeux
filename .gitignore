@@ -45,3 +45,6 @@ next-env.d.ts
 /test-results
 /playwright-report
 !deploy/.env.production.example
+
+# database backups made on the server
+/backups/
