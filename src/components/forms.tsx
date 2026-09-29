@@ -1,10 +1,17 @@
 "use client";
 
-import { createContext, startTransition, useActionState, useContext, useEffect, useRef } from "react";
+import { createContext, startTransition, useActionState, useContext, useEffect, useRef, useSyncExternalStore } from "react";
 import { useFormStatus } from "react-dom";
 import { Button, Notice } from "./ui";
 import { useI18n } from "./i18n-provider";
 import type { ActionState } from "@/lib/action-state";
+
+const noopSubscribe = () => () => {};
+
+/** False during server rendering and before hydration, true once React runs in the browser. */
+function useHydrated(): boolean {
+  return useSyncExternalStore(noopSubscribe, () => true, () => false);
+}
 
 export function SubmitButton({
   children,
@@ -26,6 +33,7 @@ export function SubmitButton({
 }) {
   const status = useFormStatus();
   const actionPending = useContext(PendingContext);
+  const hydrated = useHydrated();
   const pending = status.pending || actionPending;
   const { t } = useI18n();
   return (
@@ -34,7 +42,8 @@ export function SubmitButton({
       variant={variant}
       size={size}
       className={className}
-      disabled={pending}
+      // Stays disabled until the page is interactive, so an early click is never lost without feedback.
+      disabled={pending || !hydrated}
       name={name}
       value={value}
       onClick={confirmMessage ? (e) => { if (!window.confirm(confirmMessage)) e.preventDefault(); } : undefined}
@@ -56,11 +65,13 @@ export function ActionForm({
   children,
   className,
   resetOnSuccess,
+  id,
 }: {
   action: (state: ActionState, formData: FormData) => Promise<ActionState>;
   children: React.ReactNode;
   className?: string;
   resetOnSuccess?: boolean;
+  id?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const formRef = useRef<HTMLFormElement>(null);
@@ -72,6 +83,7 @@ export function ActionForm({
 
   return (
     <form
+      id={id}
       ref={formRef}
       action={formAction}
       className={className}

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { ActionForm, ConfirmSubmit, SubmitButton } from "@/components/forms";
-import { OptionsForm, type StayOption } from "@/components/options-form";
+import { LiveOptionsSummary, OptionsForm, OptionsProvider, type OptionsConfig, type StayOption } from "@/components/options-form";
 import { JourneyStepper, StatusBadge, TrackingTimeline, journeyIndex } from "@/components/status";
 import { Avatar, Button, Container, LinkButton, Notice } from "@/components/ui";
 import { cancelBookingAction, chooseOptionsAction, editOptionsAction, startPaymentAction } from "@/actions/patient";
@@ -78,6 +78,23 @@ export default async function BookingPage({
     }));
   }
 
+  const optionsConfig: OptionsConfig | null =
+    booking.status === "CONFIRMED" && !booking.optionsChosen
+      ? {
+          stays: stayOptions,
+          currency: booking.currency,
+          nights: stay.nights,
+          operationPrice: booking.operationPrice,
+          transportPricePerPerson: settings.transportPricePerPerson,
+          maxCompanions: settings.maxCompanions,
+          initial: {
+            withTransport: booking.withTransport,
+            accommodationId: booking.accommodationId,
+            companions: booking.companions,
+          },
+        }
+      : null;
+
   const providers = availableProviders();
   const trackingTimes = Object.fromEntries(booking.trackingEvents.map((e) => [e.step, formatDateTime(e.createdAt, locale)]));
 
@@ -102,6 +119,7 @@ export default async function BookingPage({
         </div>
       )}
 
+      <Wrap config={optionsConfig}>
       <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_380px]">
         <div className="min-w-0 space-y-8">
           {requested && booking.status === "REQUESTED" && <Notice tone="success">{t("booking.requestSent")}</Notice>}
@@ -150,20 +168,7 @@ export default async function BookingPage({
                 })}
               </p>
               <div className="mt-6">
-                <OptionsForm
-                  action={chooseOptionsAction.bind(null, locale, booking.id)}
-                  stays={stayOptions}
-                  currency={booking.currency}
-                  nights={stay.nights}
-                  operationPrice={booking.operationPrice}
-                  transportPricePerPerson={settings.transportPricePerPerson}
-                  maxCompanions={settings.maxCompanions}
-                  initial={{
-                    withTransport: booking.withTransport,
-                    accommodationId: booking.accommodationId,
-                    companions: booking.companions,
-                  }}
-                />
+                <OptionsForm action={chooseOptionsAction.bind(null, locale, booking.id)} />
               </div>
             </section>
           )}
@@ -245,35 +250,47 @@ export default async function BookingPage({
               <Row label={t("booking.arrival")} value={formatDate(stay.arrivalDate, locale)} />
               <Row label={t("booking.departure")} value={formatDate(stay.departureDate, locale)} />
               <Row label={t("booking.recovery")} value={t("booking.nights", { n: booking.recoveryNights })} />
-              {booking.optionsChosen && (
-                <>
-                  <Row label={t("booking.travellers")} value={String(1 + booking.companionsCount)} />
-                  <Row label={t("booking.transfer")} value={booking.withTransport ? t("common.yes") : t("common.no")} />
-                  <Row label={t("booking.stay")} value={booking.accommodation?.title ?? t("common.no")} />
-                </>
-              )}
             </dl>
-            <dl className="space-y-2 border-t border-line pt-5 text-sm">
-              <Row label={t("price.operation")} value={money(booking.operationPrice)} />
-              {booking.optionsChosen && (
-                <>
-                  <Row label={t("price.transport", { n: 1 + booking.companionsCount })} value={money(booking.transportPrice)} />
-                  <Row label={t("price.stay", { n: booking.nights })} value={money(booking.accommodationPrice)} />
-                </>
-              )}
-              <div className="flex justify-between gap-4 border-t border-line pt-3 text-base font-semibold text-ink">
-                <dt>{t("price.total")}</dt>
-                <dd data-testid="booking-total">{money(booking.totalAmount)}</dd>
-              </div>
-            </dl>
+            {optionsConfig ? (
+              <LiveOptionsSummary />
+            ) : (
+              <>
+                {booking.optionsChosen && (
+                  <dl className="space-y-3 border-t border-line pt-5 text-sm">
+                    <Row label={t("booking.travellers")} value={String(1 + booking.companionsCount)} />
+                    <Row label={t("booking.transfer")} value={booking.withTransport ? t("common.yes") : t("common.no")} />
+                    <Row label={t("booking.stay")} value={booking.accommodation?.title ?? t("common.no")} />
+                  </dl>
+                )}
+                <dl className="space-y-2 border-t border-line pt-5 text-sm">
+                  <Row label={t("price.operation")} value={money(booking.operationPrice)} />
+                  {booking.optionsChosen && (
+                    <>
+                      <Row label={t("price.transport", { n: 1 + booking.companionsCount })} value={money(booking.transportPrice)} />
+                      <Row label={t("price.stay", { n: booking.nights })} value={money(booking.accommodationPrice)} />
+                    </>
+                  )}
+                  <div className="flex justify-between gap-4 border-t border-line pt-3 text-base font-semibold text-ink">
+                    <dt>{t("price.total")}</dt>
+                    <dd data-testid="booking-total">{money(booking.totalAmount)}</dd>
+                  </div>
+                </dl>
+              </>
+            )}
             <p className="text-xs text-muted">
               {t("booking.support", { phone: settings.supportPhone, email: settings.supportEmail })}
             </p>
           </div>
         </aside>
       </div>
+      </Wrap>
     </Container>
   );
+}
+
+/** Shares live option choices between the form and the sidebar while options are being chosen. */
+function Wrap({ config, children }: { config: OptionsConfig | null; children: React.ReactNode }) {
+  return config ? <OptionsProvider config={config}>{children}</OptionsProvider> : <>{children}</>;
 }
 
 function Row({ label, value }: { label: string; value: string }) {

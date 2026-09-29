@@ -126,7 +126,6 @@
     },
     "operation": "Intervention",
     "chooseSlot": "Choisissez votre créneau",
-    "chooseDay": "Choisir un jour",
     "pickTime": "Sélectionnez une heure.",
     "selected": "Créneau choisi : {date}",
     "noSlots": "Aucun créneau disponible pour le moment.",
@@ -135,7 +134,9 @@
     "requestButton": "Demander ce rendez-vous",
     "noChargeYet": "Vous ne serez pas débité maintenant.",
     "loginToBook": "Se connecter pour réserver",
-    "patientsOnly": "La réservation est réservée aux comptes patients."
+    "patientsOnly": "La réservation est réservée aux comptes patients.",
+    "prevMonth": "Mois précédent",
+    "nextMonth": "Mois suivant"
   },
   "stays": {
     "title": "Hébergements",

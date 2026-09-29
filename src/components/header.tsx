@@ -24,6 +24,9 @@ export function Logo({ locale, inverted = false }: { locale: Locale; inverted?: 
 export async function Header({ locale }: { locale: Locale }) {
   const t = getT(locale);
   const user = await getCurrentUser();
+  // Patients (and visitors, who are sent to login first) get "My bookings"; staff get their dashboard.
+  const homeLink = user ? homeFor(user.role) : "/account";
+  const homeLabel = !user || user.role === "PATIENT" ? t("nav.myBookings") : t("nav.dashboard");
 
   return (
     <header className="no-print sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur">
@@ -36,11 +39,31 @@ export async function Header({ locale }: { locale: Locale }) {
           <Link href={`/${locale}/stays`} className="rounded-full px-4 py-2 text-sm font-medium text-ink hover:bg-surface">
             {t("nav.stays")}
           </Link>
-          <Link href={`/${locale}#how`} className="rounded-full px-4 py-2 text-sm font-medium text-ink hover:bg-surface">
-            {t("nav.howItWorks")}
+          <Link
+            href={`/${locale}${homeLink}`}
+            className="rounded-full px-4 py-2 text-sm font-medium text-ink hover:bg-surface"
+            data-testid="nav-home-link"
+          >
+            {homeLabel}
           </Link>
         </nav>
         <div className="flex items-center gap-1">
+          <Link
+            href={`/${locale}#how`}
+            aria-label={t("nav.howItWorks")}
+            className="group relative flex h-10 w-10 items-center justify-center rounded-full text-ink hover:bg-surface focus-visible:outline-2 focus-visible:outline-ink"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 11v5M12 7.5v.5" strokeLinecap="round" />
+            </svg>
+            <span
+              role="tooltip"
+              className="pointer-events-none absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-ink px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-float transition group-hover:opacity-100 group-focus-visible:opacity-100"
+            >
+              {t("nav.howItWorks")}
+            </span>
+          </Link>
           <Suspense>
             <LanguageSwitcher />
           </Suspense>
@@ -67,8 +90,8 @@ export async function Header({ locale }: { locale: Locale }) {
               {user ? (
                 <>
                   <p className="px-4 py-2 text-xs text-muted">{user.email}</p>
-                  <Link href={`/${locale}${homeFor(user.role)}`} className="block px-4 py-2.5 text-sm font-semibold hover:bg-surface">
-                    {user.role === "PATIENT" ? t("nav.myBookings") : t("nav.dashboard")}
+                  <Link href={`/${locale}${homeLink}`} className="block px-4 py-2.5 text-sm font-semibold hover:bg-surface md:hidden">
+                    {homeLabel}
                   </Link>
                   <Link href={`/${locale}/doctors`} className="block px-4 py-2.5 text-sm hover:bg-surface md:hidden">
                     {t("nav.doctors")}

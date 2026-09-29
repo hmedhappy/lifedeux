@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { createContext, useContext, useState } from "react";
 import clsx from "clsx";
 import { formatMoney } from "@/lib/format";
 import { computeQuote } from "@/lib/pricing";
@@ -8,7 +8,7 @@ import type { ActionState } from "@/lib/action-state";
 import { ActionForm, SubmitButton } from "./forms";
 import { useI18n } from "./i18n-provider";
 import { Photo } from "./photo";
-import { Input } from "./ui";
+import { Button, Input } from "./ui";
 
 export type StayOption = {
   id: string;
@@ -25,17 +25,7 @@ export type StayOption = {
 
 type Companion = { firstName: string; lastName: string; passportNumber: string };
 
-export function OptionsForm({
-  action,
-  stays,
-  currency,
-  nights,
-  operationPrice,
-  transportPricePerPerson,
-  maxCompanions,
-  initial,
-}: {
-  action: (state: ActionState, formData: FormData) => Promise<ActionState>;
+export type OptionsConfig = {
   stays: StayOption[];
   currency: string;
   nights: number;
@@ -43,26 +33,88 @@ export function OptionsForm({
   transportPricePerPerson: number;
   maxCompanions: number;
   initial: { withTransport: boolean; accommodationId: string | null; companions: Companion[] };
-}) {
-  const { t, locale } = useI18n();
-  const [transport, setTransport] = useState(initial.withTransport);
-  const [stayId, setStayId] = useState<string | null>(initial.accommodationId);
-  const [count, setCount] = useState(initial.companions.length);
+};
 
-  const travellers = 1 + count;
-  const selected = stays.find((s) => s.id === stayId) ?? null;
+type OptionsState = ReturnType<typeof useOptionsState>;
+
+function useOptionsState(config: OptionsConfig) {
+  const [transport, setTransport] = useState(config.initial.withTransport);
+  const [stayId, setStayId] = useState<string | null>(config.initial.accommodationId);
+  const [count, setCount] = useState(config.initial.companions.length);
+  const selected = config.stays.find((s) => s.id === stayId) ?? null;
   const quote = computeQuote({
-    operationPrice,
+    operationPrice: config.operationPrice,
     withTransport: transport,
     companionsCount: count,
-    transportPricePerPerson,
+    transportPricePerPerson: config.transportPricePerPerson,
     accommodation: selected,
-    nights,
+    nights: config.nights,
   });
+  return { ...config, transport, setTransport, stayId, setStayId, count, setCount, selected, quote, travellers: 1 + count };
+}
+
+const OptionsContext = createContext<OptionsState | null>(null);
+
+/** Shares the options being chosen between the form and the live summary in the sidebar. */
+export function OptionsProvider({ config, children }: { config: OptionsConfig; children: React.ReactNode }) {
+  const state = useOptionsState(config);
+  return <OptionsContext.Provider value={state}>{children}</OptionsContext.Provider>;
+}
+
+function useOptions(): OptionsState {
+  const ctx = useContext(OptionsContext);
+  if (!ctx) throw new Error("OptionsForm must be rendered inside OptionsProvider");
+  return ctx;
+}
+
+export const OPTIONS_FORM_ID = "options-form";
+
+/** Sidebar receipt that follows every change made in the options form. */
+export function LiveOptionsSummary() {
+  const { t, locale } = useI18n();
+  const { quote, travellers, selected, nights, currency } = useOptions();
+  const money = (v: number) => formatMoney(v, currency, locale);
+  const row = (label: string, value: string, testId?: string) => (
+    <div className="flex justify-between gap-4">
+      <dt className="text-muted">{label}</dt>
+      <dd className="text-end font-medium text-ink" data-testid={testId}>
+        {value}
+      </dd>
+    </div>
+  );
+  return (
+    <>
+      <dl className="space-y-3 border-t border-line pt-5 text-sm" aria-live="polite">
+        {row(t("booking.travellers"), String(travellers), "live-travellers")}
+        {row(t("booking.transfer"), quote.withTransport ? t("common.yes") : t("common.no"))}
+        {row(t("booking.stay"), selected?.title ?? t("common.no"), "live-stay")}
+      </dl>
+      <dl className="space-y-2 border-t border-line pt-5 text-sm" aria-live="polite">
+        {row(t("price.operation"), money(quote.operationPrice))}
+        {row(t("price.transport", { n: travellers }), money(quote.transportPrice))}
+        {row(t("price.stay", { n: nights }), money(quote.accommodationPrice))}
+        <div className="flex justify-between gap-4 border-t border-line pt-3 text-base font-semibold text-ink">
+          <dt>{t("price.total")}</dt>
+          <dd data-testid="booking-total">{money(quote.totalAmount)}</dd>
+        </div>
+      </dl>
+      <Button type="submit" form={OPTIONS_FORM_ID} size="lg" className="w-full">
+        {t("options.continue")}
+      </Button>
+    </>
+  );
+}
+
+export function OptionsForm({ action }: { action: (state: ActionState, formData: FormData) => Promise<ActionState> }) {
+  const { t, locale } = useI18n();
+  const {
+    stays, currency, nights, transportPricePerPerson, maxCompanions, initial,
+    setTransport, stayId, setStayId, count, setCount, selected, quote, travellers,
+  } = useOptions();
   const money = (v: number) => formatMoney(v, currency, locale);
 
   return (
-    <ActionForm action={action} className="space-y-10">
+    <ActionForm action={action} className="space-y-10" id={OPTIONS_FORM_ID}>
       <section>
         <h3 className="text-lg font-semibold text-ink">{t("options.companionsTitle")}</h3>
         <p className="mt-1 text-sm text-muted">{t("options.companionsText", { n: maxCompanions })}</p>

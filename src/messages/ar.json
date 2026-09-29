@@ -126,7 +126,6 @@
     },
     "operation": "العملية",
     "chooseSlot": "اختر موعدك",
-    "chooseDay": "اختر يومًا",
     "pickTime": "اختر ساعة.",
     "selected": "الموعد المختار: {date}",
     "noSlots": "لا توجد مواعيد متاحة حاليًا.",
@@ -135,7 +134,9 @@
     "requestButton": "طلب هذا الموعد",
     "noChargeYet": "لن يتم خصم أي مبلغ الآن.",
     "loginToBook": "سجّل الدخول للحجز",
-    "patientsOnly": "الحجز متاح لحسابات المرضى فقط."
+    "patientsOnly": "الحجز متاح لحسابات المرضى فقط.",
+    "prevMonth": "الشهر السابق",
+    "nextMonth": "الشهر التالي"
   },
   "stays": {
     "title": "الإقامات",

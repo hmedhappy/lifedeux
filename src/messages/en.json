@@ -126,7 +126,6 @@
     },
     "operation": "Procedure",
     "chooseSlot": "Choose your slot",
-    "chooseDay": "Choose a day",
     "pickTime": "Select a time.",
     "selected": "Selected slot: {date}",
     "noSlots": "No slot available at the moment.",
@@ -135,7 +134,9 @@
     "requestButton": "Request this appointment",
     "noChargeYet": "You won't be charged yet.",
     "loginToBook": "Log in to book",
-    "patientsOnly": "Booking is available to patient accounts only."
+    "patientsOnly": "Booking is available to patient accounts only.",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month"
   },
   "stays": {
     "title": "Stays",

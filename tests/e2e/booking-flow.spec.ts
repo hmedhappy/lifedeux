@@ -162,7 +162,11 @@ test("patient chooses companions, a house, and pays", async () => {
 
   // operation 5000 + transfer 2 x 80 + house 110 x 7 nights = 5930
   await expect(patient.getByTestId("quote-total")).toHaveText(/^5\s930\s€$/);
-  await patient.getByRole("button", { name: "Continuer vers le paiement" }).click();
+  // The receipt in the sidebar follows the choices live, before anything is saved.
+  await expect(patient.getByTestId("booking-total")).toHaveText(/^5\s930\s€$/);
+  await expect(patient.getByTestId("live-travellers")).toHaveText("2");
+  await expect(patient.getByTestId("live-stay")).toHaveText(/Maison avec jardin/);
+  await patient.getByRole("button", { name: "Continuer vers le paiement" }).last().click();
 
   await expect(patient.getByRole("heading", { name: "Paiement" })).toBeVisible();
   await expect(patient.getByTestId("booking-total")).toContainText("5");
