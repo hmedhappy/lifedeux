@@ -54,6 +54,10 @@ L'admin est celui défini par `ADMIN_EMAIL` / `ADMIN_PASSWORD`. La commande peut
 
 ## Mise en production
 
+**Sur un VPS avec Docker** (base, application, HTTPS automatique et tâche horaire en une commande) : voir [`deploy/DEPLOY.md`](deploy/DEPLOY.md).
+
+Autres hébergements :
+
 1. **Base de données** : créez une base PostgreSQL (Neon, Supabase, Railway, RDS…) et mettez son URL dans `DATABASE_URL`.
 2. **Variables d'environnement** : voir [`.env.example`](.env.example). Au minimum : `DATABASE_URL`, `AUTH_SECRET` (`openssl rand -base64 48`), `APP_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `CRON_SECRET`, et `PAYMENT_MOCK="false"`.
 3. **Stripe** :

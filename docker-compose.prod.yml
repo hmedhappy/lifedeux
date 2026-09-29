@@ -1,0 +1,65 @@
+# Production stack for a VPS. Run it through deploy/deploy.sh, which passes
+# --env-file .env.production so the ${...} values below are filled in.
+name: lifedeux
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: lifedeux
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.production}
+      POSTGRES_DB: lifedeux
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lifedeux -d lifedeux"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      DATABASE_URL: postgresql://lifedeux:${POSTGRES_PASSWORD}@db:5432/lifedeux
+    depends_on:
+      db:
+        condition: service_healthy
+    # Only reachable from the VPS itself; the reverse proxy (Caddy below, or your nginx) faces the internet.
+    ports:
+      - "127.0.0.1:${APP_PORT:-3010}:3000"
+
+  # Releases unpaid slots every hour (calls the protected /api/cron/expire endpoint).
+  cron:
+    image: curlimages/curl:8.10.1
+    restart: unless-stopped
+    env_file: .env.production
+    depends_on:
+      - app
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - 'while true; do sleep 3600; curl -fsS -H "Authorization: Bearer $$CRON_SECRET" http://app:3000/api/cron/expire || true; done'
+
+  # Automatic HTTPS (Let's Encrypt). Enabled with USE_CADDY=1; skip it if nginx already owns ports 80/443.
+  caddy:
+    image: caddy:2
+    profiles: ["caddy"]
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env.production}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
