@@ -1,13 +1,19 @@
 {
   "common": {
-    "tagline": "Votre intervention en Tunisie, entièrement prise en charge",
+    "tagline": "Consultations en ligne et interventions en Tunisie",
     "loading": "Chargement…",
     "save": "Enregistrer",
     "cancel": "Annuler",
     "seeAll": "Tout voir",
     "yes": "Oui",
     "no": "Non",
-    "language": "Langue"
+    "language": "Langue",
+    "add": "Ajouter",
+    "close": "Fermer",
+    "copied": "Copié",
+    "copy": "Copier",
+    "delete": "Supprimer",
+    "search": "Rechercher"
   },
   "nav": {
     "doctors": "Médecins",
@@ -21,7 +27,7 @@
     "menu": "Menu"
   },
   "footer": {
-    "about": "LifeDeux organise votre intervention en Tunisie : rendez-vous, transfert depuis l'aéroport, hébergement et suivi.",
+    "about": "LifeDeux vous met en relation avec des médecins vérifiés : téléconsultation avec ordonnance certifiée, ou intervention avec transfert, hébergement et suivi.",
     "platform": "Plateforme",
     "proAccess": "Espace médecins et équipe",
     "privacyTitle": "Confidentialité",
@@ -29,45 +35,27 @@
     "rights": "Tous droits réservés"
   },
   "home": {
-    "badge": "Chirurgiens spécialisés · Tunisie",
-    "heroTitle": "Une intervention rare, une prise en charge complète.",
-    "heroSubtitle": "Choisissez votre chirurgien, réservez votre créneau et laissez-nous organiser le reste : accueil à l'aéroport, logement pendant la convalescence et retour.",
-    "searchLabel": "Intervention",
+    "badge": "Médecins vérifiés · Tunisie",
+    "heroTitle": "Consultez un médecin en ligne, ou organisez votre intervention en Tunisie.",
+    "heroSubtitle": "Plus de 40 spécialités. Téléconsultation par chat avec ordonnance certifiée, ou parcours chirurgical complet avec transfert et hébergement.",
+    "searchLabel": "Spécialité ou médecin",
     "searchButton": "Rechercher",
     "facts": {
-      "care": {
-        "title": "De bout en bout",
-        "text": "Aéroport, logement, clinique"
-      },
       "languages": {
         "title": "3 langues",
         "text": "Français, anglais, arabe"
       },
       "privacy": {
-        "title": "Discrétion",
-        "text": "Données protégées"
-      }
-    },
-    "services": {
-      "appointment": {
-        "title": "Rendez-vous",
-        "text": "Créneaux en temps réel, confirmés par le chirurgien."
+        "title": "Confidentiel",
+        "text": "Échanges et documents privés"
       },
-      "transfer": {
-        "title": "Transfert",
-        "text": "Accueil à l'aéroport et navette jusqu'au logement."
-      },
-      "stay": {
-        "title": "Hébergement",
-        "text": "Appartements et maisons sélectionnés pour la convalescence."
-      },
-      "payment": {
-        "title": "Paiement sécurisé",
-        "text": "Paiement en ligne, uniquement après confirmation."
+      "specialties": {
+        "title": "{n} spécialités",
+        "text": "Des généralistes aux chirurgiens"
       }
     },
     "howTitle": "Comment ça marche",
-    "howSubtitle": "Cinq étapes simples, de la réservation à votre retour.",
+    "howSubtitle": "Deux parcours, une même exigence de qualité.",
     "stepLabel": "Étape {n}",
     "steps": {
       "1": {
@@ -91,13 +79,53 @@
         "text": "Présentez-la à votre arrivée : nous nous occupons du reste."
       }
     },
-    "doctorsTitle": "Nos chirurgiens",
-    "doctorsSubtitle": "Des spécialistes expérimentés, sélectionnés par notre équipe.",
+    "doctorsTitle": "Des médecins disponibles",
+    "doctorsSubtitle": "Profils vérifiés, disponibilités en temps réel.",
     "staysTitle": "Hébergements pour votre convalescence",
     "staysSubtitle": "Confortables, proches des cliniques, transfert inclus.",
     "ctaTitle": "Prêt à planifier votre intervention ?",
     "ctaText": "Aucun paiement n'est demandé avant la confirmation de votre chirurgien.",
-    "ctaButton": "Trouver un chirurgien"
+    "ctaButton": "Trouver un chirurgien",
+    "searchPlaceholder": "Cardiologue, psychologue, Dr Ben Salah…",
+    "ctaConsult": "Consulter en ligne",
+    "ctaSurgery": "Organiser une intervention",
+    "preview": {
+      "doctor": "Dr Amira Trabelsi · Dermatologie",
+      "m1": "Bonjour, pouvez-vous m'envoyer une photo de la zone concernée ?",
+      "m2": "Bien sûr, la voici.",
+      "certified": "certifiée QR"
+    },
+    "specialtiesTitle": "Trouvez la bonne spécialité",
+    "specialtiesSubtitle": "Choisissez une spécialité, puis le médecin qui vous convient.",
+    "allSpecialties": "Toutes les spécialités ({n})",
+    "consultTrack": {
+      "title": "Consultation en ligne",
+      "text": "Depuis chez vous, par chat texte et photo."
+    },
+    "surgeryTrack": {
+      "title": "Intervention en Tunisie",
+      "text": "Chirurgie, transfert, hébergement et suivi."
+    },
+    "consultSteps": {
+      "1": {
+        "title": "Choisissez",
+        "text": "Une spécialité, puis un médecin disponible en ligne."
+      },
+      "2": {
+        "title": "Réservez",
+        "text": "Le médecin accepte le créneau, vous payez ensuite en ligne."
+      },
+      "3": {
+        "title": "Consultez",
+        "text": "À l'heure prévue, échangez par chat et envoyez des photos."
+      },
+      "4": {
+        "title": "Recevez votre ordonnance",
+        "text": "Un PDF certifié par QR code, à présenter en pharmacie."
+      }
+    },
+    "proTitle": "Vous êtes médecin ?",
+    "proText": "Rejoignez LifeDeux sur invitation d'un confrère super-médecin, ou écrivez-nous à {email}."
   },
   "doctors": {
     "title": "Chirurgiens",
@@ -108,7 +136,15 @@
     "experience": "{n} ans d'expérience",
     "nextSlot": "Prochain créneau : {date}",
     "noSlotSoon": "Pas de créneau pour le moment",
-    "from": "À partir de"
+    "from": "À partir de",
+    "allDoctors": "Tous les médecins",
+    "surgeons": "Chirurgiens disponibles",
+    "resultsFor": "Résultats pour « {q} »",
+    "found": "{n} médecin(s) trouvé(s)",
+    "searchPlaceholder": "Nom, ville, clinique…",
+    "online": "En ligne",
+    "surgery": "Chirurgie",
+    "consultFrom": "Consultation"
   },
   "doctor": {
     "experience": "Expérience",
@@ -136,7 +172,20 @@
     "loginToBook": "Se connecter pour réserver",
     "patientsOnly": "La réservation est réservée aux comptes patients.",
     "prevMonth": "Mois précédent",
-    "nextMonth": "Mois suivant"
+    "nextMonth": "Mois suivant",
+    "chooseService": "Que souhaitez-vous ?",
+    "consultTitle": "Consultation en ligne",
+    "consultLabel": "Consultation en ligne · {n} min",
+    "consultText": "Par chat texte et photo. Ordonnance certifiée envoyée dans la conversation si nécessaire.",
+    "consultPrice": "Consultation",
+    "noService": "Ce médecin ne propose pas encore de rendez-vous en ligne.",
+    "reason": "Motif de consultation",
+    "reasonHint": "Facultatif, visible uniquement par le médecin.",
+    "requestConsult": "Demander la consultation",
+    "service": {
+      "consultation": "Consultation en ligne",
+      "operation": "Intervention"
+    }
   },
   "stays": {
     "title": "Hébergements",
@@ -193,7 +242,9 @@
     "newBooking": "Nouvelle réservation",
     "empty": "Aucune réservation",
     "emptyText": "Choisissez un chirurgien et un créneau pour commencer.",
-    "findDoctor": "Trouver un chirurgien"
+    "findDoctor": "Trouver un chirurgien",
+    "consultations": "Mes consultations en ligne",
+    "operations": "Mes interventions"
   },
   "status": {
     "REQUESTED": "En attente de confirmation",
@@ -228,7 +279,8 @@
     "PATIENT": "Patient",
     "DOCTOR": "Médecin",
     "ADMIN": "Administrateur",
-    "AGENT": "Agent terrain"
+    "AGENT": "Agent terrain",
+    "SUPER_DOCTOR": "Super-médecin"
   },
   "weekdays": {
     "0": "Dim",
@@ -358,7 +410,9 @@
       "requests": "Demandes",
       "patients": "Mes patients",
       "slots": "Créneaux",
-      "payouts": "Versements"
+      "payouts": "Versements",
+      "consultations": "Consultations",
+      "referrals": "Parrainage"
     },
     "requestsTitle": "Demandes de rendez-vous",
     "requestsSubtitle": "Confirmez ou refusez les demandes reçues.",
@@ -401,7 +455,16 @@
     "payoutsTitle": "Mes versements",
     "payoutsSubtitle": "Montants dus par LifeDeux et versements en espèces reçus.",
     "refuseConfirm": "Refuser la demande {reference} de {name} ? Le patient sera prévenu et le créneau libéré.",
-    "confirmFor": "Confirmer pour {name}"
+    "confirmFor": "Confirmer pour {name}",
+    "tooLate": "Trop tard pour accepter {reference} : le rendez-vous est trop proche pour que le patient paie.",
+    "service": "Service",
+    "acceptConsult": "Accepter la consultation de {name}",
+    "consultationsTitle": "Consultations en ligne",
+    "consultationsSubtitle": "Vos consultations acceptées, en cours et terminées.",
+    "upcoming": "À venir",
+    "past": "Terminées",
+    "noConsultations": "Aucune consultation pour l'instant.",
+    "slotKind": "Type de créneau"
   },
   "payouts": {
     "earned": "Total dû",
@@ -425,7 +488,10 @@
       "operations": "Interventions",
       "payouts": "Versements",
       "team": "Équipe",
-      "settings": "Paramètres"
+      "settings": "Paramètres",
+      "consultations": "Consultations",
+      "specialties": "Spécialités",
+      "medications": "Médicaments"
     },
     "dashboardTitle": "Vue d'ensemble",
     "stats": {
@@ -449,7 +515,10 @@
       "total": "Total",
       "status": "Statut",
       "freeSlots": "Créneaux libres",
-      "account": "Compte"
+      "account": "Compte",
+      "activity": "Activité",
+      "fee": "dont médecin {amount}",
+      "messages": "{n} message(s)"
     },
     "bookingsTitle": "Réservations",
     "searchBookings": "Référence, nom ou email",
@@ -502,7 +571,24 @@
       "price": "Prix patient",
       "fee": "Part médecin",
       "createAndInvite": "Créer et envoyer l'invitation",
-      "photoUpload": "Envoyer une photo"
+      "photoUpload": "Envoyer une photo",
+      "specialtyCategory": "Spécialité",
+      "specialtyHint": "Titre affiché, ex. « Chirurgien urologue ».",
+      "license": "N° d'inscription à l'Ordre",
+      "consultation": "Consultation en ligne",
+      "consultationHint": "Laissez le prix vide pour appliquer le tarif de la spécialité ; la part médecin est de 70 % par défaut.",
+      "offersConsultation": "Propose la consultation en ligne",
+      "defaultPrice": "Tarif spécialité",
+      "minutes": "Durée (min)",
+      "signatureTitle": "Cachet et signature",
+      "signatureHint": "Images PNG ou JPEG, privées : elles n'apparaissent que sur les ordonnances. Le cachet est obligatoire pour prescrire.",
+      "stamp": "Cachet",
+      "signature": "Signature",
+      "replaceHint": "Choisissez un fichier pour remplacer l'image actuelle.",
+      "superDoctor": "Super-médecin",
+      "superDoctorHint": "Peut inviter d'autres médecins avec un lien de parrainage.",
+      "superBadge": "Super-médecin",
+      "noStamp": "sans cachet"
     },
     "operationsTitle": "Interventions",
     "operationsSubtitle": "Catalogue des interventions proposées sur la plateforme.",
@@ -559,7 +645,27 @@
       "disabled": "Non configuré",
       "mockWarning": "Le paiement de test est actif. Désactivez PAYMENT_MOCK en production."
     },
-    "photoUploadHint": "JPEG, PNG ou WebP. Les images sont redimensionnées automatiquement."
+    "photoUploadHint": "JPEG, PNG ou WebP. Les images sont redimensionnées automatiquement.",
+    "consultationsTitle": "Consultations en ligne",
+    "consultationsSubtitle": "Toutes les téléconsultations de la plateforme.",
+    "specialtiesTitle": "Spécialités",
+    "specialtiesSubtitle": "Tarif de consultation par défaut et visibilité de chaque spécialité.",
+    "medicationsTitle": "Médicaments",
+    "medicationsSubtitle": "{n} médicaments dans le référentiel utilisé pour les ordonnances.",
+    "addMedication": "Ajouter un médicament",
+    "medicationAdded": "{name} a été ajouté.",
+    "specialty": {
+      "name": "Spécialité",
+      "price": "Consultation (TND)"
+    },
+    "medication": {
+      "name": "Nom commercial",
+      "dci": "DCI",
+      "strength": "Dosage",
+      "form": "Forme",
+      "formHint": "Comprimé, sirop…",
+      "deleteConfirm": "Supprimer {name} du référentiel ?"
+    }
   },
   "scan": {
     "title": "Scan & suivi",
@@ -621,7 +727,12 @@
     "retry": "Réessayer",
     "resetInvalid": "Ce lien est invalide ou a expiré.",
     "imageInvalid": "Format d'image non accepté (JPEG, PNG ou WebP).",
-    "imageTooLarge": "Image trop lourde (3 Mo maximum)."
+    "imageTooLarge": "Image trop lourde (3 Mo maximum).",
+    "stampMissing": "Ajoutez d'abord votre cachet : il est obligatoire pour prescrire.",
+    "prescriptionInvalid": "Complétez chaque ligne : médicament, dose, fréquence et durée.",
+    "referralInvalid": "Ce lien de parrainage n'est pas valide.",
+    "noService": "Activez la consultation en ligne ou au moins une intervention.",
+    "medicationExists": "Ce médicament existe déjà."
   },
   "email": {
     "invite": {
@@ -671,6 +782,134 @@
       "title": "Bonjour {name}",
       "body": "Vous avez demandé à changer votre mot de passe LifeDeux. Ce lien est valable 1 heure. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.",
       "cta": "Choisir un nouveau mot de passe"
+    },
+    "consultConfirmed": {
+      "subject": "Consultation acceptée — {reference}",
+      "title": "Bonne nouvelle {name} !",
+      "body": "Votre consultation en ligne du {date} est acceptée. Réglez-la avant le {deadline} pour garder votre créneau.",
+      "cta": "Payer ma consultation"
+    },
+    "consultPaid": {
+      "subject": "Consultation confirmée — {reference}",
+      "title": "C'est confirmé, {name}",
+      "body": "Nous avons reçu votre paiement. Votre consultation aura lieu le {date} ; la conversation s'ouvrira quelques minutes avant.",
+      "cta": "Ouvrir ma consultation"
+    },
+    "prescription": {
+      "subject": "Votre ordonnance {reference}",
+      "title": "Bonjour {name}",
+      "body": "Votre médecin vous a envoyé une ordonnance certifiée ({reference}). Téléchargez-la depuis la conversation et présentez-la en pharmacie.",
+      "cta": "Voir mon ordonnance"
     }
+  },
+  "slotKind": {
+    "CONSULTATION": "Consultation en ligne",
+    "OPERATION": "Intervention"
+  },
+  "specialties": {
+    "title": "Toutes les spécialités",
+    "subtitle": "Choisissez une spécialité pour voir les médecins disponibles en consultation en ligne ou pour une intervention.",
+    "searchPlaceholder": "Rechercher une spécialité…",
+    "searchDoctors": "Rechercher un médecin",
+    "count": "{n} spécialités",
+    "doctors": "{n} médecin(s)",
+    "doctorCount": "{n} médecin(s)",
+    "soon": "Bientôt disponible",
+    "none": "Aucune spécialité ne correspond. Essayez de rechercher un médecin.",
+    "all": "Toutes les spécialités"
+  },
+  "consult": {
+    "title": "Consultation en ligne",
+    "short": "Consultation",
+    "requestSent": "Votre demande a été envoyée au médecin.",
+    "requestedTitle": "En attente d'acceptation",
+    "requestedText": "{doctor} doit accepter ce créneau. Vous serez prévenu(e) par email, puis vous pourrez payer.",
+    "confirmedTitle": "Créneau accepté",
+    "confirmedText": "{doctor} a accepté votre consultation. Réglez-la pour la garantir.",
+    "expiredText": "Le délai de paiement est dépassé et le créneau a été libéré.",
+    "cancelledText": "Cette consultation a été annulée.",
+    "cancel": "Annuler la consultation",
+    "cancelConfirm": "Annuler cette consultation ?",
+    "waitingText": "Votre consultation aura lieu le {date}. La conversation s'ouvrira {minutes} minutes avant.",
+    "closedText": "La consultation est terminée. La conversation reste consultable.",
+    "awaitingPayment": "Le patient n'a pas encore payé. La conversation s'ouvrira après le paiement.",
+    "when": "Date",
+    "duration": "Durée",
+    "minutes": "{n} min",
+    "mode": "Format",
+    "modeChat": "Chat texte et photo",
+    "reason": "Motif",
+    "howChat": "Échange par chat texte et photo. Appel audio et vidéo bientôt disponibles.",
+    "howOpens": "La conversation s'ouvre {minutes} minutes avant l'heure prévue.",
+    "end": "Terminer la consultation",
+    "endConfirm": "Terminer la consultation ? La conversation passera en lecture seule."
+  },
+  "chat": {
+    "title": "Conversation",
+    "live": "En ligne",
+    "waiting": "Pas encore ouverte",
+    "closed": "Consultation terminée",
+    "call": "Appel audio",
+    "video": "Appel vidéo",
+    "soon": "bientôt disponible",
+    "empty": "Dites bonjour pour commencer la consultation.",
+    "waitingText": "La conversation s'ouvrira peu avant l'heure du rendez-vous.",
+    "image": "Photo",
+    "prescription": "Ordonnance",
+    "download": "Télécharger le PDF",
+    "attach": "Envoyer une photo",
+    "placeholder": "Écrivez votre message…",
+    "closedPlaceholder": "La conversation n'est pas ouverte",
+    "send": "Envoyer",
+    "sendFailed": "Le message n'a pas pu être envoyé."
+  },
+  "rx": {
+    "title": "Ordonnance",
+    "search": "Rechercher un médicament (nom ou DCI)…",
+    "addFree": "Ajouter une ligne libre",
+    "empty": "Recherchez un médicament ou ajoutez une ligne libre.",
+    "medication": "Médicament",
+    "dosage": "Dose",
+    "frequency": "Fréquence",
+    "duration": "Durée",
+    "instructions": "Instructions (facultatif)",
+    "notes": "Remarques pour le patient (facultatif)",
+    "remove": "Retirer",
+    "preview": "Aperçu",
+    "send": "Signer et envoyer",
+    "previewFirst": "Vérifiez l'aperçu avant l'envoi : une ordonnance envoyée ne peut plus être modifiée.",
+    "sent": "Ordonnance envoyée au patient.",
+    "stampMissing": "Aucun cachet n'est enregistré sur votre profil. Contactez l'administrateur pour pouvoir rédiger des ordonnances.",
+    "count": "{n} ordonnance(s)"
+  },
+  "verify": {
+    "title": "Vérification d'ordonnance",
+    "ok": "Ordonnance authentique",
+    "okText": "Cette ordonnance a été émise par LifeDeux et son contenu n'a pas été modifié.",
+    "bad": "Ordonnance introuvable ou modifiée",
+    "badText": "Nous ne pouvons pas confirmer ce document. Ne le délivrez pas sans vérification auprès du médecin.",
+    "doctor": "Médecin",
+    "issuedAt": "Émise le",
+    "patient": "Patient",
+    "fingerprint": "Empreinte",
+    "items": "Prescription"
+  },
+  "referral": {
+    "title": "Parrainage",
+    "subtitle": "Invitez des confrères : ils rejoignent LifeDeux immédiatement grâce à votre lien.",
+    "yourLink": "Votre lien de parrainage",
+    "code": "Code : {code}",
+    "shareText": "Rejoignez-moi sur LifeDeux pour vos consultations en ligne : {link}",
+    "listTitle": "Médecins parrainés ({n})",
+    "empty": "Aucun médecin parrainé pour l'instant.",
+    "joined": "Inscrit le {date}",
+    "consultations": "{n} consultation(s)",
+    "joinTitle": "Rejoindre LifeDeux",
+    "joinSubtitle": "Créez votre compte médecin. Il est actif immédiatement.",
+    "invitedBy": "Invité(e) par",
+    "stampHint": "PNG ou JPEG. Nécessaire pour rédiger des ordonnances.",
+    "consent": "Je certifie être inscrit(e) à l'Ordre des médecins et j'accepte les conditions d'utilisation.",
+    "joinButton": "Créer mon compte médecin",
+    "welcome": "Bienvenue sur LifeDeux ! Ajoutez vos premiers créneaux pour recevoir des patients."
   }
 }

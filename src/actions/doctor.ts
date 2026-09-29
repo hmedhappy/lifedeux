@@ -12,10 +12,11 @@ import { toLocale } from "@/lib/i18n";
 import { sendTemplate } from "@/lib/mail";
 import { getSettings } from "@/lib/settings";
 import { advanceTracking } from "@/lib/tracking-server";
+import { isDoctorRole } from "@/lib/roles";
 
 async function currentDoctor() {
   const user = await getCurrentUser();
-  if (!user || user.role !== "DOCTOR") return null;
+  if (!user || !isDoctorRole(user.role)) return null;
   const doctor = await db.doctor.findUnique({ where: { userId: user.id } });
   return doctor ? { user, doctor } : null;
 }
@@ -149,8 +150,9 @@ export async function addSlotsAction(localeRaw: string, _: ActionState, formData
   }
   if (dates.length === 0) return fail("errors.noSlotsCreated");
 
+  const kind = formData.get("kind") === "CONSULTATION" ? "CONSULTATION" : "OPERATION";
   const created = await db.slot.createMany({
-    data: dates.map((startsAt) => ({ doctorId: me.doctor.id, startsAt })),
+    data: dates.map((startsAt) => ({ doctorId: me.doctor.id, startsAt, kind })),
     skipDuplicates: true,
   });
   revalidatePath(`/${locale}/doctor/slots`);
@@ -162,6 +164,6 @@ export async function deleteSlotAction(localeRaw: string, slotId: string): Promi
   const me = await currentDoctor();
   if (!me) return;
   // Only free slots that were never booked can be removed.
-  await db.slot.deleteMany({ where: { id: slotId, doctorId: me.doctor.id, status: "FREE", bookings: { none: {} } } });
+  await db.slot.deleteMany({ where: { id: slotId, doctorId: me.doctor.id, status: "FREE", bookings: { none: {} }, consultations: { none: {} } } });
   revalidatePath(`/${locale}/doctor/slots`);
 }

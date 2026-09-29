@@ -13,9 +13,10 @@ export default async function EditDoctorPage({ params }: { params: Promise<{ loc
   const locale = toLocale(raw);
   const t = getT(locale);
   await requireRole(locale, ["ADMIN"]);
-  const [doctor, operations] = await Promise.all([
+  const [doctor, operations, specialties] = await Promise.all([
     db.doctor.findUnique({ where: { id }, include: { user: true, operations: true } }),
     db.operation.findMany({ orderBy: { createdAt: "asc" } }),
+    db.specialty.findMany({ orderBy: { sortOrder: "asc" } }),
   ]);
   if (!doctor) notFound();
 
@@ -42,6 +43,7 @@ export default async function EditDoctorPage({ params }: { params: Promise<{ loc
           t={t}
           locale={locale}
           operations={operations}
+          specialties={specialties}
           doctor={doctor}
         />
       </Card>

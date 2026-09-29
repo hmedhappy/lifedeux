@@ -13,8 +13,8 @@ import { toLocale } from "@/lib/i18n";
 import { sendTemplate } from "@/lib/mail";
 import { stripeClient } from "@/lib/payments/stripe";
 import { appUrl } from "@/lib/settings";
-import { randomToken } from "@/lib/tokens";
-import { isPhotoRef, saveUploadedImages } from "@/lib/images";
+import { randomToken, referralCode } from "@/lib/tokens";
+import { IMAGE_PATH_PREFIX, isPhotoRef, saveUploadedImages } from "@/lib/images";
 
 async function currentAdmin() {
   const user = await getCurrentUser();
@@ -72,7 +72,40 @@ const doctorSchema = z.object({
     .refine((v) => v === null || isPhotoRef(v)),
   yearsOfExperience: z.coerce.number().int().min(0).max(70),
   locale: z.enum(["fr", "en", "ar"]),
+  specialtyId: z.string().trim().min(1).max(40),
+  licenseNumber: optionalText(60),
+  consultationMinutes: z.coerce.number().int().min(10).max(120).default(30),
 });
+
+type DoctorExtras = {
+  offersConsultation: boolean;
+  consultationPrice: number | null;
+  consultationFee: number | null;
+  superDoctor: boolean;
+};
+
+/** Consultation pricing is optional: empty fields fall back to the specialty defaults. */
+function readConsultation(formData: FormData): DoctorExtras | null {
+  const offersConsultation = formData.get("offersConsultation") === "on";
+  const rawPrice = String(formData.get("consultationPrice") ?? "").trim();
+  const rawFee = String(formData.get("consultationFee") ?? "").trim();
+  const consultationPrice = rawPrice ? parseMoneyToCents(rawPrice) : null;
+  const consultationFee = rawFee ? parseMoneyToCents(rawFee) : null;
+  if ((rawPrice && !consultationPrice) || (rawFee && consultationFee === null)) return null;
+  if (consultationPrice !== null && consultationFee !== null && consultationFee > consultationPrice) return null;
+  return { offersConsultation, consultationPrice, consultationFee, superDoctor: formData.get("superDoctor") === "on" };
+}
+
+/** Stamp and signature stay private: they only ever appear inside prescriptions. */
+async function readSignatureImages(formData: FormData) {
+  const opts = { private: true, types: ["image/png", "image/jpeg"] } as const;
+  const stamp = await saveUploadedImages(formData, "stampFile", 1, opts);
+  if ("error" in stamp) return stamp;
+  const signature = await saveUploadedImages(formData, "signatureFile", 1, opts);
+  if ("error" in signature) return signature;
+  const id = (paths: string[]) => (paths[0] ? paths[0].slice(IMAGE_PATH_PREFIX.length) : undefined);
+  return { stampImageId: id(stamp.paths), signatureImageId: id(signature.paths) };
+}
 
 async function readPricing(formData: FormData) {
   const operations = await db.operation.findMany();
@@ -94,10 +127,15 @@ export async function createDoctorAction(localeRaw: string, _: ActionState, form
   const email = z.string().trim().toLowerCase().email().safeParse(formData.get("email"));
   if (!parsed.success || !email.success) return fail("errors.missingFields");
   const pricing = await readPricing(formData);
-  if (!pricing || pricing.length === 0) return fail("errors.pricing");
+  const extras = readConsultation(formData);
+  if (!pricing || !extras) return fail("errors.pricing");
+  if (pricing.length === 0 && !extras.offersConsultation) return fail("errors.noService");
+  if (!(await db.specialty.findUnique({ where: { id: parsed.data.specialtyId } }))) return fail("errors.missingFields");
   if (await db.user.findUnique({ where: { email: email.data } })) return fail("errors.emailTaken");
   const upload = await saveUploadedImages(formData, "photoFile", 1);
   if ("error" in upload) return fail(upload.error);
+  const signatures = await readSignatureImages(formData);
+  if ("error" in signatures) return fail(signatures.error);
 
   const d = { ...parsed.data, photoUrl: upload.paths[0] ?? parsed.data.photoUrl };
   const user = await db.user.create({
@@ -106,11 +144,19 @@ export async function createDoctorAction(localeRaw: string, _: ActionState, form
       firstName: d.firstName,
       lastName: d.lastName,
       phone: d.phone,
-      role: "DOCTOR",
+      role: extras.superDoctor ? "SUPER_DOCTOR" : "DOCTOR",
       locale: d.locale,
       doctor: {
         create: {
           specialty: d.specialty,
+          specialtyId: d.specialtyId,
+          licenseNumber: d.licenseNumber,
+          consultationMinutes: d.consultationMinutes,
+          offersConsultation: extras.offersConsultation,
+          consultationPrice: extras.consultationPrice,
+          consultationFee: extras.consultationFee,
+          referralCode: extras.superDoctor ? referralCode() : null,
+          ...signatures,
           bio: d.bio,
           languages: list(formData.get("languages")),
           clinicName: d.clinicName,
@@ -140,23 +186,44 @@ export async function updateDoctorAction(
   const parsed = doctorSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return fail("errors.missingFields");
   const pricing = await readPricing(formData);
-  if (!pricing || pricing.length === 0) return fail("errors.pricing");
-  const doctor = await db.doctor.findUnique({ where: { id: doctorId } });
+  const extras = readConsultation(formData);
+  if (!pricing || !extras) return fail("errors.pricing");
+  if (pricing.length === 0 && !extras.offersConsultation) return fail("errors.noService");
+  const doctor = await db.doctor.findUnique({ where: { id: doctorId }, include: { user: true } });
   if (!doctor) return fail("errors.invalid");
+  if (!(await db.specialty.findUnique({ where: { id: parsed.data.specialtyId } }))) return fail("errors.missingFields");
   const upload = await saveUploadedImages(formData, "photoFile", 1);
   if ("error" in upload) return fail(upload.error);
+  const signatures = await readSignatureImages(formData);
+  if ("error" in signatures) return fail(signatures.error);
 
   const d = { ...parsed.data, photoUrl: upload.paths[0] ?? parsed.data.photoUrl };
   const active = formData.get("active") === "on";
   await db.$transaction([
     db.user.update({
       where: { id: doctor.userId },
-      data: { firstName: d.firstName, lastName: d.lastName, phone: d.phone, locale: d.locale, active },
+      data: {
+        firstName: d.firstName,
+        lastName: d.lastName,
+        phone: d.phone,
+        locale: d.locale,
+        active,
+        role: extras.superDoctor ? "SUPER_DOCTOR" : "DOCTOR",
+      },
     }),
     db.doctor.update({
       where: { id: doctorId },
       data: {
         specialty: d.specialty,
+        specialtyId: d.specialtyId,
+        licenseNumber: d.licenseNumber,
+        consultationMinutes: d.consultationMinutes,
+        offersConsultation: extras.offersConsultation,
+        consultationPrice: extras.consultationPrice,
+        consultationFee: extras.consultationFee,
+        referralCode: extras.superDoctor ? (doctor.referralCode ?? referralCode()) : doctor.referralCode,
+        ...(signatures.stampImageId ? { stampImageId: signatures.stampImageId } : {}),
+        ...(signatures.signatureImageId ? { signatureImageId: signatures.signatureImageId } : {}),
         bio: d.bio,
         languages: list(formData.get("languages")),
         clinicName: d.clinicName,

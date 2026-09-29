@@ -6,7 +6,8 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   const { id } = await params;
   if (!/^[a-z0-9]+$/.test(id)) return new Response("Not found", { status: 404 });
   const image = await db.image.findUnique({ where: { id } });
-  if (!image) return new Response("Not found", { status: 404 });
+  // Chat attachments, stamps and signatures are only served through authenticated routes.
+  if (!image || image.private) return new Response("Not found", { status: 404 });
   return new Response(new Uint8Array(image.data), {
     headers: {
       "Content-Type": image.mime,

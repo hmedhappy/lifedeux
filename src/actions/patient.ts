@@ -274,11 +274,18 @@ export async function mockCheckoutAction(localeRaw: string, paymentId: string, f
   const patient = await currentPatient();
   if (!patient) redirect(`/${locale}/login`);
   const payment = await db.payment.findFirst({
-    where: { id: paymentId, provider: "mock", booking: { patientId: patient.id } },
+    where: {
+      id: paymentId,
+      provider: "mock",
+      OR: [{ booking: { patientId: patient.id } }, { consultation: { patientId: patient.id } }],
+    },
   });
   if (!payment) redirect(`/${locale}/account`);
   const succeed = formData.get("result") === "success";
   if (succeed) await markPaymentSucceeded({ id: payment.id });
   else await markPaymentFailed({ id: payment.id });
-  redirect(`/${locale}/account/bookings/${payment.bookingId}?payment=${succeed ? "success" : "cancelled"}`);
+  const target = payment.consultationId
+    ? `/account/consultations/${payment.consultationId}`
+    : `/account/bookings/${payment.bookingId}`;
+  redirect(`/${locale}${target}?payment=${succeed ? "success" : "cancelled"}`);
 }

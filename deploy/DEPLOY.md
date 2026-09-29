@@ -96,7 +96,7 @@ cd lifedeux
 1. Dans `.env.production` : `PAYMENT_MOCK=false`, `STRIPE_SECRET_KEY=sk_live_…`.
 2. Stripe → Developers → Webhooks → ajouter l'endpoint `https://lifedeux.afdev.site/api/webhooks/stripe` avec les événements `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`.
 3. Copier le *signing secret* dans `STRIPE_WEBHOOK_SECRET`, puis relancer `./deploy/deploy.sh`.
-4. Avant l'ouverture au public : `SEED_DEMO=false`. Les comptes de démo déjà créés restent : désactivez-les dans Admin → Équipe / Médecins, ou repartez d'une base vide (voir plus bas).
+4. Avant l'ouverture au public : `SEED_DEMO=false`, puis supprimez tous les comptes de test avec `db:reset-users` (voir plus bas) : spécialités, médicaments, interventions et logements sont conservés.
 
 ## Commandes utiles
 
@@ -111,6 +111,17 @@ $C exec -T db pg_dump -U lifedeux lifedeux | gzip > backup-$(date +%F).sql.gz
 
 # Restauration d'une sauvegarde
 gunzip -c backup-AAAA-MM-JJ.sql.gz | $C exec -T db psql -U lifedeux -d lifedeux
+
+# Données de référence seules (spécialités, interventions, médicaments) — sans risque, relançable
+$C exec -T app npm run db:seed:reference
+
+# Données de démo complètes (médecins de toutes spécialités, patients, consultations dans chaque état)
+$C exec -T app npm run db:seed:demo
+
+# Mise en production : supprime TOUS les utilisateurs et leurs données (réservations, consultations,
+# ordonnances, paiements…), garde spécialités, médicaments, interventions, logements et paramètres,
+# puis recrée l'admin défini dans .env.production. Faites une sauvegarde avant.
+$C exec -T app npm run db:reset-users -- --yes
 ```
 
 Repartir d'une base **vide** (efface toutes les données, irréversible) : `$C down -v` puis `./deploy/deploy.sh`.

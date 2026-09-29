@@ -10,8 +10,36 @@ datasource db {
 enum Role {
   PATIENT
   DOCTOR
+  /// A doctor who can also invite other doctors with a referral link.
+  SUPER_DOCTOR
   ADMIN
   AGENT
+}
+
+enum SlotKind {
+  OPERATION
+  CONSULTATION
+}
+
+enum ConsultationStatus {
+  REQUESTED
+  CONFIRMED
+  REFUSED
+  EXPIRED
+  PAID
+  COMPLETED
+  CANCELLED
+}
+
+enum MessageKind {
+  TEXT
+  IMAGE
+  PRESCRIPTION
+}
+
+enum PrescriptionStatus {
+  DRAFT
+  ISSUED
 }
 
 enum SlotStatus {
@@ -72,48 +100,191 @@ model User {
 
   doctor          Doctor?
   bookings        Booking[]       @relation("PatientBookings")
+  consultations   Consultation[]  @relation("PatientConsultations")
+  prescriptions   Prescription[]  @relation("PatientPrescriptions")
+  messages        Message[]
   trackingEvents  TrackingEvent[]
   payoutsRecorded DoctorPayout[]
   accessLogs      AccessLog[]
 }
 
 model Doctor {
-  id            String   @id @default(cuid())
-  userId        String   @unique
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  specialty     String
-  bio           String   @db.Text
-  languages     String[]
-  clinicName    String
-  clinicAddress String
-  city          String
-  photoUrl      String?
-  yearsOfExperience Int  @default(0)
-  active        Boolean  @default(true)
-  createdAt     DateTime @default(now())
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialty         String
+  bio               String   @db.Text
+  languages         String[]
+  clinicName        String
+  clinicAddress     String
+  city              String
+  photoUrl          String?
+  yearsOfExperience Int      @default(0)
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now())
 
-  operations DoctorOperation[]
-  slots      Slot[]
-  bookings   Booking[]
-  payouts    DoctorPayout[]
+  specialtyId         String?
+  specialty_          Specialty? @relation(fields: [specialtyId], references: [id])
+  /// Registration number with the medical council, printed on prescriptions.
+  licenseNumber       String?
+  offersConsultation  Boolean    @default(true)
+  /// Price paid by the patient and share owed to the doctor, per online consultation (cents).
+  consultationPrice   Int?
+  consultationFee     Int?
+  consultationMinutes Int        @default(30)
+  stampImageId        String?
+  signatureImageId    String?
+  /// Set for super-doctors: code used in their referral link.
+  referralCode        String?    @unique
+  referredById        String?
+  referredBy          Doctor?    @relation("Referrals", fields: [referredById], references: [id])
+  referrals           Doctor[]   @relation("Referrals")
+
+  operations    DoctorOperation[]
+  slots         Slot[]
+  bookings      Booking[]
+  payouts       DoctorPayout[]
+  consultations Consultation[]
+  prescriptions Prescription[]
 }
 
 model Operation {
-  id                    String   @id @default(cuid())
-  slug                  String   @unique
+  id                    String     @id @default(cuid())
+  slug                  String     @unique
   nameFr                String
   nameEn                String
   nameAr                String
-  descriptionFr         String   @db.Text
-  descriptionEn         String   @db.Text
-  descriptionAr         String   @db.Text
+  descriptionFr         String     @db.Text
+  descriptionEn         String     @db.Text
+  descriptionAr         String     @db.Text
   basePrice             Int
-  defaultRecoveryNights Int      @default(7)
-  active                Boolean  @default(true)
-  createdAt             DateTime @default(now())
+  defaultRecoveryNights Int        @default(7)
+  active                Boolean    @default(true)
+  createdAt             DateTime   @default(now())
+  specialtyId           String?
+  specialty             Specialty? @relation(fields: [specialtyId], references: [id])
 
   doctors  DoctorOperation[]
   bookings Booking[]
+}
+
+model Specialty {
+  id                String   @id @default(cuid())
+  slug              String   @unique
+  nameFr            String
+  nameEn            String
+  nameAr            String
+  /// lucide-react icon name, rendered through a whitelist.
+  icon              String
+  /// Default online consultation price (cents) for doctors of this specialty.
+  consultationPrice Int      @default(5000)
+  sortOrder         Int      @default(0)
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now())
+
+  doctors     Doctor[]
+  operations  Operation[]
+  medications Medication[]
+}
+
+model Medication {
+  id          String     @id @default(cuid())
+  name        String
+  /// International non-proprietary name (DCI).
+  dci         String?
+  form        String?
+  strength    String?
+  /// Lower-case, accent-free copy of name + dci + strength used for search.
+  searchText  String
+  specialtyId String?
+  specialty   Specialty? @relation(fields: [specialtyId], references: [id])
+  createdAt   DateTime   @default(now())
+
+  @@unique([name, strength, form])
+  @@index([searchText])
+}
+
+model Consultation {
+  id              String             @id @default(cuid())
+  reference       String             @unique
+  patientId       String
+  patient         User               @relation("PatientConsultations", fields: [patientId], references: [id])
+  doctorId        String
+  doctor          Doctor             @relation(fields: [doctorId], references: [id])
+  slotId          String
+  slot            Slot               @relation(fields: [slotId], references: [id])
+  status          ConsultationStatus @default(REQUESTED)
+  reason          String?            @db.Text
+  refusalReason   String?
+  durationMinutes Int
+  price           Int
+  doctorFee       Int
+  currency        String
+  confirmedAt     DateTime?
+  paymentDeadline DateTime?
+  paidAt          DateTime?
+  endedAt         DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  messages      Message[]
+  payments      Payment[]
+  prescriptions Prescription[]
+  images        Image[]
+
+  @@index([status])
+  @@index([patientId])
+  @@index([doctorId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  consultationId String
+  consultation   Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id])
+  kind           MessageKind  @default(TEXT)
+  text           String?      @db.Text
+  imageId        String?
+  prescriptionId String?
+  createdAt      DateTime     @default(now())
+
+  @@index([consultationId, createdAt])
+}
+
+model Prescription {
+  id             String             @id @default(cuid())
+  /// Public number printed on the PDF and used by the verification page.
+  number         String?            @unique
+  consultationId String
+  consultation   Consultation       @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  doctorId       String
+  doctor         Doctor             @relation(fields: [doctorId], references: [id])
+  patientId      String
+  patient        User               @relation("PatientPrescriptions", fields: [patientId], references: [id])
+  status         PrescriptionStatus @default(DRAFT)
+  notes          String?            @db.Text
+  /// SHA-256 of the canonical content, fixed when the prescription is issued.
+  contentHash    String?
+  issuedAt       DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  items PrescriptionItem[]
+}
+
+model PrescriptionItem {
+  id             String       @id @default(cuid())
+  prescriptionId String
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  position       Int
+  medicationId   String?
+  name           String
+  dosage         String
+  frequency      String
+  duration       String
+  instructions   String?
 }
 
 /// price = what the patient pays for the operation, doctorFee = what LifeDeux owes the doctor (cash).
@@ -129,12 +300,14 @@ model DoctorOperation {
 }
 
 model Slot {
-  id       String     @id @default(cuid())
-  doctorId String
-  doctor   Doctor     @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-  startsAt DateTime
-  status   SlotStatus @default(FREE)
-  bookings Booking[]
+  id            String         @id @default(cuid())
+  doctorId      String
+  doctor        Doctor         @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  startsAt      DateTime
+  kind          SlotKind       @default(OPERATION)
+  status        SlotStatus     @default(FREE)
+  bookings      Booking[]
+  consultations Consultation[]
 
   @@unique([doctorId, startsAt])
   @@index([doctorId, status, startsAt])
@@ -159,42 +332,42 @@ model Accommodation {
 }
 
 model Booking {
-  id                 String        @id @default(cuid())
-  reference          String        @unique
+  id                 String         @id @default(cuid())
+  reference          String         @unique
   patientId          String
-  patient            User          @relation("PatientBookings", fields: [patientId], references: [id])
+  patient            User           @relation("PatientBookings", fields: [patientId], references: [id])
   doctorId           String
-  doctor             Doctor        @relation(fields: [doctorId], references: [id])
+  doctor             Doctor         @relation(fields: [doctorId], references: [id])
   operationId        String
-  operation          Operation     @relation(fields: [operationId], references: [id])
+  operation          Operation      @relation(fields: [operationId], references: [id])
   slotId             String
-  slot               Slot          @relation(fields: [slotId], references: [id])
-  status             BookingStatus @default(REQUESTED)
+  slot               Slot           @relation(fields: [slotId], references: [id])
+  status             BookingStatus  @default(REQUESTED)
   trackingStep       TrackingStep?
-  patientNote        String?       @db.Text
+  patientNote        String?        @db.Text
   refusalReason      String?
   recoveryNights     Int
-  optionsChosen      Boolean       @default(false)
-  withTransport      Boolean       @default(false)
+  optionsChosen      Boolean        @default(false)
+  withTransport      Boolean        @default(false)
   accommodationId    String?
   accommodation      Accommodation? @relation(fields: [accommodationId], references: [id])
-  companionsCount    Int           @default(0)
+  companionsCount    Int            @default(0)
   arrivalDate        DateTime?
   departureDate      DateTime?
-  nights             Int           @default(0)
+  nights             Int            @default(0)
   operationPrice     Int
-  transportPrice     Int           @default(0)
-  accommodationPrice Int           @default(0)
+  transportPrice     Int            @default(0)
+  accommodationPrice Int            @default(0)
   totalAmount        Int
   currency           String
   doctorFee          Int
-  qrToken            String?       @unique
+  qrToken            String?        @unique
   confirmedAt        DateTime?
   paymentDeadline    DateTime?
   paidAt             DateTime?
   cancelledAt        DateTime?
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
 
   companions     Companion[]
   payments       Payment[]
@@ -217,19 +390,22 @@ model Companion {
 }
 
 model Payment {
-  id          String        @id @default(cuid())
-  bookingId   String
-  booking     Booking       @relation(fields: [bookingId], references: [id])
-  provider    String
-  providerRef String?       @unique
-  amount      Int
-  currency    String
-  status      PaymentStatus @default(PENDING)
-  checkoutUrl String?       @db.Text
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id             String        @id @default(cuid())
+  bookingId      String?
+  booking        Booking?      @relation(fields: [bookingId], references: [id])
+  consultationId String?
+  consultation   Consultation? @relation(fields: [consultationId], references: [id])
+  provider       String
+  providerRef    String?       @unique
+  amount         Int
+  currency       String
+  status         PaymentStatus @default(PENDING)
+  checkoutUrl    String?       @db.Text
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   @@index([bookingId])
+  @@index([consultationId])
 }
 
 model DoctorPayout {
@@ -266,21 +442,25 @@ model AccessLog {
 
 /// Singleton row (id = 1) holding platform-wide settings editable by admins.
 model Setting {
-  id                     Int    @id @default(1)
-  currency               String @default("EUR")
-  transportPricePerPerson Int   @default(15000)
-  paymentDeadlineHours   Int    @default(72)
-  maxCompanions          Int    @default(2)
-  supportPhone           String @default("+216 00 000 000")
-  supportEmail           String @default("contact@lifedeux.com")
+  id                      Int    @id @default(1)
+  currency                String @default("EUR")
+  transportPricePerPerson Int    @default(15000)
+  paymentDeadlineHours    Int    @default(72)
+  maxCompanions           Int    @default(2)
+  supportPhone            String @default("+216 00 000 000")
+  supportEmail            String @default("contact@lifedeux.com")
 }
 
 /// Uploaded pictures (stays, doctors), served by /api/images/[id]. Stored in the
 /// database so the app works on any host without extra file storage.
 model Image {
-  id        String   @id @default(cuid())
-  mime      String
-  size      Int
-  data      Bytes
-  createdAt DateTime @default(now())
+  id             String        @id @default(cuid())
+  mime           String
+  size           Int
+  data           Bytes
+  /// Private images (chat attachments, stamps, signatures) are never served by the public route.
+  private        Boolean       @default(false)
+  consultationId String?
+  consultation   Consultation? @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
 }

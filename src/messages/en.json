@@ -1,13 +1,19 @@
 {
   "common": {
-    "tagline": "Your procedure in Tunisia, fully taken care of",
+    "tagline": "Online consultations and procedures in Tunisia",
     "loading": "Loading…",
     "save": "Save",
     "cancel": "Cancel",
     "seeAll": "See all",
     "yes": "Yes",
     "no": "No",
-    "language": "Language"
+    "language": "Language",
+    "add": "Add",
+    "close": "Close",
+    "copied": "Copied",
+    "copy": "Copy",
+    "delete": "Delete",
+    "search": "Search"
   },
   "nav": {
     "doctors": "Surgeons",
@@ -21,7 +27,7 @@
     "menu": "Menu"
   },
   "footer": {
-    "about": "LifeDeux organises your procedure in Tunisia: appointment, airport transfer, accommodation and follow-up.",
+    "about": "LifeDeux connects you with verified doctors: teleconsultations with a certified prescription, or procedures with transfer, accommodation and follow-up.",
     "platform": "Platform",
     "proAccess": "Doctors & team access",
     "privacyTitle": "Privacy",
@@ -29,45 +35,27 @@
     "rights": "All rights reserved"
   },
   "home": {
-    "badge": "Specialist surgeons · Tunisia",
-    "heroTitle": "A rare procedure, complete care.",
-    "heroSubtitle": "Choose your surgeon, book your slot and let us handle the rest: airport pick-up, accommodation during recovery and your trip home.",
-    "searchLabel": "Procedure",
+    "badge": "Verified doctors · Tunisia",
+    "heroTitle": "See a doctor online, or plan your procedure in Tunisia.",
+    "heroSubtitle": "Over 40 specialties. Chat consultations with a certified prescription, or a complete surgical journey with airport transfer and accommodation.",
+    "searchLabel": "Specialty or doctor",
     "searchButton": "Search",
     "facts": {
-      "care": {
-        "title": "End to end",
-        "text": "Airport, stay, clinic"
-      },
       "languages": {
         "title": "3 languages",
         "text": "French, English, Arabic"
       },
       "privacy": {
-        "title": "Discretion",
-        "text": "Protected data"
-      }
-    },
-    "services": {
-      "appointment": {
-        "title": "Appointments",
-        "text": "Real-time slots, confirmed by the surgeon."
+        "title": "Confidential",
+        "text": "Private messages and documents"
       },
-      "transfer": {
-        "title": "Transfer",
-        "text": "Airport welcome and shuttle to your stay."
-      },
-      "stay": {
-        "title": "Accommodation",
-        "text": "Apartments and houses selected for recovery."
-      },
-      "payment": {
-        "title": "Secure payment",
-        "text": "Pay online, only after confirmation."
+      "specialties": {
+        "title": "{n} specialties",
+        "text": "From GPs to surgeons"
       }
     },
     "howTitle": "How it works",
-    "howSubtitle": "Five simple steps, from booking to your trip home.",
+    "howSubtitle": "Two journeys, the same standard of care.",
     "stepLabel": "Step {n}",
     "steps": {
       "1": {
@@ -91,13 +79,53 @@
         "text": "Show it on arrival: we take care of the rest."
       }
     },
-    "doctorsTitle": "Our surgeons",
-    "doctorsSubtitle": "Experienced specialists, selected by our team.",
+    "doctorsTitle": "Doctors available now",
+    "doctorsSubtitle": "Verified profiles, real-time availability.",
     "staysTitle": "Stays for your recovery",
     "staysSubtitle": "Comfortable, close to the clinics, transfer included.",
     "ctaTitle": "Ready to plan your procedure?",
     "ctaText": "No payment is required before your surgeon confirms.",
-    "ctaButton": "Find a surgeon"
+    "ctaButton": "Find a surgeon",
+    "searchPlaceholder": "Cardiologist, psychologist, Dr Ben Salah…",
+    "ctaConsult": "Consult online",
+    "ctaSurgery": "Plan a procedure",
+    "preview": {
+      "doctor": "Dr Amira Trabelsi · Dermatology",
+      "m1": "Hello, could you send me a photo of the affected area?",
+      "m2": "Of course, here it is.",
+      "certified": "QR certified"
+    },
+    "specialtiesTitle": "Find the right specialty",
+    "specialtiesSubtitle": "Pick a specialty, then the doctor who suits you.",
+    "allSpecialties": "All specialties ({n})",
+    "consultTrack": {
+      "title": "Online consultation",
+      "text": "From home, by text and photo chat."
+    },
+    "surgeryTrack": {
+      "title": "Procedure in Tunisia",
+      "text": "Surgery, transfer, accommodation and follow-up."
+    },
+    "consultSteps": {
+      "1": {
+        "title": "Choose",
+        "text": "A specialty, then a doctor available online."
+      },
+      "2": {
+        "title": "Book",
+        "text": "The doctor accepts the slot, then you pay online."
+      },
+      "3": {
+        "title": "Consult",
+        "text": "At the scheduled time, chat and share photos."
+      },
+      "4": {
+        "title": "Get your prescription",
+        "text": "A QR-certified PDF to show at the pharmacy."
+      }
+    },
+    "proTitle": "Are you a doctor?",
+    "proText": "Join LifeDeux on the invitation of a super-doctor colleague, or write to us at {email}."
   },
   "doctors": {
     "title": "Surgeons",
@@ -108,7 +136,15 @@
     "experience": "{n} years of experience",
     "nextSlot": "Next slot: {date}",
     "noSlotSoon": "No slot at the moment",
-    "from": "From"
+    "from": "From",
+    "allDoctors": "All doctors",
+    "surgeons": "Available surgeons",
+    "resultsFor": "Results for “{q}”",
+    "found": "{n} doctor(s) found",
+    "searchPlaceholder": "Name, city, clinic…",
+    "online": "Online",
+    "surgery": "Surgery",
+    "consultFrom": "Consultation"
   },
   "doctor": {
     "experience": "Experience",
@@ -136,7 +172,20 @@
     "loginToBook": "Log in to book",
     "patientsOnly": "Booking is available to patient accounts only.",
     "prevMonth": "Previous month",
-    "nextMonth": "Next month"
+    "nextMonth": "Next month",
+    "chooseService": "What do you need?",
+    "consultTitle": "Online consultation",
+    "consultLabel": "Online consultation · {n} min",
+    "consultText": "By text and photo chat. A certified prescription is sent in the conversation if needed.",
+    "consultPrice": "Consultation",
+    "noService": "This doctor does not offer online appointments yet.",
+    "reason": "Reason for consultation",
+    "reasonHint": "Optional, visible to the doctor only.",
+    "requestConsult": "Request the consultation",
+    "service": {
+      "consultation": "Online consultation",
+      "operation": "Procedure"
+    }
   },
   "stays": {
     "title": "Stays",
@@ -193,7 +242,9 @@
     "newBooking": "New booking",
     "empty": "No bookings yet",
     "emptyText": "Choose a surgeon and a slot to get started.",
-    "findDoctor": "Find a surgeon"
+    "findDoctor": "Find a surgeon",
+    "consultations": "My online consultations",
+    "operations": "My procedures"
   },
   "status": {
     "REQUESTED": "Awaiting confirmation",
@@ -228,7 +279,8 @@
     "PATIENT": "Patient",
     "DOCTOR": "Doctor",
     "ADMIN": "Administrator",
-    "AGENT": "Field agent"
+    "AGENT": "Field agent",
+    "SUPER_DOCTOR": "Super doctor"
   },
   "weekdays": {
     "0": "Sun",
@@ -358,7 +410,9 @@
       "requests": "Requests",
       "patients": "My patients",
       "slots": "Slots",
-      "payouts": "Payouts"
+      "payouts": "Payouts",
+      "consultations": "Consultations",
+      "referrals": "Referrals"
     },
     "requestsTitle": "Appointment requests",
     "requestsSubtitle": "Confirm or decline incoming requests.",
@@ -401,7 +455,16 @@
     "payoutsTitle": "My payouts",
     "payoutsSubtitle": "Amounts owed by LifeDeux and cash payouts received.",
     "refuseConfirm": "Decline request {reference} from {name}? The patient will be notified and the slot released.",
-    "confirmFor": "Confirm for {name}"
+    "confirmFor": "Confirm for {name}",
+    "tooLate": "Too late to accept {reference}: the appointment is too close for the patient to pay.",
+    "service": "Service",
+    "acceptConsult": "Accept {name}'s consultation",
+    "consultationsTitle": "Online consultations",
+    "consultationsSubtitle": "Your accepted, ongoing and completed consultations.",
+    "upcoming": "Upcoming",
+    "past": "Completed",
+    "noConsultations": "No consultations yet.",
+    "slotKind": "Slot type"
   },
   "payouts": {
     "earned": "Total owed",
@@ -425,7 +488,10 @@
       "operations": "Procedures",
       "payouts": "Payouts",
       "team": "Team",
-      "settings": "Settings"
+      "settings": "Settings",
+      "consultations": "Consultations",
+      "specialties": "Specialties",
+      "medications": "Medications"
     },
     "dashboardTitle": "Overview",
     "stats": {
@@ -449,7 +515,10 @@
       "total": "Total",
       "status": "Status",
       "freeSlots": "Free slots",
-      "account": "Account"
+      "account": "Account",
+      "activity": "Activity",
+      "fee": "doctor {amount}",
+      "messages": "{n} message(s)"
     },
     "bookingsTitle": "Bookings",
     "searchBookings": "Reference, name or email",
@@ -502,7 +571,24 @@
       "price": "Patient price",
       "fee": "Doctor's share",
       "createAndInvite": "Create and send invitation",
-      "photoUpload": "Upload a photo"
+      "photoUpload": "Upload a photo",
+      "specialtyCategory": "Specialty",
+      "specialtyHint": "Displayed title, e.g. “Urological surgeon”.",
+      "license": "Medical council number",
+      "consultation": "Online consultation",
+      "consultationHint": "Leave the price empty to use the specialty price; the doctor's share is 70% by default.",
+      "offersConsultation": "Offers online consultations",
+      "defaultPrice": "Specialty price",
+      "minutes": "Length (min)",
+      "signatureTitle": "Stamp and signature",
+      "signatureHint": "Private PNG or JPEG images: they only appear on prescriptions. The stamp is required to prescribe.",
+      "stamp": "Stamp",
+      "signature": "Signature",
+      "replaceHint": "Choose a file to replace the current image.",
+      "superDoctor": "Super doctor",
+      "superDoctorHint": "Can invite other doctors with a referral link.",
+      "superBadge": "Super doctor",
+      "noStamp": "no stamp"
     },
     "operationsTitle": "Procedures",
     "operationsSubtitle": "Catalogue of procedures offered on the platform.",
@@ -559,7 +645,27 @@
       "disabled": "Not configured",
       "mockWarning": "Test payment is enabled. Turn PAYMENT_MOCK off in production."
     },
-    "photoUploadHint": "JPEG, PNG or WebP. Images are resized automatically."
+    "photoUploadHint": "JPEG, PNG or WebP. Images are resized automatically.",
+    "consultationsTitle": "Online consultations",
+    "consultationsSubtitle": "All teleconsultations on the platform.",
+    "specialtiesTitle": "Specialties",
+    "specialtiesSubtitle": "Default consultation price and visibility of each specialty.",
+    "medicationsTitle": "Medications",
+    "medicationsSubtitle": "{n} medications in the catalogue used for prescriptions.",
+    "addMedication": "Add a medication",
+    "medicationAdded": "{name} was added.",
+    "specialty": {
+      "name": "Specialty",
+      "price": "Consultation (TND)"
+    },
+    "medication": {
+      "name": "Brand name",
+      "dci": "INN",
+      "strength": "Strength",
+      "form": "Form",
+      "formHint": "Tablet, syrup…",
+      "deleteConfirm": "Remove {name} from the catalogue?"
+    }
   },
   "scan": {
     "title": "Scan & tracking",
@@ -621,7 +727,12 @@
     "retry": "Try again",
     "resetInvalid": "This link is invalid or has expired.",
     "imageInvalid": "Image format not accepted (JPEG, PNG or WebP).",
-    "imageTooLarge": "Image too large (3 MB maximum)."
+    "imageTooLarge": "Image too large (3 MB maximum).",
+    "stampMissing": "Add your stamp first: it is required to prescribe.",
+    "prescriptionInvalid": "Complete every line: medication, dose, frequency and duration.",
+    "referralInvalid": "This referral link is not valid.",
+    "noService": "Enable online consultations or at least one procedure.",
+    "medicationExists": "This medication already exists."
   },
   "email": {
     "invite": {
@@ -671,6 +782,134 @@
       "title": "Hello {name}",
       "body": "You asked to change your LifeDeux password. This link is valid for 1 hour. If you did not make this request, ignore this email.",
       "cta": "Choose a new password"
+    },
+    "consultConfirmed": {
+      "subject": "Consultation accepted — {reference}",
+      "title": "Good news {name}!",
+      "body": "Your online consultation on {date} has been accepted. Pay before {deadline} to keep your slot.",
+      "cta": "Pay for my consultation"
+    },
+    "consultPaid": {
+      "subject": "Consultation confirmed — {reference}",
+      "title": "You're all set, {name}",
+      "body": "We received your payment. Your consultation is on {date}; the conversation opens a few minutes before.",
+      "cta": "Open my consultation"
+    },
+    "prescription": {
+      "subject": "Your prescription {reference}",
+      "title": "Hello {name}",
+      "body": "Your doctor sent you a certified prescription ({reference}). Download it from the conversation and show it at the pharmacy.",
+      "cta": "View my prescription"
     }
+  },
+  "slotKind": {
+    "CONSULTATION": "Online consultation",
+    "OPERATION": "Procedure"
+  },
+  "specialties": {
+    "title": "All specialties",
+    "subtitle": "Choose a specialty to see the doctors available for online consultations or procedures.",
+    "searchPlaceholder": "Search a specialty…",
+    "searchDoctors": "Search a doctor",
+    "count": "{n} specialties",
+    "doctors": "{n} doctor(s)",
+    "doctorCount": "{n} doctor(s)",
+    "soon": "Coming soon",
+    "none": "No specialty matches. Try searching for a doctor.",
+    "all": "All specialties"
+  },
+  "consult": {
+    "title": "Online consultation",
+    "short": "Consultation",
+    "requestSent": "Your request has been sent to the doctor.",
+    "requestedTitle": "Waiting for the doctor",
+    "requestedText": "{doctor} needs to accept this slot. We will email you, then you can pay.",
+    "confirmedTitle": "Slot accepted",
+    "confirmedText": "{doctor} accepted your consultation. Pay now to secure it.",
+    "expiredText": "The payment deadline has passed and the slot was released.",
+    "cancelledText": "This consultation was cancelled.",
+    "cancel": "Cancel the consultation",
+    "cancelConfirm": "Cancel this consultation?",
+    "waitingText": "Your consultation is on {date}. The conversation opens {minutes} minutes before.",
+    "closedText": "The consultation is over. You can still read the conversation.",
+    "awaitingPayment": "The patient has not paid yet. The conversation opens after payment.",
+    "when": "Date",
+    "duration": "Duration",
+    "minutes": "{n} min",
+    "mode": "Format",
+    "modeChat": "Text and photo chat",
+    "reason": "Reason",
+    "howChat": "Text and photo chat. Audio and video calls coming soon.",
+    "howOpens": "The conversation opens {minutes} minutes before the scheduled time.",
+    "end": "End the consultation",
+    "endConfirm": "End the consultation? The conversation will become read-only."
+  },
+  "chat": {
+    "title": "Conversation",
+    "live": "Online",
+    "waiting": "Not open yet",
+    "closed": "Consultation ended",
+    "call": "Audio call",
+    "video": "Video call",
+    "soon": "coming soon",
+    "empty": "Say hello to start the consultation.",
+    "waitingText": "The conversation opens shortly before the appointment.",
+    "image": "Photo",
+    "prescription": "Prescription",
+    "download": "Download PDF",
+    "attach": "Send a photo",
+    "placeholder": "Type your message…",
+    "closedPlaceholder": "The conversation is not open",
+    "send": "Send",
+    "sendFailed": "The message could not be sent."
+  },
+  "rx": {
+    "title": "Prescription",
+    "search": "Search a medication (brand or INN)…",
+    "addFree": "Add a free-text line",
+    "empty": "Search for a medication or add a free-text line.",
+    "medication": "Medication",
+    "dosage": "Dose",
+    "frequency": "Frequency",
+    "duration": "Duration",
+    "instructions": "Instructions (optional)",
+    "notes": "Notes for the patient (optional)",
+    "remove": "Remove",
+    "preview": "Preview",
+    "send": "Sign and send",
+    "previewFirst": "Check the preview before sending: a sent prescription can no longer be edited.",
+    "sent": "Prescription sent to the patient.",
+    "stampMissing": "No stamp is saved on your profile. Contact the administrator to be able to write prescriptions.",
+    "count": "{n} prescription(s)"
+  },
+  "verify": {
+    "title": "Prescription check",
+    "ok": "Authentic prescription",
+    "okText": "This prescription was issued through LifeDeux and its content has not been altered.",
+    "bad": "Prescription not found or altered",
+    "badText": "We cannot confirm this document. Do not dispense without checking with the doctor.",
+    "doctor": "Doctor",
+    "issuedAt": "Issued on",
+    "patient": "Patient",
+    "fingerprint": "Fingerprint",
+    "items": "Prescribed"
+  },
+  "referral": {
+    "title": "Referrals",
+    "subtitle": "Invite colleagues: they join LifeDeux immediately through your link.",
+    "yourLink": "Your referral link",
+    "code": "Code: {code}",
+    "shareText": "Join me on LifeDeux for online consultations: {link}",
+    "listTitle": "Referred doctors ({n})",
+    "empty": "No referred doctors yet.",
+    "joined": "Joined {date}",
+    "consultations": "{n} consultation(s)",
+    "joinTitle": "Join LifeDeux",
+    "joinSubtitle": "Create your doctor account. It is active immediately.",
+    "invitedBy": "Invited by",
+    "stampHint": "PNG or JPEG. Required to write prescriptions.",
+    "consent": "I certify that I am registered with the medical council and I accept the terms of use.",
+    "joinButton": "Create my doctor account",
+    "welcome": "Welcome to LifeDeux! Add your first slots to start receiving patients."
   }
 }

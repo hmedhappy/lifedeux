@@ -1,4 +1,4 @@
-import type { BookingStatus, TrackingStep } from "@prisma/client";
+import type { BookingStatus, ConsultationStatus, TrackingStep } from "@prisma/client";
 import clsx from "clsx";
 import type { TFunction } from "@/lib/i18n";
 import { trackingSequence } from "@/lib/tracking";
@@ -15,7 +15,7 @@ const tones: Record<BookingStatus, "gray" | "green" | "amber" | "red" | "blue" |
   CANCELLED: "gray",
 };
 
-export function StatusBadge({ status, t }: { status: BookingStatus; t: TFunction }) {
+export function StatusBadge({ status, t }: { status: BookingStatus | ConsultationStatus; t: TFunction }) {
   return <Badge tone={tones[status]}>{t(`status.${status}`)}</Badge>;
 }
 

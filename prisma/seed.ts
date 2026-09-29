@@ -1,12 +1,17 @@
 /**
- * Seeds the platform settings, the first admin account and the base operation.
+ * Seeds the platform settings, the first admin account and the reference data
+ * (specialties, procedures, medications).
  * With SEED_DEMO=true (or `npm run db:seed:demo`) it also creates clearly-marked
- * demo doctors, stays, slots, an agent, patients and sample bookings in several
- * states so every dashboard can be tried locally. Safe to run several times.
+ * demo doctors in several specialties (one super-doctor), stays, slots, an agent,
+ * patients, bookings and online consultations in every state, so each business
+ * scenario can be tried end to end. Safe to run several times.
  */
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, type ConsultationStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "node:crypto";
+import { contentHash, prescriptionNumber } from "../src/lib/prescription-hash";
+import { demoPhoto, demoSignature, demoStamp } from "./lib/demo-images";
+import { seedReference } from "./lib/seed-reference";
 
 const db = new PrismaClient();
 
@@ -15,7 +20,7 @@ const DAY = 24 * 60 * 60 * 1000;
 async function upsertUser(data: {
   email: string;
   password: string;
-  role: "ADMIN" | "DOCTOR" | "AGENT" | "PATIENT";
+  role: "ADMIN" | "DOCTOR" | "SUPER_DOCTOR" | "AGENT" | "PATIENT";
   firstName: string;
   lastName: string;
   phone?: string;
@@ -42,24 +47,9 @@ async function main() {
   }
   await upsertUser({ email: adminEmail.toLowerCase(), password: adminPassword, role: "ADMIN", firstName: "Admin", lastName: "LifeDeux" });
 
-  const operation = await db.operation.upsert({
-    where: { slug: "prothese-penienne" },
-    update: {},
-    create: {
-      slug: "prothese-penienne",
-      nameFr: "Prothèse pénienne",
-      nameEn: "Penile prosthesis",
-      nameAr: "زرع البدلة القضيبية",
-      descriptionFr:
-        "Pose d'un implant pénien pour traiter une dysfonction érectile lorsque les autres traitements n'ont pas fonctionné. Intervention sous anesthésie, courte hospitalisation puis convalescence encadrée.",
-      descriptionEn:
-        "Placement of a penile implant to treat erectile dysfunction when other treatments have not worked. Performed under anaesthesia, with a short hospital stay followed by supervised recovery.",
-      descriptionAr:
-        "زرع بدلة قضيبية لعلاج ضعف الانتصاب عندما لا تنجح العلاجات الأخرى. تُجرى تحت التخدير مع إقامة قصيرة في المصحّة ثم فترة نقاهة مؤطَّرة.",
-      basePrice: 590000,
-      defaultRecoveryNights: 7,
-    },
-  });
+  const counts = await seedReference(db);
+  console.log("Reference data:", counts);
+  const operation = await db.operation.findUniqueOrThrow({ where: { slug: "prothese-penienne" } });
 
   const demo = process.env.SEED_DEMO === "true" || process.argv.includes("--demo");
   if (!demo) {
@@ -119,11 +109,15 @@ async function main() {
       lastName: d.lastName,
       phone: "+216 00 000 000",
     });
+    const urology = await db.specialty.findUniqueOrThrow({ where: { slug: "urology" } });
     const doctor = await db.doctor.upsert({
       where: { userId: user.id },
-      update: {},
+      update: { specialtyId: urology.id },
       create: {
         userId: user.id,
+        specialtyId: urology.id,
+        licenseNumber: `TN-URO-${d.years}${d.lastName.length}`,
+        consultationPrice: 9000,
         specialty: d.specialty,
         bio: `[Profil de démonstration] ${d.specialty}, ${d.years} ans d'expérience. Prise en charge des patients venant de l'étranger, consultation pré-opératoire la veille de l'intervention et suivi pendant toute la convalescence.`,
         languages: d.languages,
@@ -144,7 +138,11 @@ async function main() {
       slots.push(new Date(`${key}T09:00:00+01:00`), new Date(`${key}T13:00:00+01:00`));
     }
     await db.slot.createMany({ data: slots.map((startsAt) => ({ doctorId: doctor.id, startsAt })), skipDuplicates: true });
+    await ensureSignatureImages(doctor.id);
+    await createConsultationSlots(doctor.id, ["17:00", "17:30"]);
   }
+
+  const superDoctor = await seedConsultationDoctors(demoPassword);
 
   if ((await db.accommodation.count()) === 0) {
     await db.accommodation.createMany({
@@ -223,13 +221,21 @@ async function main() {
   }
 
   await seedSampleBookings(patientIds);
+  await seedSampleConsultations(patientIds);
 
   console.log(`\nSeed done with demo data. Password for every demo account: ${demoPassword}\n`);
   console.table([
-    { role: "ADMIN", email: adminEmail.toLowerCase(), password: "(ADMIN_PASSWORD)" },
-    ...doctors.map((d) => ({ role: "DOCTOR", email: d.email, password: demoPassword })),
-    { role: "AGENT", email: "agent@demo.lifedeux.com", password: demoPassword },
-    ...patients.map((p) => ({ role: "PATIENT", email: p.email, password: demoPassword })),
+    { role: "ADMIN", email: adminEmail.toLowerCase(), password: "(ADMIN_PASSWORD)", note: "" },
+    { role: "SUPER_DOCTOR", email: superDoctor.email, password: demoPassword, note: `/fr/join/${SUPER_CODE}` },
+    ...CONSULT_DOCTORS.filter((d) => !d.superDoctor).map((d) => ({
+      role: "DOCTOR",
+      email: d.email,
+      password: demoPassword,
+      note: d.specialty + (d.stamp ? "" : " (sans cachet)") + (d.referred ? " (parrainé)" : ""),
+    })),
+    ...doctors.map((d) => ({ role: "DOCTOR", email: d.email, password: demoPassword, note: "urology + prothèse" })),
+    { role: "AGENT", email: "agent@demo.lifedeux.com", password: demoPassword, note: "" },
+    ...patients.map((p) => ({ role: "PATIENT", email: p.email, password: demoPassword, note: p.country })),
   ]);
 }
 
@@ -327,6 +333,216 @@ async function seedSampleBookings(patientIds: Record<string, string>) {
     }
   }
 }
+
+/* --------------------------- Online consultations --------------------------- */
+
+/** Fixed so the referral link of the demo super-doctor is easy to test. */
+const SUPER_CODE = "DR-DEMOSUPER";
+
+type ConsultDoctor = {
+  email: string;
+  firstName: string;
+  lastName: string;
+  specialty: string;
+  slug: string;
+  city: string;
+  clinicName: string;
+  years: number;
+  stamp: boolean;
+  superDoctor?: boolean;
+  referred?: boolean;
+  operation?: { slug: string; price: number; fee: number };
+};
+
+const CONSULT_DOCTORS: ConsultDoctor[] = [
+  { email: "dr.mansour@demo.lifedeux.com", firstName: "Hichem", lastName: "Mansour", specialty: "Médecin généraliste", slug: "general-medicine", city: "Tunis", clinicName: "Cabinet Mansour", years: 22, stamp: true, superDoctor: true },
+  { email: "dr.jaziri@demo.lifedeux.com", firstName: "Amine", lastName: "Jaziri", specialty: "Cardiologue", slug: "cardiology", city: "Tunis", clinicName: "Centre Cardio El Menzah", years: 16, stamp: true },
+  { email: "dr.amira@demo.lifedeux.com", firstName: "Amira", lastName: "Trabelsi", specialty: "Dermatologue", slug: "dermatology", city: "Sfax", clinicName: "Clinique Dermatologique de Sfax", years: 11, stamp: true },
+  { email: "dr.chaabane@demo.lifedeux.com", firstName: "Ines", lastName: "Chaabane", specialty: "Psychologue clinicienne", slug: "psychology", city: "Tunis", clinicName: "Cabinet Écoute & Soin", years: 9, stamp: false },
+  { email: "dr.khelifi@demo.lifedeux.com", firstName: "Rym", lastName: "Khelifi", specialty: "Pédiatre", slug: "pediatrics", city: "Sousse", clinicName: "Cabinet Les Petits Pas", years: 13, stamp: true },
+  { email: "dr.mejri@demo.lifedeux.com", firstName: "Sonia", lastName: "Mejri", specialty: "Gynécologue-obstétricienne", slug: "gynecology", city: "Tunis", clinicName: "Clinique La Rose", years: 19, stamp: true },
+  { email: "dr.hamdi@demo.lifedeux.com", firstName: "Walid", lastName: "Hamdi", specialty: "Ophtalmologue — chirurgie de la cataracte", slug: "ophthalmology", city: "Tunis", clinicName: "Clinique de la Vision", years: 17, stamp: true, operation: { slug: "cataracte", price: 250000, fee: 150000 } },
+  { email: "dr.bouaziz@demo.lifedeux.com", firstName: "Mehdi", lastName: "Bouaziz", specialty: "Chirurgien-dentiste implantologue", slug: "dentistry", city: "Monastir", clinicName: "Centre Dentaire Monastir", years: 10, stamp: true, operation: { slug: "implant-dentaire", price: 180000, fee: 110000 } },
+  { email: "dr.karoui@demo.lifedeux.com", firstName: "Yassine", lastName: "Karoui", specialty: "Neurologue", slug: "neurology", city: "Tunis", clinicName: "Cabinet de Neurologie Karoui", years: 8, stamp: true, referred: true },
+];
+
+async function ensureSignatureImages(doctorId: string, withStamp = true) {
+  const doctor = await db.doctor.findUniqueOrThrow({ where: { id: doctorId } });
+  const data: { stampImageId?: string; signatureImageId?: string } = {};
+  if (withStamp && !doctor.stampImageId) {
+    const bytes = demoStamp();
+    data.stampImageId = (await db.image.create({ data: { mime: "image/png", size: bytes.byteLength, data: bytes, private: true } })).id;
+  }
+  if (!doctor.signatureImageId) {
+    const bytes = demoSignature();
+    data.signatureImageId = (await db.image.create({ data: { mime: "image/png", size: bytes.byteLength, data: bytes, private: true } })).id;
+  }
+  if (Object.keys(data).length) await db.doctor.update({ where: { id: doctorId }, data });
+}
+
+/** Weekday consultation slots (Tunisia time) from tomorrow for the next 30 days. */
+async function createConsultationSlots(doctorId: string, times = ["10:00", "10:30", "11:00", "15:00", "15:30", "16:00"]) {
+  const slots: Date[] = [];
+  for (let i = 1; i < 31; i++) {
+    const day = new Date(Date.now() + i * DAY);
+    if (day.getUTCDay() === 0) continue;
+    const key = day.toISOString().slice(0, 10);
+    for (const time of times) slots.push(new Date(`${key}T${time}:00+01:00`));
+  }
+  await db.slot.createMany({ data: slots.map((startsAt) => ({ doctorId, startsAt, kind: "CONSULTATION" as const })), skipDuplicates: true });
+}
+
+async function seedConsultationDoctors(password: string) {
+  let superDoctorId: string | null = null;
+  for (const d of CONSULT_DOCTORS) {
+    const specialty = await db.specialty.findUniqueOrThrow({ where: { slug: d.slug } });
+    const user = await upsertUser({
+      email: d.email,
+      password,
+      role: d.superDoctor ? "SUPER_DOCTOR" : "DOCTOR",
+      firstName: d.firstName,
+      lastName: d.lastName,
+      phone: "+216 00 000 010",
+    });
+    const operation = d.operation ? await db.operation.findUnique({ where: { slug: d.operation.slug } }) : null;
+    const doctor: { id: string } = await db.doctor.upsert({
+      where: { userId: user.id },
+      update: {},
+      create: {
+        userId: user.id,
+        specialty: d.specialty,
+        specialtyId: specialty.id,
+        licenseNumber: `TN-${d.slug.slice(0, 3).toUpperCase()}-${1000 + d.years * 37}`,
+        bio: `[Profil de démonstration] ${d.specialty} depuis ${d.years} ans. Consultations en ligne par chat pour les patients en Tunisie et à l'étranger${d.operation ? ", et prise en charge chirurgicale complète à la clinique" : ""}.`,
+        languages: ["Français", "العربية", "English"],
+        clinicName: d.clinicName,
+        clinicAddress: "Avenue Habib Bourguiba",
+        city: d.city,
+        yearsOfExperience: d.years,
+        referralCode: d.superDoctor ? SUPER_CODE : null,
+        referredById: d.referred ? superDoctorId : null,
+        operations: operation && d.operation ? { create: { operationId: operation.id, price: d.operation.price, doctorFee: d.operation.fee } } : undefined,
+      },
+    });
+    if (d.superDoctor) superDoctorId = doctor.id;
+    await ensureSignatureImages(doctor.id, d.stamp);
+    await createConsultationSlots(doctor.id);
+    if (operation) {
+      const slots: Date[] = [];
+      for (let i = 5; i < 60; i += 2) {
+        const key = new Date(Date.now() + i * DAY).toISOString().slice(0, 10);
+        slots.push(new Date(`${key}T08:30:00+01:00`));
+      }
+      await db.slot.createMany({ data: slots.map((startsAt) => ({ doctorId: doctor.id, startsAt })), skipDuplicates: true });
+    }
+  }
+  return CONSULT_DOCTORS.find((d) => d.superDoctor)!;
+}
+
+/**
+ * One consultation per state. LC-DEMO03 is moved to "now" on every run so a
+ * live chat is always available to try; LC-DEMO05 carries an issued prescription.
+ */
+async function seedSampleConsultations(patientIds: Record<string, string>) {
+  const settings = await db.setting.findUniqueOrThrow({ where: { id: 1 } });
+  const minute = 60_000;
+  const now = Math.floor(Date.now() / (5 * minute)) * 5 * minute;
+  const samples: { reference: string; patient: string; doctor: string; status: ConsultationStatus; at: number; reason: string }[] = [
+    { reference: "LC-DEMO01", patient: "nadia@demo.lifedeux.com", doctor: "dr.jaziri@demo.lifedeux.com", status: "REQUESTED", at: now + 2 * DAY + 90 * minute, reason: "Palpitations le soir depuis deux semaines." },
+    { reference: "LC-DEMO02", patient: "patient@demo.lifedeux.com", doctor: "dr.amira@demo.lifedeux.com", status: "CONFIRMED", at: now + 3 * DAY, reason: "Plaques rouges sur les avant-bras." },
+    { reference: "LC-DEMO03", patient: "sara@demo.lifedeux.com", doctor: "dr.amira@demo.lifedeux.com", status: "PAID", at: now - 5 * minute, reason: "Grain de beauté qui change d'aspect." },
+    { reference: "LC-DEMO04", patient: "luca@demo.lifedeux.com", doctor: "dr.khelifi@demo.lifedeux.com", status: "PAID", at: now + DAY + 2 * 60 * minute, reason: "Fièvre de mon fils (4 ans) depuis hier." },
+    { reference: "LC-DEMO05", patient: "youssef@demo.lifedeux.com", doctor: "dr.mansour@demo.lifedeux.com", status: "COMPLETED", at: now - 2 * DAY, reason: "Angine, douleur à la déglutition." },
+    { reference: "LC-DEMO06", patient: "patient@demo.lifedeux.com", doctor: "dr.jaziri@demo.lifedeux.com", status: "REFUSED", at: now + 4 * DAY, reason: "Bilan cardiaque." },
+    { reference: "LC-DEMO07", patient: "luca@demo.lifedeux.com", doctor: "dr.amira@demo.lifedeux.com", status: "EXPIRED", at: now - DAY, reason: "Acné." },
+    { reference: "LC-DEMO08", patient: "nadia@demo.lifedeux.com", doctor: "dr.khelifi@demo.lifedeux.com", status: "CANCELLED", at: now + 5 * DAY, reason: "Vaccins." },
+  ];
+
+  for (const sample of samples) {
+    const doctor = await db.doctor.findFirstOrThrow({ where: { user: { email: sample.doctor } }, include: { user: true, specialty_: true } });
+    const existing = await db.consultation.findUnique({ where: { reference: sample.reference }, include: { slot: true } });
+    if (existing) {
+      if (sample.reference === "LC-DEMO03" && existing.status === "PAID") {
+        await db.slot.deleteMany({ where: { doctorId: doctor.id, startsAt: new Date(sample.at), id: { not: existing.slotId }, status: "FREE" } });
+        await db.slot.update({ where: { id: existing.slotId }, data: { startsAt: new Date(sample.at) } }).catch(() => undefined);
+      }
+      continue;
+    }
+    const price = doctor.consultationPrice ?? doctor.specialty_?.consultationPrice ?? 5000;
+    const fee = doctor.consultationFee ?? Math.round(price * 0.7);
+    const slotStatus = sample.status === "PAID" || sample.status === "COMPLETED" ? "BOOKED" : sample.status === "REQUESTED" || sample.status === "CONFIRMED" ? "HELD" : "FREE";
+    const slot = await db.slot.upsert({
+      where: { doctorId_startsAt: { doctorId: doctor.id, startsAt: new Date(sample.at) } },
+      update: { status: slotStatus, kind: "CONSULTATION" },
+      create: { doctorId: doctor.id, startsAt: new Date(sample.at), status: slotStatus, kind: "CONSULTATION" },
+    });
+    const paid = sample.status === "PAID" || sample.status === "COMPLETED";
+    const c = await db.consultation.create({
+      data: {
+        reference: sample.reference,
+        patientId: patientIds[sample.patient],
+        doctorId: doctor.id,
+        slotId: slot.id,
+        status: sample.status,
+        reason: sample.reason,
+        durationMinutes: doctor.consultationMinutes,
+        price,
+        doctorFee: fee,
+        currency: settings.currency,
+        refusalReason: sample.status === "REFUSED" ? "Un examen en cabinet est nécessaire : merci de prendre rendez-vous sur place." : null,
+        confirmedAt: sample.status === "REQUESTED" || sample.status === "REFUSED" ? null : new Date(),
+        paymentDeadline: sample.status === "CONFIRMED" ? new Date(Date.now() + settings.paymentDeadlineHours * 3_600_000) : sample.status === "EXPIRED" ? new Date(Date.now() - 2 * DAY) : null,
+        paidAt: paid ? new Date() : null,
+        endedAt: sample.status === "COMPLETED" ? new Date(sample.at + 30 * minute) : null,
+        cancelledAt: sample.status === "CANCELLED" ? new Date() : null,
+        payments: paid
+          ? { create: { provider: "mock", providerRef: `mock_${sample.reference}`, amount: price, currency: settings.currency, status: "SUCCEEDED" } }
+          : undefined,
+      },
+    });
+
+    if (sample.reference === "LC-DEMO03") {
+      const photo = demoPhoto();
+      const image = await db.image.create({ data: { mime: "image/png", size: photo.byteLength, data: photo, private: true, consultationId: c.id } });
+      const patientId = patientIds[sample.patient];
+      await db.message.createMany({
+        data: [
+          { consultationId: c.id, senderId: doctor.userId, kind: "TEXT", text: "Bonjour Sara, je suis le Dr Trabelsi. Pouvez-vous m'envoyer une photo nette du grain de beauté ?", createdAt: new Date(sample.at + minute) },
+          { consultationId: c.id, senderId: patientId, kind: "TEXT", text: "Bonjour Docteur, oui voici la photo prise ce matin.", createdAt: new Date(sample.at + 2 * minute) },
+          { consultationId: c.id, senderId: patientId, kind: "IMAGE", imageId: image.id, createdAt: new Date(sample.at + 3 * minute) },
+        ],
+      });
+    }
+
+    if (sample.reference === "LC-DEMO05") {
+      await seedIssuedPrescription(c.id, doctor.id, doctor.userId, patientIds[sample.patient], new Date(sample.at + 25 * minute));
+    }
+  }
+}
+
+async function seedIssuedPrescription(consultationId: string, doctorId: string, doctorUserId: string, patientId: string, issuedAt: Date) {
+  const pick = async (name: string, strength: string) => db.medication.findFirst({ where: { name, strength } });
+  const [augmentin, doliprane] = await Promise.all([pick("Augmentin", "1 g / 125 mg"), pick("Doliprane", "1 g")]);
+  const items = [
+    { position: 0, medicationId: augmentin?.id ?? null, name: "Augmentin 1 g / 125 mg · Comprimé", dosage: "1 comprimé", frequency: "2 fois par jour", duration: "7 jours", instructions: "Au début des repas." },
+    { position: 1, medicationId: doliprane?.id ?? null, name: "Doliprane 1 g · Comprimé", dosage: "1 comprimé", frequency: "Jusqu'à 3 fois par jour", duration: "5 jours", instructions: "Espacer les prises d'au moins 6 heures." },
+  ];
+  const notes = "Consulter en cabinet si la fièvre persiste au-delà de 72 heures.";
+  const prescription = await db.prescription.create({
+    data: { consultationId, doctorId, patientId, notes, items: { create: items } },
+    include: { items: { orderBy: { position: "asc" } }, patient: true, doctor: { include: { user: true } } },
+  });
+  const number = prescriptionNumber(issuedAt);
+  const hash = contentHash({ ...prescription, number, issuedAt });
+  await db.prescription.update({ where: { id: prescription.id }, data: { status: "ISSUED", number, issuedAt, contentHash: hash } });
+  await db.message.createMany({
+    data: [
+      { consultationId, senderId: doctorUserId, kind: "TEXT", text: "Voici votre ordonnance. Bon rétablissement !", createdAt: new Date(issuedAt.getTime() - 60_000) },
+      { consultationId, senderId: doctorUserId, kind: "PRESCRIPTION", prescriptionId: prescription.id, createdAt: issuedAt },
+    ],
+  });
+}
+
 
 main()
   .catch((error) => {

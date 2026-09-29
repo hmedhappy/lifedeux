@@ -6,6 +6,7 @@ import type { Role, User } from "@prisma/client";
 import { db } from "./db";
 import { SESSION_COOKIE, SESSION_MAX_AGE, signSession, verifySession } from "./session-token";
 import type { Locale } from "./i18n";
+import { DOCTOR_ROLES } from "./roles";
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
@@ -48,6 +49,7 @@ export function homeFor(role: Role): string {
     case "ADMIN":
       return "/admin";
     case "DOCTOR":
+    case "SUPER_DOCTOR":
       return "/doctor";
     case "AGENT":
       return "/scan";
@@ -68,7 +70,7 @@ export async function requireRole(locale: Locale, roles: Role[], next?: string):
 }
 
 export async function requireDoctor(locale: Locale) {
-  const user = await requireRole(locale, ["DOCTOR"]);
+  const user = await requireRole(locale, DOCTOR_ROLES);
   const doctor = await db.doctor.findUnique({ where: { userId: user.id } });
   if (!doctor) redirect(`/${locale}`);
   return { user, doctor };

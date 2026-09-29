@@ -15,7 +15,7 @@ function isImageFile(value: FormDataEntryValue): value is File {
 }
 
 /** Checks the magic bytes so a renamed file cannot pass as an image. */
-function sniff(bytes: Uint8Array): (typeof IMAGE_TYPES)[number] | null {
+export function sniff(bytes: Uint8Array): (typeof IMAGE_TYPES)[number] | null {
   if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
   if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return "image/png";
   if (
@@ -30,19 +30,33 @@ function sniff(bytes: Uint8Array): (typeof IMAGE_TYPES)[number] | null {
 export type UploadResult = { paths: string[] } | { error: "errors.imageInvalid" | "errors.imageTooLarge" };
 
 /** Stores the uploaded files of `field` and returns their public paths. */
-export async function saveUploadedImages(formData: FormData, field: string, max = 10): Promise<UploadResult> {
+export async function saveUploadedImages(
+  formData: FormData,
+  field: string,
+  max = 10,
+  options: { private?: boolean; consultationId?: string; types?: readonly string[] } = {},
+): Promise<UploadResult> {
   const files = formData.getAll(field).filter(isImageFile).slice(0, max);
   const prepared: { mime: string; data: Uint8Array<ArrayBuffer> }[] = [];
   for (const file of files) {
     if (file.size > MAX_IMAGE_BYTES) return { error: "errors.imageTooLarge" };
     const data = new Uint8Array(await file.arrayBuffer());
     const mime = sniff(data);
-    if (!mime) return { error: "errors.imageInvalid" };
+    if (!mime || (options.types && !options.types.includes(mime))) return { error: "errors.imageInvalid" };
     prepared.push({ mime, data });
   }
   const paths: string[] = [];
   for (const image of prepared) {
-    const saved = await db.image.create({ data: { mime: image.mime, size: image.data.byteLength, data: image.data }, select: { id: true } });
+    const saved = await db.image.create({
+      data: {
+        mime: image.mime,
+        size: image.data.byteLength,
+        data: image.data,
+        private: options.private ?? false,
+        consultationId: options.consultationId,
+      },
+      select: { id: true },
+    });
     paths.push(`${IMAGE_PATH_PREFIX}${saved.id}`);
   }
   return { paths };

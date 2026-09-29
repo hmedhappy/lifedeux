@@ -1,6 +1,6 @@
 # LifeDeux
 
-Plateforme de prise de rendez-vous pour une intervention chirurgicale en Tunisie, avec transfert aéroport, hébergement, paiement en ligne et suivi du patient par QR code. Interface en **français, anglais et arabe** (RTL).
+Plateforme médicale tunisienne pour les patients du monde entier : **consultation en ligne** (chat texte et photo, ordonnance numérique certifiée par QR code) dans plus de 40 spécialités, et **intervention chirurgicale** en Tunisie avec transfert aéroport, hébergement, paiement en ligne et suivi du patient par QR code. Interface en **français, anglais et arabe** (RTL).
 
 L'étude fonctionnelle est dans [`docs/ETUDE.md`](docs/ETUDE.md).
 
@@ -8,9 +8,11 @@ L'étude fonctionnelle est dans [`docs/ETUDE.md`](docs/ETUDE.md).
 
 | Espace | Ce qu'on y fait |
 |---|---|
-| **Patient** | Choisit le chirurgien et le créneau, envoie la demande, puis après confirmation choisit accompagnants, logement et transfert, paie en ligne et télécharge sa fiche avec QR code. |
-| **Médecin** (`/doctor`) | Confirme ou refuse les demandes (et fixe la durée de convalescence), publie ses créneaux, suit ses patients, marque l'intervention réalisée, consulte ce que LifeDeux lui doit. |
-| **Admin** (`/admin`) | Crée les comptes médecins (invitation par email), gère interventions, hébergements, réservations, remboursements, versements en espèces aux médecins, équipe et paramètres. Tableau de suivi en temps réel. |
+| **Patient** | Choisit une spécialité (cartes avec icônes, recherche) puis un médecin, et réserve **une consultation en ligne** ou **une intervention**. Consultation : le médecin accepte le créneau, le patient paie, puis discute avec lui par chat (texte + photos) à l'heure prévue et reçoit son ordonnance PDF certifiée. Intervention : après confirmation, choisit accompagnants, logement et transfert, paie et télécharge sa fiche QR. |
+| **Médecin** (`/doctor`) | Accepte ou refuse les demandes, publie ses créneaux (consultation ou intervention), mène la consultation dans le chat avec un panneau d'ordonnance (recherche de médicaments, aperçu, signature et envoi), la termine, suit ses patients opérés, consulte ce que LifeDeux lui doit. |
+| **Super-médecin** | Un médecin avec en plus une page **Parrainage** : il partage son lien, les médecins qui s'inscrivent avec sont actifs immédiatement et rattachés à lui. |
+| **Admin** (`/admin`) | Crée les comptes médecins (spécialité, n° d'Ordre, tarif de consultation, **cachet** et signature, statut super-médecin), gère spécialités, médicaments, interventions, hébergements, réservations, consultations, remboursements, versements en espèces, équipe et paramètres. |
+| **Pharmacien** (`/verify/…`) | Scanne le QR de l'ordonnance : la page confirme qu'elle est authentique et non modifiée (empreinte SHA-256). |
 | **Agent terrain** (`/scan`) | Scanne le QR code du patient (ou saisit la référence) et valide chaque étape : aéroport → logement → clinique → opéré → convalescence → départ. |
 
 Règles métier principales :
@@ -18,7 +20,11 @@ Règles métier principales :
 - le patient a **72 h** (paramétrable) pour payer après confirmation, et au plus tard 24 h avant l'intervention ;
 - le logement inclut toujours le transfert ; un logement ne peut pas être réservé deux fois sur des dates qui se chevauchent ;
 - le paiement n'est validé **que** par le prestataire (webhook Stripe signé, vérification API Konnect), jamais par le navigateur ;
-- sur la fiche et dans les emails, les libellés restent neutres (discrétion).
+- sur la fiche et dans les emails, les libellés restent neutres (discrétion) ;
+- consultation : demande au moins 2 h avant, paiement **après** acceptation et au plus tard 30 min avant ; le chat s'ouvre 10 min avant le créneau et se ferme quand le médecin termine (ou 24 h après) ; appel audio/vidéo affichés mais désactivés pour l'instant ;
+- les photos du chat, les cachets et signatures sont **privés** (jamais servis par l'URL publique des images) ;
+- pas d'ordonnance sans cachet téléversé ; une ordonnance envoyée n'est plus modifiable et toute modification en base est détectée par la page de vérification ;
+- la recherche de médicaments passe par `src/lib/medications.ts` (PostgreSQL aujourd'hui), prévu pour être remplacé par Elasticsearch sans toucher au reste.
 
 ## Stack
 
@@ -32,7 +38,7 @@ Prérequis : Node.js 20.9+ et PostgreSQL.
 cp .env.example .env            # puis remplir DATABASE_URL, AUTH_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD
 npm install
 npx prisma migrate dev          # crée les tables
-npm run db:seed:demo            # admin + 3 médecins, 5 patients, agent, logements, créneaux, réservations d'exemple
+npm run db:seed:demo            # référentiel + médecins de 10 spécialités, patients, agent, logements, créneaux, réservations et consultations
 npm run dev                     # http://localhost:3000
 ```
 
@@ -42,15 +48,31 @@ Comptes de démo (mot de passe `Demo12345!`) :
 
 | Rôle | Email | Ce qu'on y voit |
 |---|---|---|
-| Médecin | `dr.ben-salah@demo.lifedeux.com`, `dr.trabelsi@demo.lifedeux.com`, `dr.gharbi@demo.lifedeux.com` | demandes, créneaux, patients |
+| Super-médecin | `dr.mansour@demo.lifedeux.com` (médecine générale) | page Parrainage, lien `/fr/join/DR-DEMOSUPER` ; consultation terminée avec ordonnance (LC-DEMO05) |
+| Médecin | `dr.amira@demo.lifedeux.com` (dermatologie) | **chat ouvert maintenant** avec Sara (LC-DEMO03, replacé à l'heure actuelle à chaque seed) |
+| Médecin | `dr.jaziri@demo.lifedeux.com` (cardiologie) | demande de consultation à accepter (LC-DEMO01) |
+| Médecin | `dr.khelifi@demo.lifedeux.com` (pédiatrie) | consultation payée demain (LC-DEMO04) |
+| Médecin | `dr.chaabane@demo.lifedeux.com` (psychologie) | **sans cachet** : ne peut pas prescrire |
+| Médecin | `dr.karoui@demo.lifedeux.com` (neurologie) | parrainé par Dr Mansour |
+| Médecin | `dr.mejri@…`, `dr.hamdi@…` (cataracte), `dr.bouaziz@…` (implant dentaire) | consultation + intervention |
+| Médecin | `dr.ben-salah@…`, `dr.trabelsi@…`, `dr.gharbi@demo.lifedeux.com` (urologie) | demandes d'intervention, créneaux, patients |
 | Agent | `agent@demo.lifedeux.com` | scan et suivi |
-| Patient | `patient@demo.lifedeux.com` | aucune réservation, pour tester le parcours |
-| Patient | `sara@demo.lifedeux.com` | demande en attente (LD-DEMO01, Dr Trabelsi) |
-| Patient | `luca@demo.lifedeux.com` | confirmé, à payer (LD-DEMO02, Dr Ben Salah) |
-| Patient | `youssef@demo.lifedeux.com` | payé, villa + accompagnant, fiche QR (LD-DEMO03, Dr Gharbi) |
-| Patient | `nadia@demo.lifedeux.com` | aucune réservation |
+| Patient | `sara@demo.lifedeux.com` | chat en cours (LC-DEMO03) ; demande d'intervention (LD-DEMO01) |
+| Patient | `patient@demo.lifedeux.com` | consultation acceptée à payer (LC-DEMO02), consultation refusée (LC-DEMO06) |
+| Patient | `youssef@demo.lifedeux.com` | ordonnance certifiée à télécharger (LC-DEMO05) ; intervention payée avec fiche QR (LD-DEMO03) |
+| Patient | `luca@demo.lifedeux.com` | consultation payée demain (LC-DEMO04), expirée (LC-DEMO07) ; intervention à payer (LD-DEMO02) |
+| Patient | `nadia@demo.lifedeux.com` | demande en attente (LC-DEMO01), consultation annulée (LC-DEMO08) |
 
-L'admin est celui défini par `ADMIN_EMAIL` / `ADMIN_PASSWORD`. La commande peut être relancée sans créer de doublons ; ne l'utilisez pas en production (utilisez `npm run db:seed`).
+Scripts de données :
+
+| Commande | Effet |
+|---|---|
+| `npm run db:seed` | paramètres, admin (`ADMIN_EMAIL`/`ADMIN_PASSWORD`) et référentiel. Sans danger en production. |
+| `npm run db:seed:reference` | seulement le référentiel : 43 spécialités (icône, noms FR/EN/AR, tarif), 7 interventions, 58 médicaments d'exemple. |
+| `npm run db:seed:demo` | tout ce qui précède + les comptes et scénarios de démo ci-dessus. |
+| `npm run db:reset-users -- --yes` | **supprime tous les utilisateurs** et leurs données (réservations, consultations, messages, ordonnances, paiements, créneaux, images privées), garde spécialités, médicaments, interventions, logements et paramètres, puis recrée l'admin. À utiliser avant l'ouverture en production. |
+
+L'admin est celui défini par `ADMIN_EMAIL` / `ADMIN_PASSWORD`. Les seeds peuvent être relancés sans créer de doublons ; n'utilisez pas `db:seed:demo` en production.
 
 ## Mise en production
 
@@ -79,11 +101,13 @@ npm run build
 npm run test:e2e         # parcours complet dans un vrai navigateur (base E2E_DATABASE_URL)
 ```
 
-Les tests de bout en bout couvrent : pages publiques FR/EN/AR, contrôle d'accès par rôle, création d'un médecin par l'admin et activation par invitation, publication de créneaux, inscription patient, mot de passe oublié, envoi de photos (et rejet des faux fichiers image), demande, confirmation, choix accompagnant + logement, paiement, fiche QR, impossibilité de réserver deux fois un logement, suivi par l'agent et le médecin, versements en espèces, webhooks Stripe signés et falsifiés, tâche d'expiration.
+Les tests de bout en bout couvrent : pages publiques FR/EN/AR, contrôle d'accès par rôle, création d'un médecin par l'admin et activation par invitation, publication de créneaux, inscription patient, mot de passe oublié, envoi de photos (et rejet des faux fichiers image), demande, confirmation, choix accompagnant + logement, paiement, fiche QR, impossibilité de réserver deux fois un logement, suivi par l'agent et le médecin, versements en espèces, webhooks Stripe signés et falsifiés, tâche d'expiration ; et côté consultation : navigation et recherche par spécialité (FR/EN/AR), demande, acceptation, paiement, chat texte + photo (photos privées, accès refusé aux tiers), ordonnance (recherche de médicament, lignes incomplètes refusées, aperçu, brouillon invisible au patient, signature, PDF), vérification publique par QR (et détection d'une modification), fin de consultation (chat en lecture seule), médecin sans cachet, parrainage par un super-médecin, gestion admin des spécialités, médicaments et consultations.
 
 ## Limites connues
 
 - Les photos envoyées sont stockées dans PostgreSQL (redimensionnées à 1600 px dans le navigateur). C'est simple et suffisant pour quelques centaines de photos ; au-delà, un stockage objet (S3, Vercel Blob) serait préférable.
 - Paymee et Flouci ne sont pas branchés ; l'interface `PaymentProvider` (`src/lib/payments`) permet de les ajouter.
 - La limitation des tentatives de connexion est en mémoire (une seule instance) ; utilisez Redis si vous en lancez plusieurs.
+- Le chat interroge le serveur toutes les 3 s (pas de WebSocket) : simple et fiable derrière nginx, suffisant pour du texte et des photos.
+- Le PDF d'ordonnance utilise les polices standard (caractères latins) : les noms en arabe y sont remplacés par « ? ». Une police arabe embarquée sera nécessaire pour les ordonnances en arabe.
 - Stripe et Konnect n'ont pas été testés avec de vraies clés : le webhook Stripe est testé avec des signatures générées localement, la création de session Checkout et Konnect ne l'ont pas été.

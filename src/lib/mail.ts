@@ -48,7 +48,18 @@ type Recipient = { email: string; firstName: string; locale: string };
 /** Subjects stay neutral on purpose: no medical wording in inboxes. */
 export async function sendTemplate(
   to: Recipient,
-  template: "invite" | "reset" | "requestReceived" | "newRequest" | "confirmed" | "refused" | "paid" | "expired",
+  template:
+    | "invite"
+    | "reset"
+    | "requestReceived"
+    | "newRequest"
+    | "confirmed"
+    | "refused"
+    | "paid"
+    | "expired"
+    | "consultConfirmed"
+    | "consultPaid"
+    | "prescription",
   vars: Record<string, string>,
   path?: string,
 ): Promise<void> {

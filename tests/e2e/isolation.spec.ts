@@ -9,7 +9,7 @@ test("refusing one patient's request leaves the other patient's request untouche
   for (const email of ["nadia@demo.lifedeux.com", "patient@demo.lifedeux.com"]) {
     const page = await (await browser.newContext()).newPage();
     await login(page, email, DEMO_PASSWORD);
-    await page.goto(`/fr/doctors/${doc.id}`);
+    await page.goto(`/fr/doctors/${doc.id}?service=operation`);
     await page.locator("[data-testid=slot-times] button").first().click();
     await page.getByRole("button", { name: "Demander ce rendez-vous" }).click();
     await expect(page).toHaveURL(/requested=1/);

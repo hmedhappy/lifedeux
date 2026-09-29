@@ -51,7 +51,7 @@ if [ "$started" != "1" ]; then
   exit 1
 fi
 
-# Idempotent: creates the admin and the procedure (plus demo data when SEED_DEMO=true).
+# Idempotent: creates the admin and the reference data (plus demo data when SEED_DEMO=true).
 "${compose[@]}" exec -T app npx tsx prisma/seed.ts
 
 "${compose[@]}" ps

@@ -13,3 +13,11 @@ export function bookingReference(): string {
   for (const b of bytes) out += REFERENCE_ALPHABET[b % REFERENCE_ALPHABET.length];
   return `LD-${out}`;
 }
+
+/** Short code a super-doctor shares in their referral link, e.g. DR-K7P3QX9A. */
+export function referralCode(): string {
+  const bytes = randomBytes(8);
+  let out = "";
+  for (const b of bytes) out += REFERENCE_ALPHABET[b % REFERENCE_ALPHABET.length];
+  return `DR-${out}`;
+}

@@ -22,10 +22,13 @@ export default async function AdminLayout({
       items={[
         { href: base, label: t("admin.nav.dashboard"), exact: true },
         { href: `${base}/bookings`, label: t("admin.nav.bookings"), badge: pending },
+        { href: `${base}/consultations`, label: t("admin.nav.consultations") },
         { href: `/${locale}/scan`, label: t("admin.nav.scan") },
         { href: `${base}/doctors`, label: t("admin.nav.doctors") },
         { href: `${base}/stays`, label: t("admin.nav.stays") },
         { href: `${base}/operations`, label: t("admin.nav.operations") },
+        { href: `${base}/specialties`, label: t("admin.nav.specialties") },
+        { href: `${base}/medications`, label: t("admin.nav.medications") },
         { href: `${base}/payouts`, label: t("admin.nav.payouts") },
         { href: `${base}/team`, label: t("admin.nav.team") },
         { href: `${base}/settings`, label: t("admin.nav.settings") },

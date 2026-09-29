@@ -6,7 +6,7 @@ import { useI18n } from "./i18n-provider";
 const MAX_SIDE = 1600;
 
 /** Downscales a photo in the browser so uploads stay small (JPEG, 1600px max). */
-async function shrink(file: File): Promise<File> {
+export async function shrink(file: File): Promise<File> {
   if (!file.type.startsWith("image/")) return file;
   try {
     const bitmap = await createImageBitmap(file);

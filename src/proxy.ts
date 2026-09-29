@@ -8,7 +8,7 @@ const LOCALE_COOKIE = "ld_locale";
 /** First path segment after the locale → roles allowed. Pages re-check with requireRole. */
 const PROTECTED: Record<string, Role[]> = {
   admin: ["ADMIN"],
-  doctor: ["DOCTOR"],
+  doctor: ["DOCTOR", "SUPER_DOCTOR"],
   account: ["PATIENT"],
   scan: ["AGENT", "ADMIN"],
 };
@@ -16,6 +16,7 @@ const PROTECTED: Record<string, Role[]> = {
 const HOME: Record<Role, string> = {
   ADMIN: "admin",
   DOCTOR: "doctor",
+  SUPER_DOCTOR: "doctor",
   AGENT: "scan",
   PATIENT: "account",
 };

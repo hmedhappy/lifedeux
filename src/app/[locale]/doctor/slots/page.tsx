@@ -1,20 +1,30 @@
+import { Scissors, Video } from "lucide-react";
 import { ActionForm, SubmitButton } from "@/components/forms";
-import { Badge, Card, EmptyState, Field, Input, PageTitle } from "@/components/ui";
+import { Badge, Card, EmptyState, Field, Input, Notice, PageTitle } from "@/components/ui";
 import { addSlotsAction, deleteSlotAction } from "@/actions/doctor";
 import { requireDoctor } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatDate, formatTime, tunisDayKey } from "@/lib/format";
 import { getT, toLocale } from "@/lib/i18n";
 
-export default async function DoctorSlotsPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function DoctorSlotsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ welcome?: string }>;
+}) {
   const locale = toLocale((await params).locale);
+  const { welcome } = await searchParams;
   const t = getT(locale);
   const { doctor } = await requireDoctor(locale);
+  // Surgeons publish procedure slots by default; everyone else consultation slots.
+  const defaultKind = (await db.doctorOperation.count({ where: { doctorId: doctor.id } })) > 0 ? "OPERATION" : "CONSULTATION";
   const slots = await db.slot.findMany({
     where: { doctorId: doctor.id, startsAt: { gt: new Date() } },
     orderBy: { startsAt: "asc" },
     take: 300,
-    include: { _count: { select: { bookings: true } } },
+    include: { _count: { select: { bookings: true, consultations: true } } },
   });
 
   const days = new Map<string, typeof slots>();
@@ -28,10 +38,23 @@ export default async function DoctorSlotsPage({ params }: { params: Promise<{ lo
 
   return (
     <div className="space-y-10">
+      {welcome && <Notice tone="success">{t("referral.welcome")}</Notice>}
       <PageTitle title={t("doctorArea.slotsTitle")} subtitle={t("doctorArea.slotsSubtitle")} />
       <Card>
         <h2 className="text-lg font-semibold text-ink">{t("doctorArea.addSlots")}</h2>
         <ActionForm action={addSlotsAction.bind(null, locale)} className="mt-5 space-y-5">
+          <fieldset>
+            <legend className="mb-2 text-sm font-medium text-ink">{t("doctorArea.slotKind")}</legend>
+            <div className="flex flex-wrap gap-2">
+              {(["CONSULTATION", "OPERATION"] as const).map((k) => (
+                <label key={k} className="flex cursor-pointer items-center gap-2 rounded-xl border-2 border-line px-4 py-2.5 text-sm has-[:checked]:border-ink">
+                  <input type="radio" name="kind" value={k} defaultChecked={k === defaultKind} className="accent-brand" />
+                  {k === "CONSULTATION" ? <Video className="h-4 w-4" aria-hidden /> : <Scissors className="h-4 w-4" aria-hidden />}
+                  {t(`slotKind.${k}`)}
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label={t("doctorArea.from")}>
               <Input type="date" name="from" min={today} required />
@@ -72,9 +95,14 @@ export default async function DoctorSlotsPage({ params }: { params: Promise<{ lo
                 <ul className="mt-3 flex flex-wrap gap-2">
                   {daySlots.map((s) => (
                     <li key={s.id} className="flex items-center gap-2 rounded-lg border border-line py-1.5 ps-3 pe-1.5 text-sm">
+                      {s.kind === "CONSULTATION" ? (
+                        <Video className="h-3.5 w-3.5 text-brand" aria-label={t("slotKind.CONSULTATION")} />
+                      ) : (
+                        <Scissors className="h-3.5 w-3.5 text-muted" aria-label={t("slotKind.OPERATION")} />
+                      )}
                       <span className="font-medium">{formatTime(s.startsAt, locale)}</span>
                       {s.status === "FREE" ? (
-                        s._count.bookings === 0 ? (
+                        s._count.bookings + s._count.consultations === 0 ? (
                           <form action={deleteSlotAction.bind(null, locale, s.id)}>
                             <button
                               type="submit"

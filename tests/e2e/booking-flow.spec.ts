@@ -1,5 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { E2E_ENV } from "../../playwright.config";
+import { demoStamp } from "../../prisma/lib/demo-images";
 import { DEMO_PASSWORD, db, futureWeekday, login } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -24,15 +25,16 @@ let bookingId: string;
 test("public pages render in French, English and Arabic (RTL)", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveURL(/\/fr$/);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("prise en charge complète");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Consultez un médecin en ligne");
+  await expect(page.getByTestId("home-specialty").first()).toBeVisible();
   await expect(page.getByTestId("doctor-card").first()).toBeVisible();
 
   await page.goto("/en");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("complete care");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("See a doctor online");
 
   await page.goto("/ar");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("تكفّل كامل");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("استشر طبيبًا");
 
   await page.goto("/fr/stays");
   expect(await page.getByTestId("stay-card").count()).toBeGreaterThanOrEqual(4);
@@ -68,20 +70,30 @@ test("admin creates a doctor who activates the account from the invitation", asy
   await admin.locator('input[name="firstName"]').fill("Nadia");
   await admin.locator('input[name="lastName"]').fill(lastName);
   await admin.locator('input[name="email"]').fill(doctorEmail);
+  await admin.getByTestId("specialty-select").selectOption({ label: "Urologie" });
   await admin.locator('input[name="specialty"]').fill("Urologue");
   await admin.locator('input[name="clinicName"]').fill("Clinique E2E");
   await admin.locator('input[name="city"]').fill("Tunis");
   await admin.locator('input[name="clinicAddress"]').fill("1 rue du Test, Tunis");
   await admin.locator('textarea[name="bio"]').fill("Chirurgienne de test.");
   const op = await db.operation.findUniqueOrThrow({ where: { slug: "prothese-penienne" } });
+  await admin.locator(`input[name="op_${op.id}"]`).check();
   await admin.locator(`input[name="price_${op.id}"]`).fill("5000");
   await admin.locator(`input[name="fee_${op.id}"]`).fill("3000");
+  await admin.locator('input[name="licenseNumber"]').fill("TN-URO-E2E");
+  await admin.getByTestId("stamp-file").setInputFiles({ name: "cachet.png", mimeType: "image/png", buffer: Buffer.from(demoStamp()) });
   await admin.getByRole("button", { name: "Créer et envoyer l'invitation" }).click();
 
   const notice = admin.getByRole("status").filter({ hasText: "Invitation envoyée" });
   await expect(notice).toBeVisible();
   const link = (await notice.locator("span").innerText()).trim();
   expect(link).toMatch(/\/fr\/invite\/[\w-]+$/);
+  const created = await db.doctor.findFirstOrThrow({ where: { user: { email: doctorEmail } }, include: { specialty_: true } });
+  expect(created.specialty_?.slug).toBe("urology");
+  expect(created.stampImageId).toBeTruthy();
+  // The stamp is private: only the admin (and the doctor) can see it.
+  expect((await admin.request.get(`/api/images/${created.stampImageId}`)).status()).toBe(404);
+  expect((await admin.request.get(`/api/doctors/${created.id}/stamp`)).status()).toBe(200);
 
   doctor = await newPage(browser);
   await doctor.goto(link);
@@ -94,6 +106,7 @@ test("admin creates a doctor who activates the account from the invitation", asy
 
 test("doctor publishes slots", async () => {
   await doctor.goto("/fr/doctor/slots");
+  await expect(doctor.locator('input[name="kind"][value="OPERATION"]')).toBeChecked();
   await doctor.locator('input[name="from"]').fill(slotDay);
   await doctor.locator('input[name="times"]').fill("10:00, 15:30");
   await doctor.getByRole("button", { name: "Créer les créneaux" }).click();
@@ -116,6 +129,9 @@ test("patient registers and requests an appointment", async ({ browser }) => {
   const doc = await db.doctor.findFirstOrThrow({ where: { user: { email: doctorEmail } } });
   await patient.goto(`/fr/doctors/${doc.id}`);
   await expect(patient.getByRole("heading", { name: doctorName })).toBeVisible();
+  // The doctor offers both services; switch to the procedure tab.
+  await patient.getByRole("tab", { name: "Intervention" }).click();
+  await expect(patient).toHaveURL(/service=operation/);
 
   // Submitting without a slot is refused.
   await patient.getByRole("button", { name: "Demander ce rendez-vous" }).click();
@@ -129,7 +145,7 @@ test("patient registers and requests an appointment", async ({ browser }) => {
   bookingId = patient.url().split("/bookings/")[1].split("?")[0];
 
   // The requested slot disappears from the public page.
-  await patient.goto(`/fr/doctors/${doc.id}`);
+  await patient.goto(`/fr/doctors/${doc.id}?service=operation`);
   await expect(patient.getByTestId("slot-times").getByRole("button", { name: "10:00" })).toHaveCount(0);
 });
 

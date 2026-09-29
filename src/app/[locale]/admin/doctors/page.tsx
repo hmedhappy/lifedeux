@@ -3,7 +3,7 @@ import { Avatar, Badge, EmptyState, LinkButton, PageTitle, Table, Td, Th } from 
 import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/format";
-import { getT, toLocale } from "@/lib/i18n";
+import { getT, localized, toLocale } from "@/lib/i18n";
 import { getSettings } from "@/lib/settings";
 
 export default async function AdminDoctorsPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -15,6 +15,7 @@ export default async function AdminDoctorsPage({ params }: { params: Promise<{ l
       include: {
         user: true,
         operations: true,
+        specialty_: true,
         _count: { select: { slots: { where: { status: "FREE", startsAt: { gt: new Date() } } } } },
       },
       orderBy: { createdAt: "desc" },
@@ -53,6 +54,11 @@ export default async function AdminDoctorsPage({ params }: { params: Promise<{ l
                         Dr {d.user.firstName} {d.user.lastName}
                       </span>
                       <span className="text-xs text-muted">{d.user.email}</span>
+                      <span className="block text-xs text-muted">
+                        {d.specialty_ ? localized(d.specialty_, "name", locale) : d.specialty}
+                        {d.user.role === "SUPER_DOCTOR" ? ` · ${t("admin.doctor.superBadge")}` : ""}
+                        {!d.stampImageId ? ` · ${t("admin.doctor.noStamp")}` : ""}
+                      </span>
                     </span>
                   </Link>
                 </Td>
@@ -61,6 +67,7 @@ export default async function AdminDoctorsPage({ params }: { params: Promise<{ l
                   <p className="text-xs text-muted">{d.city}</p>
                 </Td>
                 <Td>
+                  {d.offersConsultation && <span className="block text-xs text-muted">{t("consult.short")}</span>}
                   {d.operations.map((o) => (
                     <span key={o.operationId} className="block">
                       {formatMoney(o.price, settings.currency, locale)}

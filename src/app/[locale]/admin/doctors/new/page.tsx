@@ -10,7 +10,10 @@ export default async function NewDoctorPage({ params }: { params: Promise<{ loca
   const locale = toLocale((await params).locale);
   const t = getT(locale);
   await requireRole(locale, ["ADMIN"]);
-  const operations = await db.operation.findMany({ where: { active: true }, orderBy: { createdAt: "asc" } });
+  const [operations, specialties] = await Promise.all([
+    db.operation.findMany({ where: { active: true }, orderBy: { createdAt: "asc" } }),
+    db.specialty.findMany({ orderBy: { sortOrder: "asc" } }),
+  ]);
   return (
     <div>
       <Link href={`/${locale}/admin/doctors`} className="text-sm font-medium underline">
@@ -20,7 +23,7 @@ export default async function NewDoctorPage({ params }: { params: Promise<{ loca
         <PageTitle title={t("admin.addDoctor")} subtitle={t("admin.addDoctorSubtitle")} />
       </div>
       <Card>
-        <DoctorForm action={createDoctorAction.bind(null, locale)} t={t} locale={locale} operations={operations} />
+        <DoctorForm action={createDoctorAction.bind(null, locale)} t={t} locale={locale} operations={operations} specialties={specialties} />
       </Card>
     </div>
   );

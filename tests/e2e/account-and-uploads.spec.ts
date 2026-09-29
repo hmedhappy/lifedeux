@@ -23,6 +23,8 @@ test("a patient can reset a forgotten password", async ({ page }) => {
 
   await page.goto("/fr/login");
   await page.getByRole("link", { name: "Mot de passe oublié ?" }).click();
+  // The login page also has an email field: wait for the navigation before typing.
+  await expect(page).toHaveURL(/\/fr\/forgot$/);
   await page.locator('input[name="email"]').fill(email);
   await page.getByRole("button", { name: "Envoyer le lien" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Si un compte existe" })).toBeVisible();

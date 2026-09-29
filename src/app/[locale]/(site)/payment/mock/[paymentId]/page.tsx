@@ -15,8 +15,13 @@ export default async function MockCheckoutPage({ params }: { params: Promise<{ l
   const t = getT(locale);
   const user = await requireRole(locale, ["PATIENT"]);
   const payment = await db.payment.findFirst({
-    where: { id: paymentId, provider: "mock", status: "PENDING", booking: { patientId: user.id } },
-    include: { booking: true },
+    where: {
+      id: paymentId,
+      provider: "mock",
+      status: "PENDING",
+      OR: [{ booking: { patientId: user.id } }, { consultation: { patientId: user.id } }],
+    },
+    include: { booking: true, consultation: true },
   });
   if (!payment) notFound();
 
@@ -27,7 +32,7 @@ export default async function MockCheckoutPage({ params }: { params: Promise<{ l
         <h1 className="text-lg font-semibold text-ink">{t("payment.mockTitle")}</h1>
         <Notice tone="warning">{t("payment.mockInfo")}</Notice>
         <p className="text-3xl font-semibold text-ink">{formatMoney(payment.amount, payment.currency, locale)}</p>
-        <p className="text-sm text-muted">{payment.booking.reference}</p>
+        <p className="text-sm text-muted">{payment.booking?.reference ?? payment.consultation?.reference}</p>
         <form action={action} className="space-y-3">
           <SubmitButton size="lg" className="w-full" name="result" value="success">
             {t("payment.mockPay")}

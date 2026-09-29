@@ -54,23 +54,39 @@ export async function expireOverdueBookings(now = new Date()): Promise<number> {
       await sendTemplate(booking.patient, "expired", { reference: booking.reference });
     }
   }
-  return overdue.length;
+  const overdueConsultations = await db.consultation.findMany({
+    where: { status: "CONFIRMED", paymentDeadline: { lt: now } },
+    include: { patient: true },
+  });
+  for (const c of overdueConsultations) {
+    const updated = await db.$transaction(async (tx) => {
+      const res = await tx.consultation.updateMany({ where: { id: c.id, status: "CONFIRMED" }, data: { status: "EXPIRED" } });
+      if (res.count === 0) return false;
+      await tx.slot.updateMany({ where: { id: c.slotId, status: "HELD" }, data: { status: "FREE" } });
+      return true;
+    });
+    if (updated) await sendTemplate(c.patient, "expired", { reference: c.reference });
+  }
+  return overdue.length + overdueConsultations.length;
 }
 
 export type PaymentOutcome = "paid" | "already" | "unpayable" | "not_found";
 
 /**
- * Marks a payment as succeeded and the booking as paid. Idempotent: webhooks
- * may be delivered several times. Only ever called from a verified source
- * (signed Stripe webhook, Konnect API check, or the dev mock).
+ * Marks a payment as succeeded and its booking or consultation as paid.
+ * Idempotent: webhooks may be delivered several times. Only ever called from a
+ * verified source (signed Stripe webhook, Konnect API check, or the dev mock).
  */
 export async function markPaymentSucceeded(where: { id: string } | { providerRef: string }): Promise<PaymentOutcome> {
   const payment = await db.payment.findUnique({ where });
   if (!payment) return "not_found";
+  if (payment.consultationId) return markConsultationPaid(payment.id, payment.consultationId, payment.amount);
+  if (!payment.bookingId) return "not_found";
+  const bookingId = payment.bookingId;
 
   const outcome = await db.$transaction(async (tx): Promise<PaymentOutcome> => {
     await tx.payment.update({ where: { id: payment.id }, data: { status: "SUCCEEDED" } });
-    const booking = await tx.booking.findUniqueOrThrow({ where: { id: payment.bookingId } });
+    const booking = await tx.booking.findUniqueOrThrow({ where: { id: bookingId } });
     if (["PAID", "IN_PROGRESS", "COMPLETED"].includes(booking.status)) return "already";
     if (booking.status !== "CONFIRMED" && booking.status !== "EXPIRED") return "unpayable";
     if (payment.amount !== booking.totalAmount) return "unpayable";
@@ -104,7 +120,7 @@ export async function markPaymentSucceeded(where: { id: string } | { providerRef
 
   if (outcome === "paid") {
     const booking = await db.booking.findUniqueOrThrow({
-      where: { id: payment.bookingId },
+      where: { id: bookingId },
       include: { patient: true, slot: true },
     });
     await sendTemplate(
@@ -114,7 +130,41 @@ export async function markPaymentSucceeded(where: { id: string } | { providerRef
       `/account/bookings/${booking.id}/ticket`,
     );
   } else if (outcome === "unpayable") {
-    console.warn(`[payments] payment ${payment.id} succeeded but booking ${payment.bookingId} cannot be paid — refund needed`);
+    console.warn(`[payments] payment ${payment.id} succeeded but booking ${bookingId} cannot be paid — refund needed`);
+  }
+  return outcome;
+}
+
+async function markConsultationPaid(paymentId: string, consultationId: string, amount: number): Promise<PaymentOutcome> {
+  const outcome = await db.$transaction(async (tx): Promise<PaymentOutcome> => {
+    await tx.payment.update({ where: { id: paymentId }, data: { status: "SUCCEEDED" } });
+    const c = await tx.consultation.findUniqueOrThrow({ where: { id: consultationId } });
+    if (c.status === "PAID" || c.status === "COMPLETED") return "already";
+    if (c.status !== "CONFIRMED" && c.status !== "EXPIRED") return "unpayable";
+    if (amount !== c.price) return "unpayable";
+    const slot = await tx.slot.updateMany({
+      where: { id: c.slotId, status: c.status === "EXPIRED" ? "FREE" : "HELD" },
+      data: { status: "BOOKED" },
+    });
+    if (slot.count === 0) return "unpayable";
+    await tx.consultation.update({ where: { id: c.id }, data: { status: "PAID", paidAt: new Date() } });
+    await tx.payment.updateMany({
+      where: { consultationId: c.id, id: { not: paymentId }, status: "PENDING" },
+      data: { status: "FAILED" },
+    });
+    return "paid";
+  });
+
+  if (outcome === "paid") {
+    const c = await db.consultation.findUniqueOrThrow({ where: { id: consultationId }, include: { patient: true, slot: true } });
+    await sendTemplate(
+      c.patient,
+      "consultPaid",
+      { reference: c.reference, date: formatDateTime(c.slot.startsAt, toLocale(c.patient.locale)) },
+      `/account/consultations/${c.id}`,
+    );
+  } else if (outcome === "unpayable") {
+    console.warn(`[payments] payment ${paymentId} succeeded but consultation ${consultationId} cannot be paid — refund needed`);
   }
   return outcome;
 }
@@ -123,7 +173,7 @@ export async function markPaymentFailed(where: { id: string } | { providerRef: s
   await db.payment.updateMany({ where: { ...where, status: "PENDING" }, data: { status: "FAILED" } });
 }
 
-/** Amount LifeDeux owes each doctor: fees of operated bookings minus cash already paid. */
+/** Amount LifeDeux owes each doctor: fees of operations and completed consultations, minus cash already paid. */
 export async function doctorBalances() {
   const [earned, paid] = await Promise.all([
     db.booking.groupBy({
@@ -139,14 +189,32 @@ export async function doctorBalances() {
     }),
     db.doctorPayout.groupBy({ by: ["doctorId"], _sum: { amount: true } }),
   ]);
-  const result = new Map<string, { earned: number; paid: number; operations: number }>();
+  const consultations = await db.consultation.groupBy({
+    by: ["doctorId"],
+    where: { status: "COMPLETED" },
+    _sum: { doctorFee: true },
+    _count: true,
+  });
+  type Balance = { earned: number; paid: number; operations: number; consultations: number };
+  const result = new Map<string, Balance>();
+  const entryFor = (id: string): Balance => {
+    const e = result.get(id) ?? { earned: 0, paid: 0, operations: 0, consultations: 0 };
+    result.set(id, e);
+    return e;
+  };
   for (const row of earned) {
-    result.set(row.doctorId, { earned: row._sum.doctorFee ?? 0, paid: 0, operations: row._count });
+    const e = entryFor(row.doctorId);
+    e.earned += row._sum.doctorFee ?? 0;
+    e.operations = row._count;
+  }
+  for (const row of consultations) {
+    const e = entryFor(row.doctorId);
+    e.earned += row._sum.doctorFee ?? 0;
+    e.consultations = row._count;
   }
   for (const row of paid) {
-    const entry = result.get(row.doctorId) ?? { earned: 0, paid: 0, operations: 0 };
+    const entry = entryFor(row.doctorId);
     entry.paid = row._sum.amount ?? 0;
-    result.set(row.doctorId, entry);
   }
   return result;
 }
