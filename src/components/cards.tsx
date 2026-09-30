@@ -56,7 +56,7 @@ export function DoctorCard({
           </span>
         )}
         {fromPrice !== null && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 font-medium text-brand-dark">
+          <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2.5 py-1 font-medium text-brand-dark">
             <Scissors className="h-3.5 w-3.5" aria-hidden />
             {t("doctors.surgery")}
           </span>

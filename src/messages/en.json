@@ -13,18 +13,29 @@
     "copied": "Copied",
     "copy": "Copy",
     "delete": "Delete",
-    "search": "Search"
+    "search": "Search",
+    "confirmTitle": "Please confirm",
+    "confirm": "Confirm",
+    "undo": "Undo"
   },
   "nav": {
-    "doctors": "Surgeons",
+    "doctors": "Doctors",
     "stays": "Stays",
     "howItWorks": "How it works",
     "login": "Log in",
     "register": "Sign up",
     "logout": "Log out",
-    "myBookings": "My bookings",
+    "myBookings": "My appointments",
     "dashboard": "Dashboard",
-    "menu": "Menu"
+    "menu": "Menu",
+    "consult": "Consult",
+    "surgery": "Surgery",
+    "home": "Home",
+    "appointments": "Appointments",
+    "messages": "Messages",
+    "documents": "Documents",
+    "more": "More",
+    "profile": "My profile"
   },
   "footer": {
     "about": "LifeDeux connects you with verified doctors: teleconsultations with a certified prescription, or procedures with transfer, accommodation and follow-up.",
@@ -410,10 +421,15 @@
       "requests": "Requests",
       "patients": "My patients",
       "slots": "Slots",
-      "payouts": "Payouts",
+      "payouts": "My earnings",
       "consultations": "Consultations",
       "referrals": "Referrals",
-      "prescription": "Prescription template"
+      "prescription": "Prescription template",
+      "today": "Today",
+      "agenda": "Schedule",
+      "profile": "My profile",
+      "groupDaily": "Day to day",
+      "groupSettings": "Earnings & settings"
     },
     "requestsTitle": "Appointment requests",
     "requestsSubtitle": "Confirm or decline incoming requests.",
@@ -482,7 +498,7 @@
     "title": "Administration",
     "nav": {
       "dashboard": "Overview",
-      "bookings": "Bookings",
+      "bookings": "Stays",
       "scan": "Scan & tracking",
       "doctors": "Doctors",
       "stays": "Stays",
@@ -492,7 +508,13 @@
       "settings": "Settings",
       "consultations": "Consultations",
       "specialties": "Specialties",
-      "medications": "Medications"
+      "medications": "Medications",
+      "today": "To do",
+      "groupToday": "Today",
+      "groupActivity": "Activity",
+      "groupCatalogue": "Catalogue",
+      "groupFinance": "Finance",
+      "groupSettings": "Settings"
     },
     "dashboardTitle": "Overview",
     "stats": {
@@ -686,7 +708,8 @@
     "invalidTicket": "Invalid QR code or booking not found.",
     "cancelled": "Booking cancelled: do not take charge.",
     "markStep": "Confirm: {step}",
-    "completed": "Stay completed."
+    "completed": "Stay completed.",
+    "space": "Field space"
   },
   "errors": {
     "invalidCredentials": "Wrong email or password.",

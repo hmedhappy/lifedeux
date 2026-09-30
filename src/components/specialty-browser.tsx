@@ -11,7 +11,7 @@ export type SpecialtyTile = { slug: string; name: string; names: string[]; icon:
 
 /** Soft, distinct tints so neighbouring cards do not look identical. */
 const TINTS = [
-  "from-rose-50 to-rose-100 text-rose-600",
+  "from-rose-50 to-rose-100 text-brand",
   "from-sky-50 to-sky-100 text-sky-600",
   "from-emerald-50 to-emerald-100 text-emerald-600",
   "from-amber-50 to-amber-100 text-amber-600",
@@ -44,7 +44,7 @@ export function SpecialtyBrowser({ specialties, initialQuery = "" }: { specialti
           className="min-w-0 flex-1 bg-transparent py-2 text-sm text-ink placeholder:text-muted focus:outline-none"
           data-testid="specialty-search"
         />
-        <button type="submit" className="rounded-full bg-gradient-to-r from-brand to-brand-dark px-5 py-3 text-sm font-semibold text-white">
+        <button type="submit" className="rounded-full bg-brand px-5 py-3 text-sm font-semibold text-white">
           {t("specialties.searchDoctors")}
         </button>
       </form>

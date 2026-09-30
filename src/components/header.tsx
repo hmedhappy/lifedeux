@@ -3,125 +3,85 @@ import { Suspense } from "react";
 import { getCurrentUser, homeFor } from "@/lib/auth";
 import { getT, type Locale } from "@/lib/i18n";
 import { logoutAction } from "@/actions/auth";
+import { HowItWorksButton } from "./how-it-works";
 import { LanguageSwitcher } from "./language-switcher";
-import { Avatar, Container } from "./ui";
+import { FooterGate } from "./footer-gate";
+import { UserMenu } from "./user-menu";
+import { Container } from "./ui";
 
-export function Logo({ locale, inverted = false }: { locale: Locale; inverted?: boolean }) {
+/** The heart and cross, redrawn: a softer heart with the cross cut out of it. */
+export function LogoMark({ className = "h-8 w-8" }: { className?: string }) {
   return (
-    <Link href={`/${locale}`} className={`flex items-center gap-2 ${inverted ? "text-white" : "text-brand"}`} aria-label="LifeDeux">
-      <svg viewBox="0 0 32 32" className="h-8 w-8" aria-hidden>
-        <path
-          fill="currentColor"
-          d="M16 29s-11-6.6-11-15.1C5 9.3 8.5 6 12.6 6c1.4 0 2.6.4 3.4 1.2C16.8 6.4 18 6 19.4 6 23.5 6 27 9.3 27 13.9 27 22.4 16 29 16 29z"
-        />
-        <path fill={inverted ? "#e31c5f" : "#fff"} d="M14.6 11h2.8v3.6H21v2.8h-3.6V21h-2.8v-3.6H11v-2.8h3.6z" />
-      </svg>
-      <span className="text-xl font-bold tracking-tight">lifedeux</span>
+    <svg viewBox="0 0 32 32" className={className} aria-hidden>
+      <rect width="32" height="32" rx="10" fill="#0f766e" />
+      <path
+        fill="#fff"
+        d="M16 25.5s-8.5-5-8.5-11.4C7.5 10.9 10 8.5 13 8.5c1.2 0 2.3.4 3 1.1.7-.7 1.8-1.1 3-1.1 3 0 5.5 2.4 5.5 5.6 0 6.4-8.5 11.4-8.5 11.4z"
+      />
+      <path fill="#0f766e" d="M14.9 12.2h2.2v2.6h2.6V17h-2.6v2.6h-2.2V17h-2.6v-2.2h2.6z" />
+    </svg>
+  );
+}
+
+export function Logo({ locale, inverted = false, href }: { locale: Locale; inverted?: boolean; href?: string }) {
+  return (
+    <Link href={href ?? `/${locale}`} className="flex items-center gap-2" aria-label="LifeDeux">
+      <LogoMark />
+      <span className={`text-xl font-extrabold tracking-tight ${inverted ? "text-white" : "text-ink"}`} dir="ltr">
+        Life<span className={inverted ? "text-brand-bright" : "text-brand"}>Deux</span>
+      </span>
     </Link>
   );
 }
 
-export async function Header({ locale }: { locale: Locale }) {
+const navLink = "rounded-full px-4 py-2 text-sm font-semibold text-ink-soft transition hover:bg-surface hover:text-ink";
+
+/**
+ * `site`: public pages and patient space (marketing links, "Comment ça marche").
+ * `pro`: doctor, admin and agent spaces — no marketing links, the space name instead.
+ */
+export async function Header({ locale, variant = "site", spaceLabel }: { locale: Locale; variant?: "site" | "pro"; spaceLabel?: string }) {
   const t = getT(locale);
   const user = await getCurrentUser();
-  // Patients (and visitors, who are sent to login first) get "My bookings"; staff get their dashboard.
-  const homeLink = user ? homeFor(user.role) : "/account";
+  const home = user ? homeFor(user.role) : "/account";
   const homeLabel = !user || user.role === "PATIENT" ? t("nav.myBookings") : t("nav.dashboard");
 
   return (
-    <header className="no-print sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur">
-      <Container className="flex h-20 items-center justify-between gap-4">
-        <Logo locale={locale} />
-        <nav className="hidden items-center gap-1 md:flex">
-          <Link href={`/${locale}/doctors`} className="rounded-full px-4 py-2 text-sm font-medium text-ink hover:bg-surface">
-            {t("nav.doctors")}
-          </Link>
-          <Link href={`/${locale}/stays`} className="rounded-full px-4 py-2 text-sm font-medium text-ink hover:bg-surface">
-            {t("nav.stays")}
-          </Link>
-          <Link
-            href={`/${locale}${homeLink}`}
-            className="rounded-full px-4 py-2 text-sm font-medium text-ink hover:bg-surface"
-            data-testid="nav-home-link"
-          >
-            {homeLabel}
-          </Link>
-        </nav>
+    <header className="no-print sticky top-0 z-40 border-b border-line bg-white/90 backdrop-blur">
+      <Container className="flex h-16 items-center justify-between gap-3 md:h-[72px]">
+        <div className="flex min-w-0 items-center gap-3">
+          <Logo locale={locale} href={variant === "pro" ? `/${locale}${home}` : undefined} />
+          {variant === "pro" && spaceLabel && (
+            <span className="hidden rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-brand-dark sm:inline">{spaceLabel}</span>
+          )}
+        </div>
+        {variant === "site" && (
+          <nav className="hidden items-center gap-1 md:flex">
+            <Link href={`/${locale}/doctors`} className={navLink}>
+              {t("nav.consult")}
+            </Link>
+            <Link href={`/${locale}/surgery`} className={navLink}>
+              {t("nav.surgery")}
+            </Link>
+            <Link href={`/${locale}/stays`} className={navLink}>
+              {t("nav.stays")}
+            </Link>
+            <Link href={`/${locale}${home}`} className={navLink} data-testid="nav-home-link">
+              {homeLabel}
+            </Link>
+          </nav>
+        )}
         <div className="flex items-center gap-1">
-          <Link
-            href={`/${locale}#how`}
-            aria-label={t("nav.howItWorks")}
-            className="group relative flex h-10 w-10 items-center justify-center rounded-full text-ink hover:bg-surface focus-visible:outline-2 focus-visible:outline-ink"
-          >
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 11v5M12 7.5v.5" strokeLinecap="round" />
-            </svg>
-            <span
-              role="tooltip"
-              className="pointer-events-none absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-ink px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-float transition group-hover:opacity-100 group-focus-visible:opacity-100"
-            >
-              {t("nav.howItWorks")}
-            </span>
-          </Link>
+          {variant === "site" && <HowItWorksButton />}
           <Suspense>
             <LanguageSwitcher />
           </Suspense>
-          <details className="relative">
-            <summary
-              aria-label={t("nav.menu")}
-              data-testid="user-menu"
-              className="flex cursor-pointer list-none items-center gap-2.5 rounded-full border border-line py-1.5 ps-3.5 pe-1.5 transition hover:shadow-float [&::-webkit-details-marker]:hidden"
-            >
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                <path d="M4 7h16M4 12h16M4 17h16" />
-              </svg>
-              {user ? (
-                <Avatar name={`${user.firstName} ${user.lastName}`} size={30} />
-              ) : (
-                <span className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-full bg-muted text-white">
-                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden>
-                    <path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zm0 2c-4.4 0-8 2.2-8 5v2h16v-2c0-2.8-3.6-5-8-5z" />
-                  </svg>
-                </span>
-              )}
-            </summary>
-            <div className="absolute end-0 z-50 mt-2 w-60 overflow-hidden rounded-xl border border-line bg-white py-2 shadow-float">
-              {user ? (
-                <>
-                  <p className="px-4 py-2 text-xs text-muted">{user.email}</p>
-                  <Link href={`/${locale}${homeLink}`} className="block px-4 py-2.5 text-sm font-semibold hover:bg-surface md:hidden">
-                    {homeLabel}
-                  </Link>
-                  <Link href={`/${locale}/doctors`} className="block px-4 py-2.5 text-sm hover:bg-surface md:hidden">
-                    {t("nav.doctors")}
-                  </Link>
-                  <hr className="my-2 border-line" />
-                  <form action={logoutAction.bind(null, locale)}>
-                    <button type="submit" className="block w-full px-4 py-2.5 text-start text-sm hover:bg-surface">
-                      {t("nav.logout")}
-                    </button>
-                  </form>
-                </>
-              ) : (
-                <>
-                  <Link href={`/${locale}/register`} className="block px-4 py-2.5 text-sm font-semibold hover:bg-surface">
-                    {t("nav.register")}
-                  </Link>
-                  <Link href={`/${locale}/login`} className="block px-4 py-2.5 text-sm hover:bg-surface">
-                    {t("nav.login")}
-                  </Link>
-                  <hr className="my-2 border-line" />
-                  <Link href={`/${locale}/doctors`} className="block px-4 py-2.5 text-sm hover:bg-surface">
-                    {t("nav.doctors")}
-                  </Link>
-                  <Link href={`/${locale}/stays`} className="block px-4 py-2.5 text-sm hover:bg-surface">
-                    {t("nav.stays")}
-                  </Link>
-                </>
-              )}
-            </div>
-          </details>
+          <UserMenu
+            user={user ? { name: `${user.firstName} ${user.lastName}`, email: user.email, role: user.role } : null}
+            homeHref={`/${locale}${home}`}
+            homeLabel={homeLabel}
+            logout={logoutAction.bind(null, locale)}
+          />
         </div>
       </Container>
     </header>
@@ -131,28 +91,47 @@ export async function Header({ locale }: { locale: Locale }) {
 export async function Footer({ locale }: { locale: Locale }) {
   const t = getT(locale);
   return (
-    <footer className="no-print mt-24 border-t border-line bg-surface">
-      <Container className="grid gap-8 py-12 text-sm sm:grid-cols-3">
-        <div>
-          <Logo locale={locale} />
-          <p className="mt-3 max-w-xs text-muted">{t("footer.about")}</p>
-        </div>
-        <div>
-          <p className="font-semibold">{t("footer.platform")}</p>
-          <ul className="mt-3 space-y-2 text-muted">
-            <li><Link href={`/${locale}/doctors`} className="hover:underline">{t("nav.doctors")}</Link></li>
-            <li><Link href={`/${locale}/stays`} className="hover:underline">{t("nav.stays")}</Link></li>
-            <li><Link href={`/${locale}/login`} className="hover:underline">{t("footer.proAccess")}</Link></li>
-          </ul>
-        </div>
-        <div>
-          <p className="font-semibold">{t("footer.privacyTitle")}</p>
-          <p className="mt-3 text-muted">{t("footer.privacy")}</p>
-        </div>
-      </Container>
-      <Container className="border-t border-line py-6 text-xs text-muted">
-        © {new Date().getFullYear()} LifeDeux · {t("footer.rights")}
-      </Container>
-    </footer>
+    <FooterGate>
+      <footer className="no-print mt-20 border-t border-line bg-white">
+        <Container className="grid gap-8 py-10 text-sm sm:grid-cols-3">
+          <div>
+            <Logo locale={locale} />
+            <p className="mt-3 max-w-xs text-muted">{t("footer.about")}</p>
+          </div>
+          <div>
+            <p className="font-semibold text-ink">{t("footer.platform")}</p>
+            <ul className="mt-3 space-y-2 text-muted">
+              <li>
+                <Link href={`/${locale}/doctors`} className="hover:text-ink">
+                  {t("nav.consult")}
+                </Link>
+              </li>
+              <li>
+                <Link href={`/${locale}/surgery`} className="hover:text-ink">
+                  {t("nav.surgery")}
+                </Link>
+              </li>
+              <li>
+                <Link href={`/${locale}/stays`} className="hover:text-ink">
+                  {t("nav.stays")}
+                </Link>
+              </li>
+              <li>
+                <Link href={`/${locale}/login`} className="hover:text-ink">
+                  {t("footer.proAccess")}
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <p className="font-semibold text-ink">{t("footer.privacyTitle")}</p>
+            <p className="mt-3 text-muted">{t("footer.privacy")}</p>
+          </div>
+        </Container>
+        <Container className="border-t border-line py-6 text-xs text-muted">
+          © {new Date().getFullYear()} LifeDeux · {t("footer.rights")}
+        </Container>
+      </footer>
+    </FooterGate>
   );
 }

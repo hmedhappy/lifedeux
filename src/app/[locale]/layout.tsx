@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Noto_Sans_Arabic } from "next/font/google";
+import { IBM_Plex_Sans_Arabic, Plus_Jakarta_Sans } from "next/font/google";
 import { notFound } from "next/navigation";
 import "../globals.css";
 import { I18nProvider } from "@/components/i18n-provider";
+import { ToastProvider } from "@/components/toast";
 import { dir, getMessages, getT, isLocale, locales } from "@/lib/i18n";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
-const arabic = Noto_Sans_Arabic({ subsets: ["arabic"], variable: "--font-arabic", display: "swap" });
+const jakarta = Plus_Jakarta_Sans({ subsets: ["latin", "latin-ext"], variable: "--font-jakarta", display: "swap" });
+const arabic = IBM_Plex_Sans_Arabic({ subsets: ["arabic"], weight: ["400", "500", "600", "700"], variable: "--font-arabic", display: "swap" });
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -23,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
-export const viewport: Viewport = { themeColor: "#ff385c" };
+export const viewport: Viewport = { themeColor: "#0f766e" };
 
 export default async function LocaleLayout({
   children,
@@ -35,10 +36,10 @@ export default async function LocaleLayout({
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   return (
-    <html lang={locale} dir={dir(locale)} className={`${inter.variable} ${arabic.variable}`}>
+    <html lang={locale} dir={dir(locale)} className={`${jakarta.variable} ${arabic.variable}`}>
       <body className="min-h-screen font-sans">
         <I18nProvider locale={locale} messages={getMessages(locale)}>
-          {children}
+          <ToastProvider>{children}</ToastProvider>
         </I18nProvider>
       </body>
     </html>

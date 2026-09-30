@@ -13,18 +13,29 @@
     "copied": "تم النسخ",
     "copy": "نسخ",
     "delete": "حذف",
-    "search": "بحث"
+    "search": "بحث",
+    "confirmTitle": "تأكيد",
+    "confirm": "تأكيد",
+    "undo": "تراجع"
   },
   "nav": {
-    "doctors": "الجرّاحون",
+    "doctors": "الأطباء",
     "stays": "الإقامات",
     "howItWorks": "كيف يعمل",
     "login": "تسجيل الدخول",
     "register": "إنشاء حساب",
     "logout": "تسجيل الخروج",
-    "myBookings": "حجوزاتي",
+    "myBookings": "مواعيدي",
     "dashboard": "لوحة التحكم",
-    "menu": "القائمة"
+    "menu": "القائمة",
+    "consult": "استشارة",
+    "surgery": "الجراحة",
+    "home": "الرئيسية",
+    "appointments": "المواعيد",
+    "messages": "الرسائل",
+    "documents": "المستندات",
+    "more": "المزيد",
+    "profile": "ملفي الشخصي"
   },
   "footer": {
     "about": "تربطك LifeDeux بأطباء موثوقين: استشارة عن بعد مع وصفة موثقة، أو عملية مع النقل والإقامة والمتابعة.",
@@ -410,10 +421,15 @@
       "requests": "الطلبات",
       "patients": "مرضاي",
       "slots": "المواعيد",
-      "payouts": "المستحقات",
+      "payouts": "أرباحي",
       "consultations": "الاستشارات",
       "referrals": "الإحالة",
-      "prescription": "نموذج الوصفة"
+      "prescription": "نموذج الوصفة",
+      "today": "اليوم",
+      "agenda": "الأجندة",
+      "profile": "ملفي",
+      "groupDaily": "اليومي",
+      "groupSettings": "الأرباح والإعدادات"
     },
     "requestsTitle": "طلبات المواعيد",
     "requestsSubtitle": "أكّد أو ارفض الطلبات الواردة.",
@@ -482,7 +498,7 @@
     "title": "الإدارة",
     "nav": {
       "dashboard": "نظرة عامة",
-      "bookings": "الحجوزات",
+      "bookings": "الإقامات",
       "scan": "المسح والمتابعة",
       "doctors": "الأطباء",
       "stays": "الإقامات",
@@ -492,7 +508,13 @@
       "settings": "الإعدادات",
       "consultations": "الاستشارات",
       "specialties": "التخصصات",
-      "medications": "الأدوية"
+      "medications": "الأدوية",
+      "today": "للمعالجة",
+      "groupToday": "اليوم",
+      "groupActivity": "النشاط",
+      "groupCatalogue": "الكتالوج",
+      "groupFinance": "المالية",
+      "groupSettings": "الإعدادات"
     },
     "dashboardTitle": "نظرة عامة",
     "stats": {
@@ -686,7 +708,8 @@
     "invalidTicket": "رمز QR غير صالح أو الحجز غير موجود.",
     "cancelled": "حجز ملغى: لا يتم التكفّل.",
     "markStep": "تأكيد: {step}",
-    "completed": "انتهت الإقامة."
+    "completed": "انتهت الإقامة.",
+    "space": "فضاء الميدان"
   },
   "errors": {
     "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",

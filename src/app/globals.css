@@ -1,27 +1,135 @@
 @import "tailwindcss";
 
+/*
+ * LifeDeux design system, "Lagon" direction (docs/RELOOKING.md).
+ * Flat surfaces, a border before a shadow, one teal primary and a coral accent.
+ * The existing class names (brand, ink, muted, line, surface) keep working and now map to Lagon.
+ */
 @theme {
-  --color-brand: #ff385c;
-  --color-brand-dark: #e31c5f;
-  --color-ink: #222222;
-  --color-muted: #6a6a6a;
-  --color-line: #dddddd;
-  --color-surface: #f7f7f7;
-  --font-sans: var(--font-inter), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
-  --shadow-float: 0 6px 16px rgba(0, 0, 0, 0.12);
+  --color-brand: #0f766e;
+  --color-brand-dark: #0b5d57;
+  --color-brand-soft: #e6f4f1;
+  --color-brand-bright: #14b8a6;
+  /* Accent only: never white text on coral (contrast). */
+  --color-coral: #ff7a59;
+  --color-coral-ink: #c2410c;
+  --color-coral-soft: #fff1ec;
+  /* Surgery journey ("travel") accent. */
+  --color-trip: #b45309;
+  --color-trip-soft: #fef6e7;
+  --color-ink: #16211f;
+  --color-ink-soft: #3a4745;
+  --color-muted: #5c6b69;
+  --color-line: #e3e9e7;
+  --color-line-strong: #c5cfcc;
+  --color-surface: #f2f5f4;
+  --color-canvas: #fafbfa;
+
+  --font-sans: var(--font-jakarta), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-card: 0 1px 2px rgba(16, 33, 31, 0.04), 0 1px 3px rgba(16, 33, 31, 0.06);
+  --shadow-float: 0 4px 12px -2px rgba(16, 33, 31, 0.08), 0 2px 4px -2px rgba(16, 33, 31, 0.04);
+  --shadow-sheet: 0 16px 40px -8px rgba(16, 33, 31, 0.16), 0 4px 12px -4px rgba(16, 33, 31, 0.06);
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-in: cubic-bezier(0.3, 0, 0.8, 0.15);
+
+  --animate-sheet-in: sheet-in 320ms var(--ease-out) both;
+  --animate-modal-in: modal-in 200ms var(--ease-out) both;
+  --animate-fade-in: fade-in 200ms var(--ease-standard) both;
+  --animate-toast-in: toast-in 200ms var(--ease-out) both;
+  --animate-pop: pop 160ms var(--ease-standard) both;
+  --animate-live: live 2s ease-out infinite;
+  --animate-shimmer: shimmer 1.2s ease-in-out infinite;
+
+  @keyframes sheet-in {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  @keyframes modal-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes pop {
+    from { transform: scale(1.04); }
+    to { transform: scale(1); }
+  }
+  @keyframes live {
+    0% { box-shadow: 0 0 0 0 rgba(21, 128, 61, 0.45); }
+    100% { box-shadow: 0 0 0 8px rgba(21, 128, 61, 0); }
+  }
+  @keyframes shimmer {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
 }
 
 html {
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: #ffffff;
+  background: var(--color-canvas);
   color: var(--color-ink);
+  font-size: 16px;
+}
+
+@media (min-width: 768px) {
+  body {
+    font-size: 15px;
+  }
 }
 
 html[dir="rtl"] body {
-  font-family: var(--font-arabic), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-arabic), var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.7;
+}
+
+h1, h2, h3 {
+  text-wrap: balance;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+/* Animated check mark drawn once (payment done, prescription received). */
+.check-draw path {
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  animation: check-draw 400ms var(--ease-out) 120ms forwards;
+}
+@keyframes check-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Padding so page content is never hidden behind the mobile tab bar. */
+.has-tabbar {
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 768px) {
+  .has-tabbar {
+    padding-bottom: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
 }
 
 @media print {

@@ -139,7 +139,7 @@ export function Chat({
               <div
                 className={clsx(
                   "max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm shadow-sm",
-                  m.mine ? "rounded-ee-md bg-gradient-to-br from-brand to-brand-dark text-white" : "rounded-es-md bg-white text-ink",
+                  m.mine ? "rounded-ee-md bg-brand text-white" : "rounded-es-md bg-white text-ink",
                 )}
               >
                 {!m.mine && <p className="mb-0.5 text-xs font-semibold opacity-70">{m.senderName}</p>}
@@ -212,7 +212,7 @@ export function Chat({
             type="submit"
             disabled={!open || sending || !text.trim()}
             aria-label={t("chat.send")}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand to-brand-dark text-white disabled:opacity-40"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-white disabled:opacity-40"
           >
             {sending ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden /> : <Send className="h-5 w-5 rtl:-scale-x-100" aria-hidden />}
           </button>

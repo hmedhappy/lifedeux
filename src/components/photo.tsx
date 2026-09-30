@@ -12,11 +12,11 @@ export function Photo({ src, alt, className }: { src?: string | null; alt: strin
         role="img"
         aria-label={alt}
         className={clsx(
-          "flex items-center justify-center overflow-hidden bg-gradient-to-br from-rose-100 via-orange-50 to-amber-100",
+          "flex items-center justify-center overflow-hidden bg-surface",
           className,
         )}
       >
-        <svg viewBox="0 0 64 64" className="h-1/3 w-1/3 text-brand/70" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
+        <svg viewBox="0 0 64 64" className="h-1/3 w-1/3 text-line-strong" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
           <path d="M10 30 32 12l22 18" />
           <path d="M16 26v24h32V26" />
           <path d="M27 50V37h10v13" />

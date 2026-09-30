@@ -13,7 +13,10 @@
     "copied": "Copié",
     "copy": "Copier",
     "delete": "Supprimer",
-    "search": "Rechercher"
+    "search": "Rechercher",
+    "confirmTitle": "Confirmer",
+    "confirm": "Confirmer",
+    "undo": "Annuler"
   },
   "nav": {
     "doctors": "Médecins",
@@ -22,9 +25,17 @@
     "login": "Connexion",
     "register": "Inscription",
     "logout": "Déconnexion",
-    "myBookings": "Mes réservations",
+    "myBookings": "Mes rendez-vous",
     "dashboard": "Tableau de bord",
-    "menu": "Menu"
+    "menu": "Menu",
+    "consult": "Consulter",
+    "surgery": "Chirurgie",
+    "home": "Accueil",
+    "appointments": "Rendez-vous",
+    "messages": "Messages",
+    "documents": "Documents",
+    "more": "Plus",
+    "profile": "Mon profil"
   },
   "footer": {
     "about": "LifeDeux vous met en relation avec des médecins vérifiés : téléconsultation avec ordonnance certifiée, ou intervention avec transfert, hébergement et suivi.",
@@ -410,10 +421,15 @@
       "requests": "Demandes",
       "patients": "Mes patients",
       "slots": "Créneaux",
-      "payouts": "Versements",
+      "payouts": "Mes gains",
       "consultations": "Consultations",
       "referrals": "Parrainage",
-      "prescription": "Modèle d'ordonnance"
+      "prescription": "Modèle d'ordonnance",
+      "today": "Aujourd'hui",
+      "agenda": "Agenda",
+      "profile": "Mon profil",
+      "groupDaily": "Au quotidien",
+      "groupSettings": "Gains et réglages"
     },
     "requestsTitle": "Demandes de rendez-vous",
     "requestsSubtitle": "Confirmez ou refusez les demandes reçues.",
@@ -482,7 +498,7 @@
     "title": "Administration",
     "nav": {
       "dashboard": "Vue d'ensemble",
-      "bookings": "Réservations",
+      "bookings": "Séjours",
       "scan": "Scan & suivi",
       "doctors": "Médecins",
       "stays": "Hébergements",
@@ -492,7 +508,13 @@
       "settings": "Paramètres",
       "consultations": "Consultations",
       "specialties": "Spécialités",
-      "medications": "Médicaments"
+      "medications": "Médicaments",
+      "today": "À traiter",
+      "groupToday": "Aujourd'hui",
+      "groupActivity": "Activité",
+      "groupCatalogue": "Catalogue",
+      "groupFinance": "Finance",
+      "groupSettings": "Réglages"
     },
     "dashboardTitle": "Vue d'ensemble",
     "stats": {
@@ -686,7 +708,8 @@
     "invalidTicket": "QR code invalide ou réservation introuvable.",
     "cancelled": "Réservation annulée : ne pas prendre en charge.",
     "markStep": "Valider : {step}",
-    "completed": "Séjour terminé."
+    "completed": "Séjour terminé.",
+    "space": "Espace terrain"
   },
   "errors": {
     "invalidCredentials": "Email ou mot de passe incorrect.",

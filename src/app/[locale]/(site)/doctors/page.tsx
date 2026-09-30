@@ -63,7 +63,7 @@ export default async function DoctorsPage({
       <div className="mt-5 flex flex-wrap items-center justify-between gap-5">
         <div className="flex items-center gap-4">
           {current && (
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-brand-dark">
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-soft text-brand-dark">
               <SpecialtyIcon name={current.icon} className="h-7 w-7" />
             </span>
           )}

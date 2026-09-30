@@ -135,7 +135,7 @@ export function SlotPicker({ slots }: { slots: SlotOption[] }) {
             aria-pressed={s.id === slotId}
             className={clsx(
               "rounded-lg border px-3 py-2 text-sm font-medium transition",
-              s.id === slotId ? "border-brand bg-rose-50 text-brand-dark" : "border-line hover:border-ink",
+              s.id === slotId ? "border-brand bg-brand-soft text-brand-dark" : "border-line hover:border-ink",
             )}
           >
             {s.time}

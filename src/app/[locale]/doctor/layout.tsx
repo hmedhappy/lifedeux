@@ -32,13 +32,16 @@ export default async function DoctorLayout({
       locale={locale}
       title={t("doctorArea.title")}
       items={[
-        { href: base, label: t("doctorArea.nav.requests"), exact: true, badge: pending },
-        { href: `${base}/consultations`, label: t("doctorArea.nav.consultations"), badge: live },
-        { href: `${base}/prescription`, label: t("doctorArea.nav.prescription") },
-        { href: `${base}/patients`, label: t("doctorArea.nav.patients") },
-        { href: `${base}/slots`, label: t("doctorArea.nav.slots") },
-        { href: `${base}/payouts`, label: t("doctorArea.nav.payouts") },
-        ...(user.role === "SUPER_DOCTOR" ? [{ href: `${base}/referrals`, label: t("doctorArea.nav.referrals") }] : []),
+        { href: base, label: t("doctorArea.nav.today"), icon: "today", exact: true, badge: pending, tab: true, group: t("doctorArea.nav.groupDaily"), testId: "nav-today" },
+        { href: `${base}/consultations`, label: t("doctorArea.nav.consultations"), icon: "consultations", badge: live, tab: true, group: t("doctorArea.nav.groupDaily"), testId: "nav-consultations" },
+        { href: `${base}/slots`, label: t("doctorArea.nav.agenda"), icon: "agenda", tab: true, group: t("doctorArea.nav.groupDaily"), testId: "nav-agenda" },
+        { href: `${base}/patients`, label: t("doctorArea.nav.patients"), icon: "patients", group: t("doctorArea.nav.groupDaily") },
+        { href: `${base}/payouts`, label: t("doctorArea.nav.payouts"), icon: "wallet", group: t("doctorArea.nav.groupSettings") },
+        { href: `${base}/prescription`, label: t("doctorArea.nav.prescription"), icon: "prescription", group: t("doctorArea.nav.groupSettings") },
+        { href: `${base}/profile`, label: t("doctorArea.nav.profile"), icon: "profile", group: t("doctorArea.nav.groupSettings"), testId: "nav-profile" },
+        ...(user.role === "SUPER_DOCTOR"
+          ? [{ href: `${base}/referrals`, label: t("doctorArea.nav.referrals"), icon: "referral" as const, group: t("doctorArea.nav.groupSettings") }]
+          : []),
       ]}
     >
       {children}

@@ -66,7 +66,7 @@ export default async function DoctorPage({
             {doctor.specialty_ && (
               <Link
                 href={`/${locale}/doctors?specialty=${doctor.specialty_.slug}`}
-                className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 text-sm font-medium text-brand-dark hover:underline"
+                className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1 text-sm font-medium text-brand-dark hover:underline"
               >
                 <SpecialtyIcon name={doctor.specialty_.icon} className="h-4 w-4" />
                 {specialtyName}

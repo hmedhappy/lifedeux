@@ -20,18 +20,18 @@ export default async function AdminLayout({
       locale={locale}
       title={t("admin.title")}
       items={[
-        { href: base, label: t("admin.nav.dashboard"), exact: true },
-        { href: `${base}/bookings`, label: t("admin.nav.bookings"), badge: pending },
-        { href: `${base}/consultations`, label: t("admin.nav.consultations") },
-        { href: `/${locale}/scan`, label: t("admin.nav.scan") },
-        { href: `${base}/doctors`, label: t("admin.nav.doctors") },
-        { href: `${base}/stays`, label: t("admin.nav.stays") },
-        { href: `${base}/operations`, label: t("admin.nav.operations") },
-        { href: `${base}/specialties`, label: t("admin.nav.specialties") },
-        { href: `${base}/medications`, label: t("admin.nav.medications") },
-        { href: `${base}/payouts`, label: t("admin.nav.payouts") },
-        { href: `${base}/team`, label: t("admin.nav.team") },
-        { href: `${base}/settings`, label: t("admin.nav.settings") },
+        { href: base, label: t("admin.nav.today"), icon: "tasks", exact: true, tab: true, group: t("admin.nav.groupToday"), testId: "nav-admin-today" },
+        { href: `${base}/bookings`, label: t("admin.nav.bookings"), icon: "surgery", badge: pending, tab: true, group: t("admin.nav.groupActivity") },
+        { href: `${base}/consultations`, label: t("admin.nav.consultations"), icon: "consultations", tab: true, group: t("admin.nav.groupActivity") },
+        { href: `/${locale}/scan`, label: t("admin.nav.scan"), icon: "scan", group: t("admin.nav.groupActivity") },
+        { href: `${base}/doctors`, label: t("admin.nav.doctors"), icon: "specialty", group: t("admin.nav.groupCatalogue") },
+        { href: `${base}/operations`, label: t("admin.nav.operations"), icon: "surgery", group: t("admin.nav.groupCatalogue") },
+        { href: `${base}/specialties`, label: t("admin.nav.specialties"), icon: "specialty", group: t("admin.nav.groupCatalogue") },
+        { href: `${base}/medications`, label: t("admin.nav.medications"), icon: "pill", group: t("admin.nav.groupCatalogue") },
+        { href: `${base}/stays`, label: t("admin.nav.stays"), icon: "stays", group: t("admin.nav.groupCatalogue") },
+        { href: `${base}/payouts`, label: t("admin.nav.payouts"), icon: "wallet", group: t("admin.nav.groupFinance") },
+        { href: `${base}/team`, label: t("admin.nav.team"), icon: "patients", group: t("admin.nav.groupSettings") },
+        { href: `${base}/settings`, label: t("admin.nav.settings"), icon: "settings", group: t("admin.nav.groupSettings") },
       ]}
     >
       {children}
