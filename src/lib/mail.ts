@@ -20,9 +20,15 @@ function getTransporter(): Transporter | null {
   return transporter;
 }
 
+/** MAIL_ONLY_TO (a regex) limits real sending, e.g. e2e runs on a real mailbox; other recipients are only logged. */
+function deliverable(to: string): boolean {
+  const only = process.env.MAIL_ONLY_TO;
+  return !only || new RegExp(only, "i").test(to);
+}
+
 export async function sendMail(mail: Mail): Promise<void> {
   const t = getTransporter();
-  if (!t) {
+  if (!t || !deliverable(mail.to)) {
     console.info(`[mail] SMTP not configured — would send to ${mail.to}: ${mail.subject}`);
     return;
   }
@@ -91,7 +97,7 @@ export async function sendTemplate(
     subject: t(`email.${template}.subject`, data),
     html: layout(t(`email.${template}.title`, data), body, href ? { label: t(`email.${template}.cta`, data), href } : undefined),
   });
-  const logs = [{ userId: to.id ?? null, channel: "email", template, target: to.email, status: process.env.SMTP_HOST ? "sent" : "logged" }];
+  const logs = [{ userId: to.id ?? null, channel: "email", template, target: to.email, status: process.env.SMTP_HOST && deliverable(to.email) ? "sent" : "logged" }];
   const phone = EMAIL_ONLY.has(template) || !whatsappEnabled() ? null : whatsappNumber(to.phone);
   if (phone) {
     const ok = await sendWhatsApp(phone, `${strip(body)}${href ? ` ${href}` : ""}`, locale);
