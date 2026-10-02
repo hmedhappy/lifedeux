@@ -1,4 +1,4 @@
-# Déployer LifeDeux sur un VPS
+# Déployer Medelys sur un VPS
 
 Objectif : `https://lifedeux.afdev.site`, avec la base PostgreSQL, l'application, le HTTPS automatique et la tâche horaire, le tout lancé par Docker.
 
@@ -120,7 +120,7 @@ $C restart app                         # redémarrer l'application
 
 ## Sauvegardes, restauration, ouverture au public
 
-À lancer depuis le dossier LifeDeux sur le VPS. Si Node.js est installé sur le VPS, `npm run vps:…` marche aussi. Sinon, utilise `./deploy/…`, qui ne demande que Docker.
+À lancer depuis le dossier `lifedeux` sur le VPS. Si Node.js est installé sur le VPS, `npm run vps:…` marche aussi. Sinon, utilise `./deploy/…`, qui ne demande que Docker.
 
 | Commande | Ce qu'elle fait |
 |---|---|

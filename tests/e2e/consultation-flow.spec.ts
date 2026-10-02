@@ -308,7 +308,7 @@ test("a super-doctor refers a colleague who joins immediately", async ({ browser
   await join.locator('input[name="stampFile"]').setInputFiles({ name: "cachet.png", mimeType: "image/png", buffer: Buffer.from(demoPhoto()) });
   await join.getByRole("button", { name: "Créer mon compte médecin" }).click();
   await expect(join).toHaveURL(/\/fr\/doctor\/slots\?welcome=1/);
-  await expect(join.getByText("Bienvenue sur LifeDeux")).toBeVisible();
+  await expect(join.getByText("Bienvenue sur Medelys")).toBeVisible();
   // A regular doctor has no referral page.
   await join.goto("/fr/doctor/referrals");
   await expect(join).toHaveURL(/\/fr\/doctor$/);

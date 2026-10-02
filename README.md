@@ -1,4 +1,4 @@
-# LifeDeux
+# Medelys
 
 Plateforme médicale tunisienne pour les patients du monde entier : **consultation en ligne** (chat texte et photo, ordonnance numérique certifiée par QR code) dans plus de 40 spécialités, et **intervention chirurgicale** en Tunisie avec transfert aéroport, hébergement, paiement en ligne et suivi du patient par QR code. Interface en **français, anglais et arabe** (RTL).
 
@@ -9,7 +9,7 @@ L'étude fonctionnelle est dans [`docs/ETUDE.md`](docs/ETUDE.md).
 | Espace | Ce qu'on y fait |
 |---|---|
 | **Patient** | Choisit une spécialité (cartes avec icônes, recherche) puis un médecin, et réserve **une consultation en ligne** ou **une intervention**. Consultation : le médecin accepte le créneau, le patient paie, puis discute avec lui par chat (texte + photos) à l'heure prévue et reçoit son ordonnance PDF certifiée. Intervention : après confirmation, choisit accompagnants, logement et transfert, paie et télécharge sa fiche QR. |
-| **Médecin** (`/doctor`) | Accepte ou refuse les demandes, publie ses créneaux (consultation ou intervention), mène la consultation dans le chat avec un panneau d'ordonnance (recherche de médicaments, **aperçu en direct** de la page, signature et envoi), choisit ou crée son **modèle d'ordonnance** (turquoise par défaut, bandeau LifeDeux, ou son propre papier à en-tête avec sa couleur et ses marges), la termine, suit ses patients opérés, consulte ce que LifeDeux lui doit. |
+| **Médecin** (`/doctor`) | Accepte ou refuse les demandes, publie ses créneaux (consultation ou intervention), mène la consultation dans le chat avec un panneau d'ordonnance (recherche de médicaments, **aperçu en direct** de la page, signature et envoi), choisit ou crée son **modèle d'ordonnance** (turquoise par défaut, bandeau Medelys, ou son propre papier à en-tête avec sa couleur et ses marges), la termine, suit ses patients opérés, consulte ce que Medelys lui doit. |
 | **Super-médecin** | Un médecin avec en plus une page **Parrainage** : il partage son lien, les médecins qui s'inscrivent avec sont actifs immédiatement et rattachés à lui. |
 | **Admin** (`/admin`) | Crée les comptes médecins (spécialité, n° d'Ordre, tarif de consultation, **cachet** et signature, statut super-médecin), gère spécialités, médicaments, interventions, hébergements, réservations, consultations, remboursements, versements en espèces, équipe et paramètres. |
 | **Pharmacien** (`/verify/…`) | Scanne le QR de l'ordonnance : la page confirme qu'elle est authentique et non modifiée (empreinte SHA-256). |

@@ -58,7 +58,7 @@ async function main() {
       passwordHash: await bcrypt.hash(adminPassword, 12),
       role: "ADMIN",
       firstName: "Admin",
-      lastName: "LifeDeux",
+      lastName: "Medelys",
       consentAt: new Date(),
     },
   });

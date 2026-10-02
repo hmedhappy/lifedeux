@@ -45,7 +45,8 @@ export type SheetData = {
   verify: { url: string; fingerprint: string } | null;
 };
 
-export type ImageRef = "stamp" | "signature" | "qr" | "background";
+/** `logo` is the white Medelys logo, supplied by the renderer callers rather than the doctor. */
+export type ImageRef = "stamp" | "signature" | "qr" | "background" | "logo";
 export type Font = "r" | "b" | "i";
 
 export type Op =
@@ -61,7 +62,7 @@ export type Op =
 
 export const BUILTIN_TEMPLATES = {
   "builtin:teal": { name: "Turquoise", config: { layout: "teal", color: "#0f8f7e" } },
-  "builtin:rose": { name: "LifeDeux", config: { layout: "rose", color: "#e31c5f" } },
+  "builtin:rose": { name: "Medelys", config: { layout: "rose", color: "#014d7d" } },
 } as const;
 export type BuiltinRef = keyof typeof BUILTIN_TEMPLATES;
 export const DEFAULT_TEMPLATE: BuiltinRef = "builtin:teal";
@@ -320,8 +321,8 @@ function rose(data: SheetData, color: string): Op[] {
   const W = PAGE_W;
   const M = 48;
   pg.rect(0, 0, W, 92, color);
-  pg.text("LifeDeux", M, 48, 22, "b", WHITE);
-  pg.text("Téléconsultation", M, 66, 10, "r", WHITE);
+  pg.push({ t: "image", ref: "logo", x: M, y: 26, w: 120, h: 27, fit: "contain", align: "left" });
+  pg.text("Téléconsultation", M, 70, 10, "r", WHITE);
   pg.right("ORDONNANCE MÉDICALE", W - M, 50, 16, "b", WHITE);
   pg.right("Medical prescription", W - M, 66, 10, "r", WHITE);
 
@@ -353,7 +354,7 @@ function rose(data: SheetData, color: string): Op[] {
   } else draftWatermark(pg, 120, 560, color);
 
   pg.line(M, PAGE_H - 50, W - M, PAGE_H - 50, "#dddddd", 0.5);
-  pg.text("Document émis via LifeDeux à la suite d'une téléconsultation. Valable après vérification.", M, PAGE_H - 36, 8, "r", MUTED);
+  pg.text("Document émis via Medelys à la suite d'une téléconsultation. Valable après vérification.", M, PAGE_H - 36, 8, "r", MUTED);
   return pg.ops;
 }
 

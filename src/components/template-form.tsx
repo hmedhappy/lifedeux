@@ -6,7 +6,7 @@ import { Field, Input } from "./ui";
 
 const LAYOUTS = [
   { id: "teal", color: "#0f8f7e" },
-  { id: "rose", color: "#e31c5f" },
+  { id: "rose", color: "#014d7d" },
   { id: "letterhead", color: "#1e3a5f" },
 ] as const;
 

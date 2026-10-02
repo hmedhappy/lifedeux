@@ -45,7 +45,7 @@ async function main() {
   if (!adminEmail || !adminPassword || adminPassword.length < 8) {
     throw new Error("Set ADMIN_EMAIL and ADMIN_PASSWORD (8+ characters) before seeding.");
   }
-  await upsertUser({ email: adminEmail.toLowerCase(), password: adminPassword, role: "ADMIN", firstName: "Admin", lastName: "LifeDeux" });
+  await upsertUser({ email: adminEmail.toLowerCase(), password: adminPassword, role: "ADMIN", firstName: "Admin", lastName: "Medelys" });
 
   const counts = await seedReference(db);
   console.log("Reference data:", counts);

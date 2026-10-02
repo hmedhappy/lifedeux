@@ -6,11 +6,11 @@ export type Variant = "primary" | "secondary" | "ghost" | "danger" | "dangerSoli
 
 const variants: Record<Variant, string> = {
   primary: "bg-brand text-white shadow-card hover:bg-brand-dark disabled:opacity-50",
-  secondary: "border border-line-strong bg-white text-ink hover:border-ink hover:bg-surface disabled:opacity-50",
+  secondary: "border border-line-strong bg-white text-brand hover:bg-brand-soft disabled:opacity-50",
   ghost: "text-ink hover:bg-surface disabled:opacity-50",
   soft: "bg-brand-soft text-brand-dark hover:bg-brand-soft/70 disabled:opacity-50",
-  danger: "border border-red-200 bg-white text-red-700 hover:bg-red-50 disabled:opacity-50",
-  dangerSolid: "bg-red-600 text-white hover:bg-red-700 disabled:opacity-50",
+  danger: "border border-danger/30 bg-white text-danger hover:bg-danger-soft disabled:opacity-50",
+  dangerSolid: "bg-danger text-white hover:bg-danger-hover disabled:opacity-50",
   dark: "bg-ink text-white hover:bg-black disabled:opacity-50",
 };
 
@@ -132,10 +132,10 @@ export type BadgeTone = "gray" | "green" | "amber" | "red" | "blue" | "rose" | "
 export function Badge({ tone = "gray", children, className }: { tone?: BadgeTone; children: React.ReactNode; className?: string }) {
   const tones: Record<BadgeTone, string> = {
     gray: "bg-surface text-ink-soft",
-    green: "bg-emerald-50 text-emerald-800",
-    amber: "bg-amber-50 text-amber-800",
-    red: "bg-red-50 text-red-700",
-    blue: "bg-sky-50 text-sky-800",
+    green: "bg-success-soft text-success",
+    amber: "bg-warning-soft text-warning",
+    red: "bg-danger-soft text-danger",
+    blue: "bg-info-soft text-info",
     rose: "bg-coral-soft text-coral-ink",
     brand: "bg-brand-soft text-brand-dark",
     trip: "bg-trip-soft text-trip",
@@ -190,10 +190,10 @@ export function Stat({ label, value, hint, icon: Icon }: { label: string; value:
 
 export function Notice({ tone = "info", children }: { tone?: "info" | "success" | "warning" | "error"; children: React.ReactNode }) {
   const tones = {
-    info: "border-sky-200 bg-sky-50 text-sky-900",
-    success: "border-emerald-200 bg-emerald-50 text-emerald-900",
-    warning: "border-amber-200 bg-amber-50 text-amber-900",
-    error: "border-red-200 bg-red-50 text-red-800",
+    info: "border-info/25 bg-info-soft text-ink",
+    success: "border-success/25 bg-success-soft text-ink",
+    warning: "border-warning/25 bg-warning-soft text-ink",
+    error: "border-danger/25 bg-danger-soft text-danger",
   };
   const icons = { info: Info, success: CheckCircle2, warning: TriangleAlert, error: AlertCircle };
   const Icon = icons[tone];
@@ -206,8 +206,9 @@ export function Notice({ tone = "info", children }: { tone?: "info" | "success" 
 }
 
 /** Placeholder block while content loads. */
+/** Placeholder shaped like the content it stands for (radius 6px for text; pass rounded-full / rounded-2xl for avatars and cards). */
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={clsx("animate-shimmer rounded-xl bg-surface", className)} aria-hidden />;
+  return <div className={clsx("ld-skeleton rounded-md", className)} aria-hidden />;
 }
 
 export function Table({ children }: { children: React.ReactNode }) {

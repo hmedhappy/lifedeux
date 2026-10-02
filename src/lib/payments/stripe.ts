@@ -35,7 +35,7 @@ export const stripeProvider: PaymentProvider = {
         metadata: { paymentId: req.paymentId, bookingId: req.bookingId, reference: req.reference },
         payment_intent_data: {
           metadata: { paymentId: req.paymentId, bookingId: req.bookingId },
-          statement_descriptor_suffix: "LIFEDEUX",
+          statement_descriptor_suffix: "MEDELYS",
           ...(req.hold ? { capture_method: "manual" as const } : {}),
         },
         success_url: req.successUrl,

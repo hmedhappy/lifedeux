@@ -66,7 +66,7 @@ export default async function MessagesPage({ params }: { params: Promise<{ local
                     {t("chat.live")}
                   </Badge>
                 ) : c._count.messages > 0 ? (
-                  <span className="min-w-6 rounded-full bg-coral px-2 py-0.5 text-center text-xs font-bold text-ink">{c._count.messages}</span>
+                  <span className="min-w-6 rounded-full bg-coral px-2 py-0.5 text-center text-xs font-bold text-white">{c._count.messages}</span>
                 ) : null}
               </Link>
             </li>

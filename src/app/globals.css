@@ -1,35 +1,58 @@
 @import "tailwindcss";
 
 /*
- * LifeDeux design system, "Lagon" direction (docs/RELOOKING.md).
- * Flat surfaces, a border before a shadow, one teal primary and a coral accent.
- * The existing class names (brand, ink, muted, line, surface) keep working and now map to Lagon.
+ * Medelys design system (design/brand/system/tokens.json, guidelines.md).
+ * Deep blue primary, teal accent from the leaf and cross, terracotta for the surgery journey.
+ * Token names are unchanged so every existing class keeps working; only the values moved.
  */
 @theme {
-  --color-brand: #0f766e;
-  --color-brand-dark: #0b5d57;
-  --color-brand-soft: #e6f4f1;
-  --color-brand-bright: #14b8a6;
-  /* Accent only: never white text on coral (contrast). */
-  --color-coral: #ff7a59;
-  --color-coral-ink: #c2410c;
-  --color-coral-soft: #fff1ec;
-  /* Surgery journey ("travel") accent. */
-  --color-trip: #b45309;
-  --color-trip-soft: #fef6e7;
-  --color-ink: #16211f;
-  --color-ink-soft: #3a4745;
-  --color-muted: #5c6b69;
-  --color-line: #e3e9e7;
-  --color-line-strong: #c5cfcc;
-  --color-surface: #f2f5f4;
-  --color-canvas: #fafbfa;
+  --color-brand: #014d7d;
+  --color-brand-dark: #003965;
+  --color-brand-soft: #e6f0f7;
+  /* Focus rings, progress, illustrations: not for body text (4.1:1 on white). */
+  --color-brand-bright: #2a86c8;
+  /* "coral" is the historical name of the accent: it now carries the Medelys teal. */
+  --color-coral: #017680;
+  --color-coral-ink: #075e5c;
+  --color-coral-soft: #e3f4f3;
+  --color-accent: #017680;
+  --color-accent-ink: #075e5c;
+  --color-accent-soft: #e3f4f3;
+  /* Surgery journey ("travel") accent. Never for errors. */
+  --color-trip: #a84b24;
+  --color-trip-soft: #fbede5;
+  --color-ink: #12304f;
+  --color-ink-soft: #2b4560;
+  --color-muted: #5b6b7a;
+  --color-line: #dce4e8;
+  --color-line-strong: #b7c4cc;
+  /* Soft fill for hovers, chips and inset panels on white cards (cards themselves are bg-white). */
+  --color-surface: #edf2f4;
+  --color-canvas: #f4f7f8;
+  /* Status: put the strong colour on its soft background for text. */
+  --color-success: #1e7a4c;
+  --color-success-soft: #e5f3eb;
+  --color-warning: #9a5b00;
+  --color-warning-soft: #fbf0dc;
+  --color-danger: #c0352b;
+  --color-danger-hover: #9e2a22;
+  --color-danger-soft: #fbe8e6;
+  --color-info: #1f6fb2;
+  --color-info-soft: #e6eff8;
+  --color-skeleton-base: #e6ecef;
+  --color-skeleton-highlight: #f4f7f8;
 
   --font-sans: var(--font-jakarta), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
 
-  --shadow-card: 0 1px 2px rgba(16, 33, 31, 0.04), 0 1px 3px rgba(16, 33, 31, 0.06);
-  --shadow-float: 0 4px 12px -2px rgba(16, 33, 31, 0.08), 0 2px 4px -2px rgba(16, 33, 31, 0.04);
-  --shadow-sheet: 0 16px 40px -8px rgba(16, 33, 31, 0.16), 0 4px 12px -4px rgba(16, 33, 31, 0.06);
+  --shadow-card: 0 1px 2px rgba(18, 48, 79, 0.06), 0 2px 8px rgba(18, 48, 79, 0.06);
+  --shadow-float: 0 8px 24px rgba(18, 48, 79, 0.12), 0 2px 6px rgba(18, 48, 79, 0.06);
+  /* Also used by menus, modals and toasts, so it falls both ways rather than only upwards. */
+  --shadow-sheet: 0 8px 32px rgba(18, 48, 79, 0.16), 0 2px 8px rgba(18, 48, 79, 0.06);
+
+  /* Medelys radii: buttons and fields (rounded-xl) 10px, cards (rounded-2xl) 14px, sheets (rounded-3xl) 20px. */
+  --radius-xl: 10px;
+  --radius-2xl: 14px;
+  --radius-3xl: 20px;
 
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-out: cubic-bezier(0.05, 0.7, 0.1, 1);
@@ -82,6 +105,7 @@ body {
   background: var(--color-canvas);
   color: var(--color-ink);
   font-size: 16px;
+  line-height: 1.6;
 }
 
 @media (min-width: 768px) {
@@ -95,12 +119,17 @@ html[dir="rtl"] body {
   line-height: 1.7;
 }
 
+/* Arabic letters are joined: never track them. */
+html[dir="rtl"] [class*="tracking-"] {
+  letter-spacing: 0;
+}
+
 h1, h2, h3 {
   text-wrap: balance;
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-brand);
+  outline: 2px solid var(--color-brand-bright);
   outline-offset: 2px;
 }
 
@@ -114,6 +143,58 @@ h1, h2, h3 {
   to { stroke-dashoffset: 0; }
 }
 
+/*
+ * Medelys loaders (design/brand/loading/skeleton.md). The ZIP's SVGs reference these classes
+ * but shipped without their <style>, so the motion is written here from the spec.
+ */
+.ld-skeleton {
+  background: linear-gradient(90deg, var(--color-skeleton-base) 0%, var(--color-skeleton-highlight) 45%, var(--color-skeleton-base) 90%);
+  background-size: 800px 100%;
+  animation: ld-skeleton 1.4s linear infinite;
+}
+@keyframes ld-skeleton {
+  from { background-position: -400px 0; }
+  to { background-position: 400px 0; }
+}
+[dir="rtl"] .ld-skeleton {
+  animation-direction: reverse;
+}
+
+.ld-spinner {
+  transform-origin: 24px 24px;
+  animation: ld-spin 0.9s linear infinite;
+}
+@keyframes ld-spin {
+  to { transform: rotate(360deg); }
+}
+
+.ld-splash {
+  transform-origin: 100px 100px;
+  animation: ld-breathe 2.4s var(--ease-standard) infinite;
+}
+.ld-splash-cross {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ld-pulse 2.4s var(--ease-standard) infinite;
+}
+@keyframes ld-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.96); }
+}
+@keyframes ld-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.9); }
+}
+
+/* Loaders only appear after 300ms, so quick navigations never flash them. */
+.ld-delayed {
+  animation: ld-fade 150ms var(--ease-standard) 300ms both;
+}
+@keyframes ld-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* Padding so page content is never hidden behind the mobile tab bar. */
 .has-tabbar {
   padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
@@ -125,6 +206,17 @@ h1, h2, h3 {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* Static loaders: plain skeleton fill, a still 3/4 arc, the logomark at rest. */
+  .ld-skeleton {
+    animation: none;
+    background: var(--color-skeleton-base);
+  }
+  .ld-spinner, .ld-splash, .ld-splash-cross {
+    animation: none;
+  }
+  .ld-spinner circle {
+    stroke-dasharray: 94 126;
+  }
   *, *::before, *::after {
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;

@@ -39,7 +39,7 @@
     "profile": "My profile"
   },
   "footer": {
-    "about": "LifeDeux connects you with verified doctors: teleconsultations with a certified prescription, or procedures with transfer, accommodation and follow-up.",
+    "about": "Medelys connects you with verified doctors: teleconsultations with a certified prescription, or procedures with transfer, accommodation and follow-up.",
     "platform": "Platform",
     "proAccess": "Doctors & team access",
     "privacyTitle": "Privacy",
@@ -137,7 +137,7 @@
       }
     },
     "proTitle": "Are you a doctor?",
-    "proText": "Join LifeDeux on the invitation of a super-doctor colleague, or write to us at {email}."
+    "proText": "Join Medelys on the invitation of a super-doctor colleague, or write to us at {email}."
   },
   "doctors": {
     "title": "Doctors",
@@ -166,7 +166,7 @@
     "about": "About",
     "operations": "Procedures offered",
     "recovery": "Recommended recovery: {n} nights",
-    "includedTitle": "What LifeDeux organises for you",
+    "includedTitle": "What Medelys organises for you",
     "included": {
       "transfer": "Airport welcome and shuttles (optional)",
       "stay": "Accommodation for the whole recovery (optional)",
@@ -238,7 +238,7 @@
     "registerButton": "Create my account",
     "haveAccount": "Already registered?",
     "loginLink": "Log in",
-    "consent": "I agree that LifeDeux processes my data to organise my procedure and shares it with the chosen surgeon.",
+    "consent": "I agree that Medelys processes my data to organise my procedure and shares it with the chosen surgeon.",
     "inviteTitle": "Activate your account",
     "inviteSubtitle": "Hello {name}, choose a password for {email}.",
     "inviteButton": "Activate my account",
@@ -392,7 +392,7 @@
     "addPhotos": "Add photos",
     "photosHint": "Optional, up to 3 photos. Only the doctor sees them.",
     "consentConsultation": "I agree that the doctor may view the information and photos sent for my consultation.",
-    "consentSurgery": "I agree that my information is shared with the surgeon and the LifeDeux team to organise my stay.",
+    "consentSurgery": "I agree that my information is shared with the surgeon and the Medelys team to organise my stay.",
     "policyConsultation": "Nothing is charged before the doctor agrees. Free cancellation up to 24 h before.",
     "reasons": {
       "first": "First opinion",
@@ -416,7 +416,7 @@
     "stayTitle": "Accommodation",
     "stayText": "{n} nights, airport transfer included.",
     "noStay": "I'll organise it myself",
-    "noStayText": "No LifeDeux accommodation.",
+    "noStayText": "No Medelys accommodation.",
     "unavailable": "Unavailable on these dates",
     "tooSmall": "Too small for your group",
     "transferTitle": "Airport transfer",
@@ -442,7 +442,7 @@
     "editOptions": "Edit options",
     "method": "Payment method",
     "button": "Pay {amount}",
-    "secure": "Secure payment. LifeDeux never stores your card details.",
+    "secure": "Secure payment. Medelys never stores your card details.",
     "providers": {
       "stripe": {
         "title": "International bank card",
@@ -459,7 +459,7 @@
     }
   },
   "payment": {
-    "description": "LifeDeux booking {reference}",
+    "description": "Medelys booking {reference}",
     "mockTitle": "Test payment",
     "mockInfo": "Demo mode: no money is charged.",
     "mockPay": "Simulate a successful payment",
@@ -479,7 +479,7 @@
     "stay": "Accommodation",
     "noStay": "Arranged by the patient",
     "qrAlt": "Booking QR code",
-    "qrHelp": "Show it to the LifeDeux team as soon as you arrive.",
+    "qrHelp": "Show it to the Medelys team as soon as you arrive.",
     "transferYes": "AIRPORT PICK-UP: YES",
     "transferNo": "INDEPENDENT ARRIVAL",
     "companions": "Companions",
@@ -541,7 +541,7 @@
     "noSlots": "No slot published",
     "deleteSlot": "Delete this slot",
     "payoutsTitle": "My payouts",
-    "payoutsSubtitle": "Amounts owed by LifeDeux and cash payouts received.",
+    "payoutsSubtitle": "Amounts owed by Medelys and cash payouts received.",
     "refuseConfirm": "Decline request {reference} from {name}? The patient will be notified and the slot released.",
     "confirmFor": "Confirm for {name}",
     "tooLate": "Too late to accept {reference}: the appointment is too close for the patient to pay.",
@@ -556,7 +556,7 @@
     "accepted": "Consultation {reference} accepted: the payment is collected and the patient notified.",
     "stampLink": "Send my stamp",
     "stampMissingBanner": "Stamp missing: your online consultations stay hidden until it is validated.",
-    "stampPendingBanner": "Stamp received, being validated by the LifeDeux team.",
+    "stampPendingBanner": "Stamp received, being validated by the Medelys team.",
     "moveAsked": "Change requested"
   },
   "payouts": {
@@ -909,9 +909,9 @@
   },
   "email": {
     "invite": {
-      "subject": "Your LifeDeux access",
+      "subject": "Your Medelys access",
       "title": "Welcome {name}",
-      "body": "A LifeDeux account has been created for you. Choose your password to access it (link valid for 7 days).",
+      "body": "A Medelys account has been created for you. Choose your password to access it (link valid for 7 days).",
       "cta": "Activate my account"
     },
     "requestReceived": {
@@ -953,7 +953,7 @@
     "reset": {
       "subject": "Reset your password",
       "title": "Hello {name}",
-      "body": "You asked to change your LifeDeux password. This link is valid for 1 hour. If you did not make this request, ignore this email.",
+      "body": "You asked to change your Medelys password. This link is valid for 1 hour. If you did not make this request, ignore this email.",
       "cta": "Choose a new password"
     },
     "consultConfirmed": {
@@ -975,10 +975,10 @@
       "cta": "View my prescription"
     },
     "loginCode": {
-      "subject": "Your LifeDeux code: {code}",
+      "subject": "Your Medelys code: {code}",
       "title": "Hello {name}",
       "body": "Your sign-in code is {code}. It is valid for 10 minutes. If you did not ask for it, ignore this email.",
-      "cta": "Open LifeDeux"
+      "cta": "Open Medelys"
     },
     "consultCancelled": {
       "subject": "Cancellation confirmed — {reference}",
@@ -1031,7 +1031,7 @@
       "cta": "Open the scanner"
     },
     "adminAlert": {
-      "subject": "Urgent LifeDeux alert",
+      "subject": "Urgent Medelys alert",
       "title": "To handle, {name}",
       "body": "{message}",
       "cta": "Open \"To do\""
@@ -1188,7 +1188,7 @@
   "verify": {
     "title": "Prescription check",
     "ok": "Authentic prescription",
-    "okText": "This prescription was issued through LifeDeux and its content has not been altered.",
+    "okText": "This prescription was issued through Medelys and its content has not been altered.",
     "bad": "Prescription not found or altered",
     "badText": "We cannot confirm this document. Do not dispense without checking with the doctor.",
     "doctor": "Doctor",
@@ -1201,21 +1201,21 @@
   },
   "referral": {
     "title": "Referrals",
-    "subtitle": "Invite colleagues: they join LifeDeux immediately through your link.",
+    "subtitle": "Invite colleagues: they join Medelys immediately through your link.",
     "yourLink": "Your referral link",
     "code": "Code: {code}",
-    "shareText": "Join me on LifeDeux for online consultations: {link}",
+    "shareText": "Join me on Medelys for online consultations: {link}",
     "listTitle": "Referred doctors ({n})",
     "empty": "No referred doctors yet.",
     "joined": "Joined {date}",
     "consultations": "{n} {n:consultation|consultations}",
-    "joinTitle": "Join LifeDeux",
+    "joinTitle": "Join Medelys",
     "joinSubtitle": "Create your doctor account. It is active immediately.",
     "invitedBy": "Invited by",
     "stampHint": "PNG or JPEG. Required to write prescriptions.",
     "consent": "I certify that I am registered with the medical council and I accept the terms of use.",
     "joinButton": "Create my doctor account",
-    "welcome": "Welcome to LifeDeux! Add your first slots to start receiving patients.",
+    "welcome": "Welcome to Medelys! Add your first slots to start receiving patients.",
     "stepAccount": "Your account",
     "stepPractice": "Your practice"
   },
@@ -1237,7 +1237,7 @@
     "base": "Base",
     "layout": {
       "teal": "Classic teal",
-      "rose": "LifeDeux banner",
+      "rose": "Medelys banner",
       "letterhead": "My letterhead"
     },
     "layoutHint": {
@@ -1332,7 +1332,7 @@
     "instant": "Instant booking",
     "instantHint": "Requests are accepted automatically, without going through your inbox.",
     "price": "Consultation price ({currency})",
-    "priceHint": "A new price applies after validation by the LifeDeux team.",
+    "priceHint": "A new price applies after validation by the Medelys team.",
     "pricePending": "New price requested: {price}, waiting for validation.",
     "save": "Save",
     "saved": "Profile saved.",
@@ -1387,7 +1387,7 @@
     "moves": "{n} time change {n:request|requests} to answer",
     "monthEarnings": "Earnings this month",
     "monthActs": "{n} {n:act|acts}",
-    "onboardingTitle": "Get started on LifeDeux",
+    "onboardingTitle": "Get started on Medelys",
     "steps": {
       "photo": "Complete my bio and photo",
       "stamp": "Send my stamp",
@@ -1529,6 +1529,6 @@
   },
   "support": {
     "label": "Help on WhatsApp",
-    "prefill": "Hello LifeDeux, I have a question."
+    "prefill": "Hello Medelys, I have a question."
   }
 }

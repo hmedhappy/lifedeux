@@ -82,7 +82,7 @@ function isActive(pathname: string, item: NavItem) {
 function Count({ n }: { n?: number }) {
   if (!n) return null;
   return (
-    <span className="min-w-5 rounded-full bg-coral px-1.5 py-0.5 text-center text-[11px] font-bold leading-4 text-ink">{n > 99 ? "99+" : n}</span>
+    <span className="min-w-5 rounded-full bg-coral px-1.5 py-0.5 text-center text-[11px] font-bold leading-4 text-white">{n > 99 ? "99+" : n}</span>
   );
 }
 

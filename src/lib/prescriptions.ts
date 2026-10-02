@@ -2,6 +2,7 @@ import "server-only";
 import QRCode from "qrcode";
 import type { Doctor, PrescriptionTemplate } from "@prisma/client";
 import { db } from "./db";
+import { brandPng } from "./brand-assets";
 import { imageSize } from "./images";
 import { opsToPdf, opsToSvg } from "./rx-render";
 import {
@@ -175,7 +176,13 @@ export async function renderPrescriptionPdf(p: PrescriptionFull): Promise<Uint8A
   const bytes = (img: { data: Uint8Array; mime: string } | null) => (img ? { bytes: img.data, mime: img.mime } : null);
   return opsToPdf(
     buildSheet(data, tpl),
-    { stamp: bytes(stamp), signature: bytes(signature), background: bytes(background), qr: qr ? { bytes: qr, mime: "image/png" } : null },
+    {
+      stamp: bytes(stamp),
+      signature: bytes(signature),
+      background: bytes(background),
+      qr: qr ? { bytes: qr, mime: "image/png" } : null,
+      logo: tpl.layout === "rose" ? { bytes: await brandPng("logo-horizontal-white"), mime: "image/png" } : null,
+    },
     { title: `Ordonnance ${p.number ?? "(aperçu)"}`, author: data.doctor.name },
   );
 }
@@ -191,7 +198,9 @@ export async function renderPreviewSvg(
     ["signature", doctor.signatureImageId, `/api/doctors/${doctor.id}/signature`],
     ["background", tpl.layout === "letterhead" ? tpl.backgroundImageId : null, `/api/doctors/${doctor.id}/letterhead/${tpl.backgroundImageId}`],
   ];
-  const hrefs: Partial<Record<ImageRef, { href: string; width: number; height: number }>> = {};
+  const hrefs: Partial<Record<ImageRef, { href: string; width: number; height: number }>> = {
+    logo: { href: "/brand/logo-horizontal-white.svg", width: 446.1, height: 100 },
+  };
   for (const [ref, id, href] of refs) {
     const row = await imageRow(id);
     const size = row ? imageSize(row.data, row.mime) : null;

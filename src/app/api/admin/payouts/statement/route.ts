@@ -5,6 +5,7 @@ import { doctorActs, monthRange } from "@/lib/earnings";
 import { formatDate, formatMoney } from "@/lib/format";
 import { getT } from "@/lib/i18n";
 import { getSettings } from "@/lib/settings";
+import { LOGO_RATIO, brandPng } from "@/lib/brand-assets";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   let page = pdf.addPage([595, 842]);
   let y = 790;
-  const line = (s: string, x: number, size = 10, f = font, color = rgb(0.09, 0.13, 0.12)) => page.drawText(latin1(s), { x, y, size, font: f, color });
+  const line = (s: string, x: number, size = 10, f = font, color = rgb(18 / 255, 48 / 255, 79 / 255)) => page.drawText(latin1(s), { x, y, size, font: f, color });
   const newline = (h = 16) => {
     y -= h;
     if (y < 60) {
@@ -46,8 +47,9 @@ export async function GET(request: Request) {
     }
   };
 
-  line("LifeDeux", 48, 18, bold, rgb(15 / 255, 118 / 255, 110 / 255));
-  newline(26);
+  const logo = await pdf.embedPng(await brandPng("logo-horizontal"));
+  page.drawImage(logo, { x: 48, y: y - 4, width: 24 * LOGO_RATIO, height: 24 });
+  newline(30);
   line(`${t("statement.title")} - ${month}`, 48, 13, bold);
   newline(18);
   line(`Dr ${doctor.user.firstName} ${doctor.user.lastName}${doctor.licenseNumber ? ` - ${doctor.licenseNumber}` : ""}`, 48, 11);

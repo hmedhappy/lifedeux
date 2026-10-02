@@ -1,17 +1,18 @@
-# Brand assets (source files)
+# Medelys — brand handoff
 
-Drop the files from Claude Design here, then push. They are the *sources*:
-the website copies what it needs into `public/` and `src/app/` when the new
-identity is applied.
+- `logo/` — vector logos (traced from the source logo, outlined, flat hex fills) + 1024px PNGs
+- `favicon/` — favicon.svg/.ico (16/32/48), PWA icons, apple-touch-icon, og-image
+- `loading/` — spinner.svg, splash.svg (CSS-animated, reduced-motion aware), skeleton.md + mockup
+- `system/` — tokens.json, tokens.css (with Tailwind 4 `@theme` block), guidelines.md, components.png
 
-| Folder | What to put | Preferred formats |
-| --- | --- | --- |
-| `logo/` | Main logo, logo mark (icon only), horizontal / stacked versions, light and dark variants | SVG (best), plus PNG 1024 px |
-| `favicon/` | Favicon and app icons | SVG, `favicon.ico`, PNG 32 / 180 (Apple) / 192 / 512 |
-| `loading/` | Loading states: spinner, skeletons, splash | SVG, Lottie JSON, GIF/MP4, or screenshots + notes |
-| `system/` | Design system: colours, fonts, spacing, radius, shadows, component screenshots | Markdown / JSON tokens, CSS, PDF or PNG exports |
+theme-color: `#014D7D`
 
-Tips:
-- Name files clearly, e.g. `logo-horizontal-dark.svg`, `logomark.svg`.
-- If the design system is a Claude Design link (claude.ai/…), paste the link in
-  `system/LINKS.md` instead of exporting it.
+```html
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#014D7D">
+<meta property="og:image" content="/og-image.png">
+```
+
+Manifest icons: icon-192.png, icon-512.png (purpose "any"), icon-512-maskable.png (purpose "maskable").

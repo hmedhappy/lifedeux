@@ -5,13 +5,14 @@ import { db } from "@/lib/db";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { getT, localized, toLocale } from "@/lib/i18n";
 import { appUrl } from "@/lib/settings";
+import { LOGO_RATIO, brandPng } from "@/lib/brand-assets";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const TEAL = rgb(15 / 255, 118 / 255, 110 / 255);
-const INK = rgb(0.09, 0.13, 0.12);
-const MUTED = rgb(0.36, 0.42, 0.41);
+const BRAND = rgb(1 / 255, 77 / 255, 125 / 255);
+const INK = rgb(18 / 255, 48 / 255, 79 / 255);
+const MUTED = rgb(91 / 255, 107 / 255, 122 / 255);
 
 /** Standard PDF fonts only cover Latin-1: anything else is replaced. */
 const latin1 = (s: string) => s.normalize("NFC").replace(/[^\u0000-ÿ€’–—…]/g, "?").replace(/[’]/g, "'").replace(/[–—]/g, "-").replace("…", "...");
@@ -39,8 +40,9 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const text = (s: string, x: number, y: number, size = 11, f = font, color = INK) => page.drawText(latin1(s), { x, y, size, font: f, color });
 
-  page.drawRectangle({ x: 0, y: 560, width: 420, height: 80, color: TEAL });
-  text("LifeDeux", 28, 606, 20, bold, rgb(1, 1, 1));
+  page.drawRectangle({ x: 0, y: 560, width: 420, height: 80, color: BRAND });
+  const logo = await pdf.embedPng(await brandPng("logo-horizontal-white"));
+  page.drawImage(logo, { x: 28, y: 602, width: 22 * LOGO_RATIO, height: 22 });
   text(t("ticket.title"), 28, 584, 11, font, rgb(1, 1, 1));
   text(b.reference, 300, 606, 13, bold, rgb(1, 1, 1));
 
@@ -66,7 +68,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   return new Response(new Uint8Array(bytes), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="lifedeux-${b.reference}.pdf"`,
+      "Content-Disposition": `inline; filename="medelys-${b.reference}.pdf"`,
       "Cache-Control": "private, no-store",
     },
   });

@@ -1,4 +1,4 @@
-# Relooking LifeDeux : décisions et spécification
+# Relooking Medelys (ex-LifeDeux) : décisions et spécification
 
 Source : questionnaire de 145 questions (4 études UX/UI : patient, médecin, admin/terrain, design system), rempli par le product owner, plus 5 précisions. Livraison **en une seule fois**, patient mobile d'abord dans la conception.
 
@@ -18,7 +18,7 @@ Légende : ✅ recommandation suivie · ✏️ choix différent de la recommanda
 | ✅ Illustrations au trait (états vides), pas de mascotte | |
 | ✏️ Photos de médecins facultatives (initiales sinon) ; ✏️ photos de logements fournies par les hôtes | |
 | ✅ Animations subtiles ; ✏️ célébration = coche animée seulement | Respect de `prefers-reduced-motion` |
-| ✅ Logo modernisé (cœur + croix) ; ✏️ logotype latin seul ; nom « LifeDeux » partout | |
+| ✅ Logo modernisé (cœur + croix) ; ✏️ logotype latin seul ; nom « Medelys » partout (ex-LifeDeux, voir « Identité Medelys ») | |
 | ✅ Même marque pour l'espace médecin, interface plus dense | |
 | ✅ WCAG 2.2 AA, zones tactiles de 44px, vouvoiement chaleureux, ✏️ émojis autorisés | |
 | ✅ Chiffres occidentaux, miroir RTL des éléments directionnels seulement | |
@@ -139,3 +139,11 @@ Légende : ✅ recommandation suivie · ✏️ choix différent de la recommanda
 - Pluriels corrects.
 - Chevauchements de créneaux bloqués.
 - Infobulles utilisables au toucher.
+
+## 12. Identité Medelys (ex-LifeDeux)
+
+- ✅ Marque visible renommée « Medelys » (FR, EN, AR en lettres latines), logo et favicon du kit `design/brand/`.
+- ✅ Couleurs : mêmes noms de tokens, nouvelles valeurs (brand #014D7D, accent teal #017680 sous le nom historique `coral`, trip #A84B24). Statuts `success/warning/danger/info` ajoutés. Contraste AA vérifié (blanc sur brand 8,9:1, muted sur blanc 5,5:1).
+- ✅ Polices Poppins + Tajawal (variables `--font-jakarta` / `--font-arabic` conservées).
+- ✅ Chargements : splash, spinner, squelette à reflet (sens de lecture, coupé si `prefers-reduced-motion`).
+- ✏️ Identifiants techniques inchangés : package, base `lifedeux`, domaine, comptes `@demo.lifedeux.com`, préfixes LD-/LC-/RX-, cookies.

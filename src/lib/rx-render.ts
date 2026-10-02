@@ -22,7 +22,7 @@ export async function opsToPdf(ops: Op[], images: Partial<Record<ImageRef, Image
   const pdf = await PDFDocument.create();
   pdf.setTitle(meta.title);
   pdf.setAuthor(meta.author);
-  pdf.setProducer("LifeDeux");
+  pdf.setProducer("Medelys");
   const page = pdf.addPage([PAGE_W, PAGE_H]);
   const fonts = {
     r: await pdf.embedFont(StandardFonts.Helvetica),

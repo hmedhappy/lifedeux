@@ -218,7 +218,7 @@ export async function markPaymentFailed(where: { id: string } | { providerRef: s
   await db.payment.updateMany({ where: { ...where, status: "PENDING" }, data: { status: "FAILED" } });
 }
 
-/** Amount LifeDeux owes each doctor: fees of operations and completed consultations, minus cash already paid. */
+/** Amount Medelys owes each doctor: fees of operations and completed consultations, minus cash already paid. */
 export async function doctorBalances() {
   const [earned, paid] = await Promise.all([
     db.booking.groupBy({

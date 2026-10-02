@@ -39,7 +39,7 @@
     "profile": "Mon profil"
   },
   "footer": {
-    "about": "LifeDeux vous met en relation avec des médecins vérifiés : téléconsultation avec ordonnance certifiée, ou intervention avec transfert, hébergement et suivi.",
+    "about": "Medelys vous met en relation avec des médecins vérifiés : téléconsultation avec ordonnance certifiée, ou intervention avec transfert, hébergement et suivi.",
     "platform": "Plateforme",
     "proAccess": "Espace médecins et équipe",
     "privacyTitle": "Confidentialité",
@@ -137,7 +137,7 @@
       }
     },
     "proTitle": "Vous êtes médecin ?",
-    "proText": "Rejoignez LifeDeux sur invitation d'un confrère super-médecin, ou écrivez-nous à {email}."
+    "proText": "Rejoignez Medelys sur invitation d'un confrère super-médecin, ou écrivez-nous à {email}."
   },
   "doctors": {
     "title": "Médecins",
@@ -166,7 +166,7 @@
     "about": "À propos",
     "operations": "Interventions proposées",
     "recovery": "Convalescence conseillée : {n} nuits",
-    "includedTitle": "Ce que LifeDeux organise pour vous",
+    "includedTitle": "Ce que Medelys organise pour vous",
     "included": {
       "transfer": "Accueil à l'aéroport et navettes (en option)",
       "stay": "Logement pendant toute la convalescence (en option)",
@@ -238,7 +238,7 @@
     "registerButton": "Créer mon compte",
     "haveAccount": "Déjà inscrit ?",
     "loginLink": "Se connecter",
-    "consent": "J'accepte que LifeDeux traite mes données pour organiser mon intervention et les partage avec le chirurgien choisi.",
+    "consent": "J'accepte que Medelys traite mes données pour organiser mon intervention et les partage avec le chirurgien choisi.",
     "inviteTitle": "Activer votre compte",
     "inviteSubtitle": "Bonjour {name}, choisissez un mot de passe pour {email}.",
     "inviteButton": "Activer mon compte",
@@ -392,7 +392,7 @@
     "addPhotos": "Ajouter des photos",
     "photosHint": "Facultatif, 3 photos maximum. Seul le médecin les voit.",
     "consentConsultation": "J'accepte que le médecin consulte les informations et photos envoyées pour ma consultation.",
-    "consentSurgery": "J'accepte que mes informations soient transmises au chirurgien et à l'équipe LifeDeux pour organiser mon séjour.",
+    "consentSurgery": "J'accepte que mes informations soient transmises au chirurgien et à l'équipe Medelys pour organiser mon séjour.",
     "policyConsultation": "Rien n'est débité avant l'accord du médecin. Annulation gratuite jusqu'à 24 h avant.",
     "reasons": {
       "first": "Premier avis",
@@ -416,7 +416,7 @@
     "stayTitle": "Hébergement",
     "stayText": "{n} nuits, transfert aéroport inclus.",
     "noStay": "Je m'organise seul",
-    "noStayText": "Pas d'hébergement LifeDeux.",
+    "noStayText": "Pas d'hébergement Medelys.",
     "unavailable": "Indisponible à ces dates",
     "tooSmall": "Trop petit pour votre groupe",
     "transferTitle": "Transfert aéroport",
@@ -442,7 +442,7 @@
     "editOptions": "Modifier les options",
     "method": "Moyen de paiement",
     "button": "Payer {amount}",
-    "secure": "Paiement sécurisé. Aucune donnée bancaire n'est stockée par LifeDeux.",
+    "secure": "Paiement sécurisé. Aucune donnée bancaire n'est stockée par Medelys.",
     "providers": {
       "stripe": {
         "title": "Carte bancaire internationale",
@@ -459,7 +459,7 @@
     }
   },
   "payment": {
-    "description": "Réservation LifeDeux {reference}",
+    "description": "Réservation Medelys {reference}",
     "mockTitle": "Paiement de test",
     "mockInfo": "Mode démonstration : aucun argent n'est débité.",
     "mockPay": "Simuler un paiement réussi",
@@ -479,7 +479,7 @@
     "stay": "Hébergement",
     "noStay": "Organisé par le patient",
     "qrAlt": "QR code de la réservation",
-    "qrHelp": "À présenter à l'équipe LifeDeux dès votre arrivée.",
+    "qrHelp": "À présenter à l'équipe Medelys dès votre arrivée.",
     "transferYes": "PRISE EN CHARGE AÉROPORT : OUI",
     "transferNo": "ARRIVÉE AUTONOME",
     "companions": "Accompagnants",
@@ -541,7 +541,7 @@
     "noSlots": "Aucun créneau publié",
     "deleteSlot": "Supprimer ce créneau",
     "payoutsTitle": "Mes versements",
-    "payoutsSubtitle": "Montants dus par LifeDeux et versements en espèces reçus.",
+    "payoutsSubtitle": "Montants dus par Medelys et versements en espèces reçus.",
     "refuseConfirm": "Refuser la demande {reference} de {name} ? Le patient sera prévenu et le créneau libéré.",
     "confirmFor": "Confirmer pour {name}",
     "tooLate": "Trop tard pour accepter {reference} : le rendez-vous est trop proche pour que le patient paie.",
@@ -556,7 +556,7 @@
     "accepted": "Consultation {reference} acceptée : le paiement est encaissé et le patient prévenu.",
     "stampLink": "Envoyer mon cachet",
     "stampMissingBanner": "Cachet manquant : vos consultations en ligne restent masquées tant qu'il n'est pas validé.",
-    "stampPendingBanner": "Cachet reçu, en cours de validation par l'équipe LifeDeux.",
+    "stampPendingBanner": "Cachet reçu, en cours de validation par l'équipe Medelys.",
     "moveAsked": "Changement demandé"
   },
   "payouts": {
@@ -909,9 +909,9 @@
   },
   "email": {
     "invite": {
-      "subject": "Votre accès LifeDeux",
+      "subject": "Votre accès Medelys",
       "title": "Bienvenue {name}",
-      "body": "Un compte LifeDeux a été créé pour vous. Choisissez votre mot de passe pour y accéder (lien valable 7 jours).",
+      "body": "Un compte Medelys a été créé pour vous. Choisissez votre mot de passe pour y accéder (lien valable 7 jours).",
       "cta": "Activer mon compte"
     },
     "requestReceived": {
@@ -953,7 +953,7 @@
     "reset": {
       "subject": "Réinitialisation de votre mot de passe",
       "title": "Bonjour {name}",
-      "body": "Vous avez demandé à changer votre mot de passe LifeDeux. Ce lien est valable 1 heure. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.",
+      "body": "Vous avez demandé à changer votre mot de passe Medelys. Ce lien est valable 1 heure. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.",
       "cta": "Choisir un nouveau mot de passe"
     },
     "consultConfirmed": {
@@ -975,10 +975,10 @@
       "cta": "Voir mon ordonnance"
     },
     "loginCode": {
-      "subject": "Votre code LifeDeux : {code}",
+      "subject": "Votre code Medelys : {code}",
       "title": "Bonjour {name}",
       "body": "Votre code de connexion est {code}. Il est valable 10 minutes. Si vous n'avez rien demandé, ignorez cet email.",
-      "cta": "Ouvrir LifeDeux"
+      "cta": "Ouvrir Medelys"
     },
     "consultCancelled": {
       "subject": "Annulation confirmée — {reference}",
@@ -1031,7 +1031,7 @@
       "cta": "Ouvrir le scan"
     },
     "adminAlert": {
-      "subject": "Alerte urgente LifeDeux",
+      "subject": "Alerte urgente Medelys",
       "title": "À traiter, {name}",
       "body": "{message}",
       "cta": "Ouvrir « À traiter »"
@@ -1188,7 +1188,7 @@
   "verify": {
     "title": "Vérification d'ordonnance",
     "ok": "Ordonnance authentique",
-    "okText": "Cette ordonnance a été émise par LifeDeux et son contenu n'a pas été modifié.",
+    "okText": "Cette ordonnance a été émise par Medelys et son contenu n'a pas été modifié.",
     "bad": "Ordonnance introuvable ou modifiée",
     "badText": "Nous ne pouvons pas confirmer ce document. Ne le délivrez pas sans vérification auprès du médecin.",
     "doctor": "Médecin",
@@ -1201,21 +1201,21 @@
   },
   "referral": {
     "title": "Parrainage",
-    "subtitle": "Invitez des confrères : ils rejoignent LifeDeux immédiatement grâce à votre lien.",
+    "subtitle": "Invitez des confrères : ils rejoignent Medelys immédiatement grâce à votre lien.",
     "yourLink": "Votre lien de parrainage",
     "code": "Code : {code}",
-    "shareText": "Rejoignez-moi sur LifeDeux pour vos consultations en ligne : {link}",
+    "shareText": "Rejoignez-moi sur Medelys pour vos consultations en ligne : {link}",
     "listTitle": "Médecins parrainés ({n})",
     "empty": "Aucun médecin parrainé pour l'instant.",
     "joined": "Inscrit le {date}",
     "consultations": "{n} {n:consultation|consultations}",
-    "joinTitle": "Rejoindre LifeDeux",
+    "joinTitle": "Rejoindre Medelys",
     "joinSubtitle": "Créez votre compte médecin. Il est actif immédiatement.",
     "invitedBy": "Invité(e) par",
     "stampHint": "PNG ou JPEG. Nécessaire pour rédiger des ordonnances.",
     "consent": "Je certifie être inscrit(e) à l'Ordre des médecins et j'accepte les conditions d'utilisation.",
     "joinButton": "Créer mon compte médecin",
-    "welcome": "Bienvenue sur LifeDeux ! Ajoutez vos premiers créneaux pour recevoir des patients.",
+    "welcome": "Bienvenue sur Medelys ! Ajoutez vos premiers créneaux pour recevoir des patients.",
     "stepAccount": "Votre compte",
     "stepPractice": "Votre activité"
   },
@@ -1237,7 +1237,7 @@
     "base": "Base",
     "layout": {
       "teal": "Classique turquoise",
-      "rose": "Bandeau LifeDeux",
+      "rose": "Bandeau Medelys",
       "letterhead": "Mon papier à en-tête"
     },
     "layoutHint": {
@@ -1332,7 +1332,7 @@
     "instant": "Réservation immédiate",
     "instantHint": "Les demandes sont acceptées automatiquement, sans passer par votre boîte de réception.",
     "price": "Tarif de la consultation ({currency})",
-    "priceHint": "Un nouveau tarif s'applique après validation par l'équipe LifeDeux.",
+    "priceHint": "Un nouveau tarif s'applique après validation par l'équipe Medelys.",
     "pricePending": "Nouveau tarif demandé : {price}, en attente de validation.",
     "save": "Enregistrer",
     "saved": "Profil enregistré.",
@@ -1387,7 +1387,7 @@
     "moves": "{n} {n:demande de changement d'horaire|demandes de changement d'horaire} à traiter",
     "monthEarnings": "Gains du mois",
     "monthActs": "{n} {n:acte|actes}",
-    "onboardingTitle": "Bien démarrer sur LifeDeux",
+    "onboardingTitle": "Bien démarrer sur Medelys",
     "steps": {
       "photo": "Compléter ma présentation et ma photo",
       "stamp": "Envoyer mon cachet",
@@ -1529,6 +1529,6 @@
   },
   "support": {
     "label": "Aide sur WhatsApp",
-    "prefill": "Bonjour LifeDeux, j'ai une question."
+    "prefill": "Bonjour Medelys, j'ai une question."
   }
 }

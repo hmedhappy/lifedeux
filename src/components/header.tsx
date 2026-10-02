@@ -8,28 +8,17 @@ import { LanguageSwitcher } from "./language-switcher";
 import { FooterGate } from "./footer-gate";
 import { UserMenu } from "./user-menu";
 import { Container } from "./ui";
+import { MedelysLogo, MedelysMark } from "./brand-logo";
 
-/** The heart and cross, redrawn: a softer heart with the cross cut out of it. */
-export function LogoMark({ className = "h-8 w-8" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 32 32" className={className} aria-hidden>
-      <rect width="32" height="32" rx="10" fill="#0f766e" />
-      <path
-        fill="#fff"
-        d="M16 25.5s-8.5-5-8.5-11.4C7.5 10.9 10 8.5 13 8.5c1.2 0 2.3.4 3 1.1.7-.7 1.8-1.1 3-1.1 3 0 5.5 2.4 5.5 5.6 0 6.4-8.5 11.4-8.5 11.4z"
-      />
-      <path fill="#0f766e" d="M14.9 12.2h2.2v2.6h2.6V17h-2.6v2.6h-2.2V17h-2.6v-2.2h2.6z" />
-    </svg>
-  );
+/** The Medelys monogram: the M with its leaf and cross. */
+export function LogoMark({ className = "h-8 w-8", white = false }: { className?: string; white?: boolean }) {
+  return <MedelysMark className={className} white={white} />;
 }
 
 export function Logo({ locale, inverted = false, href }: { locale: Locale; inverted?: boolean; href?: string }) {
   return (
-    <Link href={href ?? `/${locale}`} className="flex items-center gap-2" aria-label="LifeDeux">
-      <LogoMark />
-      <span className={`text-xl font-extrabold tracking-tight ${inverted ? "text-white" : "text-ink"}`} dir="ltr">
-        Life<span className={inverted ? "text-brand-bright" : "text-brand"}>Deux</span>
-      </span>
+    <Link href={href ?? `/${locale}`} className="flex shrink-0 items-center" aria-label="Medelys">
+      <MedelysLogo className="h-8 w-auto md:h-9" white={inverted} />
     </Link>
   );
 }
@@ -129,7 +118,7 @@ export async function Footer({ locale }: { locale: Locale }) {
           </div>
         </Container>
         <Container className="border-t border-line py-6 text-xs text-muted">
-          © {new Date().getFullYear()} LifeDeux · {t("footer.rights")}
+          © {new Date().getFullYear()} Medelys · {t("footer.rights")}
         </Container>
       </footer>
     </FooterGate>
