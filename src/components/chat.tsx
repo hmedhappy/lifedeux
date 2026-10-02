@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import { ArrowLeft, Building2, Check, CheckCheck, FileText, ImagePlus, Loader2, Phone, Scissors, Send, Video, X } from "lucide-react";
+import { ArrowLeft, Building2, Check, CheckCheck, FilePen, FileText, ImagePlus, Info, Loader2, Phone, Scissors, Send, Video, X } from "lucide-react";
 import type { ChatMessage, PeerStatus } from "@/lib/consultations";
 import type { ChatState } from "@/lib/consultation-rules";
+import { useConsultPanels } from "./consult-context";
 import { useI18n } from "./i18n-provider";
 import { shrink } from "./image-input";
 import { Avatar } from "./ui";
@@ -69,6 +70,7 @@ export function Chat({
   className?: string;
 }) {
   const { t, locale } = useI18n();
+  const panels = useConsultPanels();
   const [messages, setMessages] = useState(initialMessages);
   const [state, setState] = useState(initialState);
   const [peer, setPeer] = useState<PeerStatus>({ online: false, typing: false, seenAt: null });
@@ -208,7 +210,7 @@ export function Chat({
             <Link
               href={backHref}
               aria-label={t("common.back")}
-              className={clsx("-ms-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-surface", fullscreenMobile ? "md:hidden" : "hidden")}
+              className="-ms-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-surface"
             >
               <ArrowLeft className="h-5 w-5 rtl:-scale-x-100" aria-hidden />
             </Link>
@@ -218,7 +220,21 @@ export function Chat({
             {open && peer.online && <span className="absolute -bottom-0.5 -end-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" aria-hidden />}
           </span>
           <div className="min-w-0">
-            <p className="truncate font-semibold text-ink">{peerName}</p>
+            <p className="flex min-w-0 items-center gap-1">
+              <span className="truncate font-semibold text-ink">{peerName}</span>
+              {panels && (
+                <button
+                  type="button"
+                  onClick={panels.openPatient}
+                  aria-label={t("workspace.patient")}
+                  title={t("workspace.patient")}
+                  className="-my-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-brand hover:bg-brand-soft"
+                  data-testid="chat-peer-info"
+                >
+                  <Info className="h-[18px] w-[18px]" aria-hidden />
+                </button>
+              )}
+            </p>
             <p className={clsx("truncate text-xs", peer.typing ? "font-medium text-brand" : "text-muted")} data-testid="chat-status">
               {statusLine}
               {peerSubtitle && !peer.typing && <span> · {peerSubtitle}</span>}
@@ -359,6 +375,22 @@ export function Chat({
         >
           <ImagePlus className="h-5 w-5" aria-hidden />
         </button>
+        {panels?.toggleRx && (
+          <button
+            type="button"
+            onClick={panels.toggleRx}
+            aria-label={t("workspace.prescription")}
+            title={t("workspace.prescription")}
+            aria-pressed={panels.rxOpen}
+            className={clsx(
+              "flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition hover:bg-surface",
+              panels.rxOpen ? "text-brand lg:bg-brand-soft" : "text-ink",
+            )}
+            data-testid="chat-rx-toggle"
+          >
+            <FilePen className="h-5 w-5" aria-hidden />
+          </button>
+        )}
         <textarea
           value={text}
           onChange={(e) => onType(e.target.value)}

@@ -92,7 +92,15 @@ export default async function DoctorConsultationPage({ params }: { params: Promi
   );
 
   const patientPanel = (
-    <aside className="space-y-4 lg:grid lg:grid-cols-3 lg:gap-4 lg:space-y-0" data-testid="patient-panel">
+    <aside className="space-y-3" data-testid="patient-panel">
+      <div className="rounded-3xl border border-line bg-white p-5 text-sm shadow-card">
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusBadge status={c.status} t={t} />
+          <span className="font-mono text-xs text-muted">{c.reference}</span>
+        </div>
+        <p className="mt-2 font-medium text-ink">{formatDateTime(c.slot.startsAt, locale)}</p>
+        <p className="text-muted">{t("consult.minutes", { n: c.durationMinutes })}</p>
+      </div>
       <div className="rounded-3xl border border-line bg-white p-5 shadow-card">
         <p className="font-semibold text-ink">{patientName}</p>
         <p className="text-sm text-muted">{subtitle || "—"}</p>
@@ -137,8 +145,9 @@ export default async function DoctorConsultationPage({ params }: { params: Promi
   );
 
   const prescription = canPrescribe ? (
-    <section className="rounded-3xl border border-line bg-white p-5 shadow-card">
-      <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-ink">
+    // A card in the large-screen column; on phones the side panel already frames it.
+    <section className="bg-white lg:rounded-3xl lg:border lg:border-line lg:p-5 lg:shadow-card">
+      <h2 className="mb-4 hidden items-center gap-2 text-lg font-semibold text-ink lg:flex">
         <FileText className="h-5 w-5 text-brand" aria-hidden />
         {t("rx.title")}
       </h2>
@@ -178,21 +187,24 @@ export default async function DoctorConsultationPage({ params }: { params: Promi
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <Link
-          href={`/${locale}/doctor/consultations`}
-          aria-label={t("doctorArea.consultationsTitle")}
-          className="-ms-2 flex h-11 w-11 items-center justify-center rounded-full text-ink-soft hover:bg-surface"
-        >
-          <ArrowLeft className="h-5 w-5 rtl:-scale-x-100" aria-hidden />
-        </Link>
-        <h1 className="text-xl font-bold tracking-tight text-ink">{patientName}</h1>
-        <StatusBadge status={c.status} t={t} />
-        <span className="text-sm text-muted">
-          {formatDateTime(c.slot.startsAt, locale)} · {t("consult.minutes", { n: c.durationMinutes })}
-        </span>
-        <span className="font-mono text-xs text-muted">{c.reference}</span>
-      </div>
+      {/* Once the chat exists its header names the patient: no second title above it. */}
+      {!paid && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <Link
+            href={`/${locale}/doctor/consultations`}
+            aria-label={t("doctorArea.consultationsTitle")}
+            className="-ms-2 flex h-11 w-11 items-center justify-center rounded-full text-ink-soft hover:bg-surface"
+          >
+            <ArrowLeft className="h-5 w-5 rtl:-scale-x-100" aria-hidden />
+          </Link>
+          <h1 className="text-xl font-bold tracking-tight text-ink">{patientName}</h1>
+          <StatusBadge status={c.status} t={t} />
+          <span className="text-sm text-muted">
+            {formatDateTime(c.slot.startsAt, locale)} · {t("consult.minutes", { n: c.durationMinutes })}
+          </span>
+          <span className="font-mono text-xs text-muted">{c.reference}</span>
+        </div>
+      )}
 
       {moveSlot && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4" data-testid="reschedule-request">
@@ -240,10 +252,16 @@ export default async function DoctorConsultationPage({ params }: { params: Promi
               quickReplies={QUICK_REPLIES.map((n) => t(`chat.quick.${n}`))}
               orientation={{ clinic: `${doctor.clinicName}, ${doctor.clinicAddress}`, surgeryHref: null }}
               headerActions={actions}
-              className="h-[calc(100dvh-15rem)] min-h-[460px] lg:h-[calc(100dvh-10rem)]"
+              backHref={`/${locale}/doctor/consultations`}
+              fullscreenMobile={chat === "open"}
+              className="md:h-[calc(100dvh-9rem)] md:min-h-[460px]"
             />
           ) : (
-            <p className="rounded-3xl border border-dashed border-line-strong p-8 text-center text-sm text-muted">{t("workspace.chatLater")}</p>
+            // No chat yet, so no info icon: the patient file stays on the page.
+            <div className="space-y-4">
+              {patientPanel}
+              <p className="rounded-3xl border border-dashed border-line-strong p-8 text-center text-sm text-muted">{t("workspace.chatLater")}</p>
+            </div>
           )
         }
       />

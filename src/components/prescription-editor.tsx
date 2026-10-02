@@ -30,6 +30,81 @@ const label = (m: MedicationHit) => [m.name, m.strength, m.form].filter((v) => v
 const PREVIEW_DELAY_MS = 400;
 const FIELDS: PosologyField[] = ["dosage", "frequency", "duration"];
 
+/** Medicines matching what is typed (2 letters or more), shared by the search box and each line's name. */
+function useMedicationSearch(query: string) {
+  const [results, setResults] = useState<MedicationHit[]>([]);
+  const [searching, setSearching] = useState(false);
+  useEffect(() => {
+    if (query.trim().length < 2) return;
+    const timer = setTimeout(async () => {
+      setSearching(true);
+      const res = await fetch(`/api/medications?q=${encodeURIComponent(query)}`).catch(() => null);
+      setSearching(false);
+      if (res?.ok) setResults(((await res.json()) as { results: MedicationHit[] }).results);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [query]);
+  return { results: query.trim().length < 2 ? [] : results, searching };
+}
+
+function MedicationList({ hits, onPick }: { hits: MedicationHit[]; onPick: (m: MedicationHit) => void }) {
+  return (
+    <ul className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-2xl border border-line bg-white py-1 shadow-float" role="listbox">
+      {hits.map((m) => (
+        <li key={m.id}>
+          <button
+            type="button"
+            // Keeps the focus in the field, so the list is still there when the click lands.
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => onPick(m)}
+            className="flex w-full items-start gap-3 px-3 py-2 text-start text-sm hover:bg-surface"
+            data-testid="rx-result"
+          >
+            <Pill className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
+            <span>
+              <span className="block font-medium text-ink">{label(m)}</span>
+              {m.dci && <span className="block text-xs text-muted">{m.dci}</span>}
+            </span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** The medicine name of a line: free text, with the same search as the box above once the doctor types. */
+function MedicationInput({ value, onType, onPick, ariaLabel }: { value: string; onType: (v: string) => void; onPick: (m: MedicationHit) => void; ariaLabel: string }) {
+  const [typed, setTyped] = useState("");
+  const [focused, setFocused] = useState(false);
+  const { results, searching } = useMedicationSearch(typed);
+  return (
+    <div className="relative min-w-0 flex-1">
+      <Input
+        value={value}
+        onChange={(e) => {
+          onType(e.target.value);
+          setTyped(e.target.value);
+        }}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        aria-label={ariaLabel}
+        className="font-medium"
+        data-testid="rx-item-name"
+      />
+      {searching && focused && <Loader2 className="absolute end-3 top-3.5 h-4 w-4 animate-spin text-muted" aria-hidden />}
+      {focused && typed === value && results.length > 0 && (
+        <MedicationList
+          hits={results}
+          onPick={(m) => {
+            onPick(m);
+            setTyped("");
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
 /** The rendered page (SVG made by the server from the same layout as the PDF). */
 function Page({ svg, className = "" }: { svg: string; className?: string }) {
   return <div className={`[&>svg]:block [&>svg]:h-auto [&>svg]:w-full ${className}`} dangerouslySetInnerHTML={{ __html: svg }} />;
@@ -54,8 +129,7 @@ export function PrescriptionEditor({
   const { t } = useI18n();
   const toast = useToast();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<MedicationHit[]>([]);
-  const [searching, setSearching] = useState(false);
+  const { results: shown, searching } = useMedicationSearch(query);
   const [items, setItems] = useState<Item[]>(() => (initial?.items ?? []).map((i) => ({ ...i, key: newKey() })));
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [templateRef, setTemplateRef] = useState(defaultTemplate);
@@ -63,24 +137,14 @@ export function PrescriptionEditor({
   const [expanded, setExpanded] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [active, setActive] = useState<string | null>(null);
+  // The posology field being typed in: only its suggestions are shown.
+  const [focus, setFocus] = useState<{ key: string; field: PosologyField } | null>(null);
+  const fieldRefs = useRef(new Map<string, HTMLInputElement>());
   const [favorites, setFavorites] = useState(initialFavorites);
   const [favName, setFavName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const previewTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-
-  useEffect(() => {
-    clearTimeout(timer.current);
-    if (query.trim().length < 2) return;
-    timer.current = setTimeout(async () => {
-      setSearching(true);
-      const res = await fetch(`/api/medications?q=${encodeURIComponent(query)}`).catch(() => null);
-      setSearching(false);
-      if (res?.ok) setResults(((await res.json()) as { results: MedicationHit[] }).results);
-    }, 250);
-    return () => clearTimeout(timer.current);
-  }, [query]);
 
   const lines = (): Line[] =>
     items.map(({ medicationId, name, dosage, frequency, duration, instructions }) => ({ medicationId, name, dosage, frequency, duration, instructions }));
@@ -102,7 +166,6 @@ export function PrescriptionEditor({
     return () => clearTimeout(previewTimer.current);
   }, [snapshot, consultationId, items.length]);
 
-  const shown = query.trim().length < 2 ? [] : results;
   const liveSvg = items.length > 0 ? svg : null;
 
   if (!hasStamp) {
@@ -115,7 +178,14 @@ export function PrescriptionEditor({
     setItems((list) => [...list, item]);
     setActive(item.key);
     setQuery("");
-    setResults([]);
+  }
+
+  /** A suggestion fills the field, then the next one takes the focus (dosage → frequency → duration). */
+  function pickPosology(key: string, field: PosologyField, value: string) {
+    update(key, { [field]: value });
+    const next = FIELDS[FIELDS.indexOf(field) + 1];
+    if (next) fieldRefs.current.get(`${key}:${next}`)?.focus();
+    else setFocus(null);
   }
 
   function applyFavorite(f: Favorite) {
@@ -228,26 +298,7 @@ export function PrescriptionEditor({
           data-testid="rx-search"
         />
         {searching && <Loader2 className="absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted" aria-hidden />}
-        {shown.length > 0 && (
-          <ul className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-2xl border border-line bg-white py-1 shadow-float" role="listbox">
-            {shown.map((m) => (
-              <li key={m.id}>
-                <button
-                  type="button"
-                  onClick={() => add(blank(label(m), m.id))}
-                  className="flex w-full items-start gap-3 px-3 py-2 text-start text-sm hover:bg-surface"
-                  data-testid="rx-result"
-                >
-                  <Pill className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
-                  <span>
-                    <span className="block font-medium text-ink">{label(m)}</span>
-                    {m.dci && <span className="block text-xs text-muted">{m.dci}</span>}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+        {shown.length > 0 && <MedicationList hits={shown} onPick={(m) => add(blank(label(m), m.id))} />}
       </div>
       <button type="button" onClick={() => add(blank(query))} className="inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-ink-soft hover:text-ink">
         <Plus className="h-4 w-4" aria-hidden />
@@ -269,7 +320,12 @@ export function PrescriptionEditor({
               >
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold text-brand">{index + 1}.</span>
-                  <Input value={i.name} onChange={(e) => update(i.key, { name: e.target.value })} aria-label={t("rx.medication")} className="font-medium" />
+                  <MedicationInput
+                    value={i.name}
+                    onType={(name) => update(i.key, { name })}
+                    onPick={(m) => update(i.key, { name: label(m), medicationId: m.id })}
+                    ariaLabel={t("rx.medication")}
+                  />
                   <button
                     type="button"
                     onClick={() => setItems((list) => list.filter((x) => x.key !== i.key))}
@@ -281,29 +337,63 @@ export function PrescriptionEditor({
                 </div>
                 <div className="mt-2 grid grid-cols-3 gap-2">
                   {FIELDS.map((f) => (
-                    <Input key={f} value={i[f]} onChange={(e) => update(i.key, { [f]: e.target.value })} placeholder={t(`rx.${f}`)} aria-label={t(`rx.${f}`)} name={f} />
+                    <Input
+                      key={f}
+                      ref={(el) => {
+                        if (el) fieldRefs.current.set(`${i.key}:${f}`, el);
+                        else fieldRefs.current.delete(`${i.key}:${f}`);
+                      }}
+                      value={i[f]}
+                      onChange={(e) => update(i.key, { [f]: e.target.value })}
+                      onFocus={() => setFocus({ key: i.key, field: f })}
+                      onBlur={() => setFocus((cur) => (cur?.key === i.key && cur.field === f ? null : cur))}
+                      placeholder={t(`rx.${f}`)}
+                      aria-label={t(`rx.${f}`)}
+                      name={f}
+                      className="px-2.5"
+                    />
                   ))}
                 </div>
+                {/* Suggestions of the focused field only, sliding in from the start side one after the other. */}
+                <div
+                  className={clsx(
+                    "grid transition-[grid-template-rows] duration-200 ease-[var(--ease-standard)]",
+                    focus?.key === i.key ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+                  )}
+                  data-testid="rx-chips"
+                >
+                  <div className="overflow-hidden">
+                    <div className="grid pt-2 [grid-template-areas:'chips']">
+                      {FIELDS.map((f) => {
+                        const visible = focus?.key === i.key && focus.field === f;
+                        return (
+                          <div key={f} className={clsx("-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [grid-area:chips]", !visible && "pointer-events-none")} aria-hidden={!visible}>
+                            {POSOLOGY[f].map((v, n) => (
+                              <button
+                                key={v}
+                                type="button"
+                                tabIndex={visible ? 0 : -1}
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={() => pickPosology(i.key, f, v)}
+                                aria-pressed={i[f] === v}
+                                style={{ transitionDelay: visible ? `${n * 35}ms` : "0ms" }}
+                                className={clsx(
+                                  "min-h-8 shrink-0 rounded-full border px-2.5 text-xs transition-[opacity,transform,background-color,border-color] duration-200",
+                                  visible ? "translate-x-0 opacity-100" : "-translate-x-3 opacity-0 rtl:translate-x-3",
+                                  i[f] === v ? "border-brand bg-brand text-white" : "border-line bg-white text-ink-soft hover:border-brand",
+                                )}
+                              >
+                                {v}
+                              </button>
+                            ))}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
                 {open && (
-                  <div className="mt-2 space-y-1.5 animate-fade-in" data-testid="rx-chips">
-                    {FIELDS.map((f) => (
-                      <div key={f} className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
-                        {POSOLOGY[f].map((v) => (
-                          <button
-                            key={v}
-                            type="button"
-                            onClick={() => update(i.key, { [f]: v })}
-                            aria-pressed={i[f] === v}
-                            className={clsx(
-                              "min-h-8 shrink-0 rounded-full border px-2.5 text-xs transition",
-                              i[f] === v ? "border-brand bg-brand text-white" : "border-line bg-white text-ink-soft hover:border-brand",
-                            )}
-                          >
-                            {v}
-                          </button>
-                        ))}
-                      </div>
-                    ))}
+                  <div className="mt-2 animate-fade-in">
                     <Input
                       value={i.instructions ?? ""}
                       onChange={(e) => update(i.key, { instructions: e.target.value })}

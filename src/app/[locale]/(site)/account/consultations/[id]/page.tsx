@@ -127,30 +127,35 @@ export default async function PatientConsultationPage({
 
   return (
     <Container className="py-6 sm:py-10">
-      <Link href={`/${locale}/account`} className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-ink-soft hover:text-ink">
-        <ArrowLeft className="h-4 w-4 rtl:-scale-x-100" aria-hidden />
-        {t("account.title")}
-      </Link>
+      {/* The chat header already names the doctor and has its own back arrow. */}
+      {!showChat && (
+        <>
+          <Link href={`/${locale}/account`} className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-ink-soft hover:text-ink">
+            <ArrowLeft className="h-4 w-4 rtl:-scale-x-100" aria-hidden />
+            {t("account.title")}
+          </Link>
 
-      <header className="mt-2 flex flex-wrap items-center gap-4">
-        <Avatar name={`${c.doctor.user.firstName} ${c.doctor.user.lastName}`} src={c.doctor.photoUrl} size={56} />
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-ink sm:text-2xl">{doctorName}</h1>
-            <StatusBadge status={c.status} t={t} />
-          </div>
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
-            <span className="inline-flex items-center gap-1.5">
-              <SpecialtyIcon name={c.doctor.specialty_?.icon ?? "Stethoscope"} className="h-4 w-4" aria-hidden />
-              {specialty}
-            </span>
-            <span className="font-medium text-ink">{formatDateTime(c.slot.startsAt, locale)}</span>
-            <span className="font-mono text-xs">{c.reference}</span>
-          </p>
-        </div>
-      </header>
+          <header className="mt-2 flex flex-wrap items-center gap-4">
+            <Avatar name={`${c.doctor.user.firstName} ${c.doctor.user.lastName}`} src={c.doctor.photoUrl} size={56} />
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl font-bold tracking-tight text-ink sm:text-2xl">{doctorName}</h1>
+                <StatusBadge status={c.status} t={t} />
+              </div>
+              <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+                <span className="inline-flex items-center gap-1.5">
+                  <SpecialtyIcon name={c.doctor.specialty_?.icon ?? "Stethoscope"} className="h-4 w-4" aria-hidden />
+                  {specialty}
+                </span>
+                <span className="font-medium text-ink">{formatDateTime(c.slot.startsAt, locale)}</span>
+                <span className="font-mono text-xs">{c.reference}</span>
+              </p>
+            </div>
+          </header>
+        </>
+      )}
 
-      <div className="mt-6 space-y-3 empty:hidden">
+      <div className={clsx("space-y-3 empty:hidden", showChat ? "mb-4" : "mt-6")}>
         {requested && c.status === "REQUESTED" && <Notice tone="success">{t("consult.requestSent")}</Notice>}
         {payment === "success" && (c.status === "CONFIRMED" || (c.status === "REQUESTED" && !hold)) && (
           <>
@@ -167,7 +172,7 @@ export default async function PatientConsultationPage({
       </div>
 
       {showChat ? (
-        <div className="mt-6 space-y-4">
+        <div className="space-y-4">
           {c.status === "NO_SHOW" && <Notice tone="warning">{t("consult.noShowText")}</Notice>}
           <Chat
             consultationId={c.id}

@@ -51,7 +51,7 @@ export function LinkButton({
 const fieldBase =
   "w-full min-h-11 rounded-xl border border-line-strong bg-white px-3.5 py-2.5 text-base text-ink placeholder:text-muted transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 md:text-sm";
 
-export function Input({ className, ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
+export function Input({ className, ...props }: React.ComponentProps<"input">) {
   return <input className={clsx(fieldBase, className)} {...props} />;
 }
 
