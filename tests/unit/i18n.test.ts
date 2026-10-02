@@ -55,6 +55,12 @@ const DYNAMIC_KEYS = [
   ...["saved", "savedPricePending"].map((s) => `doctorProfile.${s}`),
   ...["late", "health", "lodging", "transport", "other"].map((s) => `incident.kinds.${s}`),
   "scan.stale",
+  ...["refundFailed", "autoRefund", "incident", "lodgingIssue", "noAnswer", "other"].map((s) => `todo.alert.${s}`),
+  ...["license", "stamp", "signature"].map((s) => `ready.missing.${s}`),
+  ...["CASH", "TRANSFER"].map((s) => `payoutMethod.${s}`),
+  ...["payoutOverBalance", "payoutRecorded"].map((s) => `admin.${s}`),
+  ...["done", "doneWithErrors"].map((s) => `import.${s}`),
+  ...["placeholder", "placeholderSearch"].map((s) => `palette.${s}`),
   "payment.mockHold",
   "payment.mockPay",
 ];

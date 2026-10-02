@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Avatar, Badge, EmptyState, LinkButton, PageTitle, Table, Td, Th } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
+import { prescriptionReadiness } from "@/lib/doctor-readiness";
+import type { TFunction } from "@/lib/i18n";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/format";
 import { getT, localized, toLocale } from "@/lib/i18n";
@@ -41,6 +43,7 @@ export default async function AdminDoctorsPage({ params }: { params: Promise<{ l
               <Th>{t("admin.doctor.price")}</Th>
               <Th>{t("admin.col.freeSlots")}</Th>
               <Th>{t("admin.col.account")}</Th>
+              <Th>{t("ready.col")}</Th>
             </tr>
           </thead>
           <tbody>
@@ -84,11 +87,25 @@ export default async function AdminDoctorsPage({ params }: { params: Promise<{ l
                     <Badge>{t("admin.inactive")}</Badge>
                   )}
                 </Td>
+                <Td>
+                  <ReadyBadge t={t} doctor={d} />
+                </Td>
               </tr>
             ))}
           </tbody>
         </Table>
       )}
     </div>
+  );
+}
+
+function ReadyBadge({ t, doctor }: { t: TFunction; doctor: Parameters<typeof prescriptionReadiness>[0] }) {
+  const r = prescriptionReadiness(doctor);
+  return r.ready ? (
+    <Badge tone="green">{t("ready.yes")}</Badge>
+  ) : (
+    <span title={r.missing.map((m) => t(`ready.missing.${m}`)).join(", ")}>
+      <Badge tone="amber">{t("ready.no", { n: r.missing.length })}</Badge>
+    </span>
   );
 }

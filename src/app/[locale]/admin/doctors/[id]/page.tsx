@@ -6,7 +6,8 @@ import { Card, PageTitle } from "@/components/ui";
 import { resendInviteAction, reviewStampAction, updateDoctorAction } from "@/actions/admin";
 import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getT, toLocale } from "@/lib/i18n";
+import { getT, toLocale, type TFunction } from "@/lib/i18n";
+import { prescriptionReadiness } from "@/lib/doctor-readiness";
 
 export default async function EditDoctorPage({ params }: { params: Promise<{ locale: string; id: string }> }) {
   const { locale: raw, id } = await params;
@@ -26,6 +27,7 @@ export default async function EditDoctorPage({ params }: { params: Promise<{ loc
         ← {t("admin.doctorsTitle")}
       </Link>
       <PageTitle title={`Dr ${doctor.user.firstName} ${doctor.user.lastName}`} subtitle={doctor.user.email} />
+      <ReadyLine t={t} doctor={doctor} />
       {doctor.pendingStampImageId && (
         <Card>
           <div className="flex flex-wrap items-center gap-5" data-testid="stamp-review">
@@ -72,5 +74,17 @@ export default async function EditDoctorPage({ params }: { params: Promise<{ loc
         />
       </Card>
     </div>
+  );
+}
+
+function ReadyLine({ t, doctor }: { t: TFunction; doctor: Parameters<typeof prescriptionReadiness>[0] }) {
+  const r = prescriptionReadiness(doctor);
+  return (
+    <p
+      className={`rounded-2xl px-4 py-3 text-sm font-medium ${r.ready ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"}`}
+      data-testid="ready-line"
+    >
+      {r.ready ? t("ready.yesLong") : t("ready.noLong", { missing: r.missing.map((m) => t(`ready.missing.${m}`)).join(", ") })}
+    </p>
   );
 }

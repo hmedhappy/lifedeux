@@ -16,6 +16,7 @@ import { randomToken, referralCode } from "@/lib/tokens";
 import { IMAGE_PATH_PREFIX, isPhotoRef, saveUploadedImages } from "@/lib/images";
 import { isLatinName } from "@/lib/latin";
 import { audit } from "@/lib/audit";
+import { MAX_IMPORT_ROWS, parseCsv } from "@/lib/csv";
 import { doctorBalances } from "@/lib/bookings";
 
 async function currentAdmin() {
@@ -177,6 +178,7 @@ export async function createDoctorAction(localeRaw: string, _: ActionState, form
     include: { doctor: true },
   });
   const link = await issueInvite(user.id, locale);
+  await audit((await currentAdmin())!.id, "doctor.create", user.id, { email: user.email });
   revalidatePath(`/${locale}/admin/doctors`);
   return ok("admin.inviteSent", { vars: { email: user.email }, detail: link });
 }
@@ -243,6 +245,7 @@ export async function updateDoctorAction(
     db.doctorOperation.deleteMany({ where: { doctorId } }),
     db.doctorOperation.createMany({ data: pricing.map((p) => ({ ...p, doctorId })) }),
   ]);
+  await audit((await currentAdmin())!.id, "doctor.update", doctorId, { pricing, consultationPrice: extras.consultationPrice });
   revalidatePath(`/${locale}/admin/doctors`);
   return ok("admin.saved");
 }
@@ -320,6 +323,7 @@ export async function saveOperationAction(
 
   if (operationId) await db.operation.update({ where: { id: operationId }, data });
   else await db.operation.create({ data });
+  await audit((await currentAdmin())!.id, "operation.save", null, { basePrice });
   revalidatePath(`/${locale}/admin/operations`);
   if (!operationId) redirect(`/${locale}/admin/operations`);
   return ok("admin.saved");
@@ -380,6 +384,7 @@ export async function adminCancelBookingAction(localeRaw: string, bookingId: str
     await tx.slot.updateMany({ where: { id: booking.slotId, status: { in: ["HELD", "BOOKED"] } }, data: { status: "FREE" } });
     await tx.payment.updateMany({ where: { bookingId: booking.id, status: "PENDING" }, data: { status: "FAILED" } });
   });
+  await audit((await currentAdmin())!.id, "booking.cancel", bookingId, undefined);
   revalidatePath(`/${locale}/admin/bookings/${bookingId}`);
 }
 
@@ -428,6 +433,7 @@ export async function saveSettingsAction(localeRaw: string, _: ActionState, form
     update: { ...parsed.data, transportPricePerPerson },
     create: { id: 1, ...parsed.data, transportPricePerPerson },
   });
+  await audit((await currentAdmin())!.id, "settings.save", null, { transportPricePerPerson });
   revalidatePath(`/${locale}`, "layout");
   return ok("admin.saved");
 }
@@ -446,6 +452,7 @@ export async function reviewStampAction(localeRaw: string, doctorId: string, app
       db.alert.updateMany({ where: { doctorId, kind: "stampToReview", resolvedAt: null }, data: { resolvedAt: new Date() } }),
     ]);
   }
+  await audit((await currentAdmin())!.id, "stamp.review", doctorId, { approve });
   revalidatePath(`/${locale}/admin`, "layout");
 }
 
@@ -456,6 +463,7 @@ export async function assignAgentAction(localeRaw: string, bookingId: string, fo
   const agentId = String(formData.get("agentId") ?? "") || null;
   if (agentId && !(await db.user.findFirst({ where: { id: agentId, role: "AGENT", active: true } }))) return;
   await db.booking.update({ where: { id: bookingId }, data: { agentId } });
+  await audit((await currentAdmin())!.id, "agent.assign", bookingId, { agentId });
   revalidatePath(`/${locale}/admin/bookings`);
 }
 
@@ -469,5 +477,75 @@ export async function markLodgingUnavailableAction(localeRaw: string, bookingId:
     db.booking.update({ where: { id: bookingId }, data: { accommodationIssueAt: new Date() } }),
     db.alert.create({ data: { kind: "lodgingIssue", severity: "urgent", message: `Lodging unavailable for ${booking.reference}`, bookingId } }),
   ]);
+  await audit((await currentAdmin())!.id, "lodging.unavailable", bookingId, undefined);
   revalidatePath(`/${locale}/admin/bookings`);
+}
+
+const importDoctorSchema = z.object({
+  first_name: latinName(),
+  last_name: latinName(),
+  email: z.string().trim().toLowerCase().email(),
+  phone: optionalText(30),
+  specialty_slug: z.string().trim().min(1),
+  specialty: optionalText(120),
+  license: optionalText(60),
+  city: text(80),
+  clinic_name: text(160),
+  clinic_address: text(300),
+  locale: z.enum(["fr", "en", "ar"]).optional(),
+});
+
+/**
+ * Doctor import (after medications). Each line creates an account and emails an
+ * invitation; doctors stay hidden until their stamp and prices are set.
+ */
+export async function importDoctorsAction(localeRaw: string, _: ActionState, formData: FormData): Promise<ActionState> {
+  const locale = toLocale(localeRaw);
+  const admin = await currentAdmin();
+  if (!admin) return fail("errors.forbidden");
+  const file = formData.get("file");
+  const text = file && typeof file === "object" && "text" in file && file.size > 0 ? await file.text() : String(formData.get("csv") ?? "");
+  const { headers, rows } = parseCsv(text);
+  const required = ["first_name", "last_name", "email", "specialty_slug", "city", "clinic_name", "clinic_address"];
+  const missing = required.filter((h) => !headers.includes(h));
+  if (missing.length) return fail("errors.csvColumns", { columns: missing.join(", ") });
+  if (rows.length > MAX_IMPORT_ROWS) return fail("errors.csvTooLong", { n: MAX_IMPORT_ROWS });
+  const specialties = new Map((await db.specialty.findMany()).map((s) => [s.slug, s]));
+  const errors: number[] = [];
+  let created = 0;
+  for (const [i, r] of rows.entries()) {
+    const d = importDoctorSchema.safeParse(r);
+    const specialty = d.success ? specialties.get(d.data.specialty_slug) : undefined;
+    if (!d.success || !specialty || (await db.user.findUnique({ where: { email: d.data.email } }))) {
+      errors.push(i + 2);
+      continue;
+    }
+    const user = await db.user.create({
+      data: {
+        email: d.data.email,
+        firstName: d.data.first_name,
+        lastName: d.data.last_name,
+        phone: d.data.phone,
+        role: "DOCTOR",
+        locale: d.data.locale ?? "fr",
+        doctor: {
+          create: {
+            specialty: d.data.specialty ?? specialty.nameFr,
+            specialtyId: specialty.id,
+            licenseNumber: d.data.license,
+            bio: "",
+            languages: [],
+            clinicName: d.data.clinic_name,
+            clinicAddress: d.data.clinic_address,
+            city: d.data.city,
+          },
+        },
+      },
+    });
+    await issueInvite(user.id, locale);
+    created++;
+  }
+  await audit(admin.id, "import.doctors", null, { created, errors });
+  revalidatePath(`/${locale}/admin/doctors`);
+  return ok(errors.length ? "import.doneWithErrors" : "import.done", { vars: { created, skipped: errors.length, lines: errors.slice(0, 20).join(", ") } });
 }

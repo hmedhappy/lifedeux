@@ -571,7 +571,21 @@
     "note": "Note",
     "byMonth": "Gains par mois",
     "noActs": "Aucun acte réalisé ces 6 derniers mois.",
-    "received": "Versements reçus"
+    "received": "Versements reçus",
+    "acts": "Actes",
+    "month": "Mois",
+    "show": "Afficher",
+    "statement": "Relevé {month}",
+    "method": "Mode",
+    "batchTitle": "Lot mensuel",
+    "batchText": "Verse à chaque médecin la totalité de son solde dû ({total} au total).",
+    "batchButton": "Enregistrer le lot",
+    "batchConfirm": "Enregistrer le versement de {total} à tous les médecins ?",
+    "batchNote": "Lot {month}",
+    "overHint": "Un montant supérieur au solde dû est accepté avec un avertissement.",
+    "dueShort": "dû {amount}",
+    "history": "Historique",
+    "export": "Export CSV {month}"
   },
   "admin": {
     "title": "Administration",
@@ -593,7 +607,9 @@
       "groupActivity": "Activité",
       "groupCatalogue": "Catalogue",
       "groupFinance": "Finance",
-      "groupSettings": "Réglages"
+      "groupSettings": "Réglages",
+      "audit": "Journal d'audit",
+      "import": "Import CSV"
     },
     "dashboardTitle": "Vue d'ensemble",
     "stats": {
@@ -690,7 +706,10 @@
       "superDoctor": "Super-médecin",
       "superDoctorHint": "Peut inviter d'autres médecins avec un lien de parrainage.",
       "superBadge": "Super-médecin",
-      "noStamp": "sans cachet"
+      "noStamp": "sans cachet",
+      "stepIdentity": "Identité et cabinet",
+      "stepPricing": "Tarifs",
+      "stepSignatures": "Cachet et signature"
     },
     "operationsTitle": "Interventions",
     "operationsSubtitle": "Catalogue des interventions proposées sur la plateforme.",
@@ -771,7 +790,27 @@
     "stampReviewTitle": "Cachet à valider",
     "stampReviewText": "Vérifiez le nom, la spécialité et le numéro d'Ordre avant de valider. Le cachet sera apposé sur toutes ses ordonnances.",
     "stampApprove": "Valider le cachet",
-    "stampReject": "Refuser"
+    "stampReject": "Refuser",
+    "agent": "Agent",
+    "assign": "Assigner",
+    "noAgent": "Aucun agent",
+    "fieldTitle": "Terrain",
+    "lodgingUnavailable": "Logement indisponible",
+    "lodgingConfirm": "Signaler le logement indisponible ? Le patient devra en choisir un autre.",
+    "lodgingFlagged": "Logement signalé indisponible : en attente du choix du patient.",
+    "batchRecorded": "{n} {n:versement enregistré|versements enregistrés}.",
+    "noPrescriptions": "Aucune ordonnance.",
+    "orientation": "Orientation",
+    "refusal": "Motif de refus",
+    "reauth": "Votre mot de passe",
+    "refundConfirm": "Rembourser intégralement ce paiement ?",
+    "revokeRx": "Annuler cette ordonnance",
+    "revokeRxHint": "Contactez d'abord le médecin. Le QR code affichera l'ordonnance comme annulée.",
+    "revokeReason": "Motif",
+    "revoke": "Annuler",
+    "revokeConfirm": "Annuler définitivement l'ordonnance {number} ?",
+    "rxRevoked": "Ordonnance annulée.",
+    "payoutOverBalance": "Versement enregistré. Attention : il dépasse le solde dû (avance)."
   },
   "scan": {
     "title": "Scan & suivi",
@@ -860,7 +899,11 @@
     "tooManyFavorites": "30 ordonnances types maximum. Supprimez-en une d'abord.",
     "scheduleInvalid": "Horaires invalides. Écrivez par exemple 09:00-12:00, 14:00-17:00.",
     "vacationBooked": "Impossible : {n} {n:créneau est déjà réservé|créneaux sont déjà réservés} sur ces dates. Déplacez ou terminez ces rendez-vous d'abord.",
-    "flightInvalid": "Vol invalide. Exemple : TU 721, avec la date et l'heure d'arrivée."
+    "flightInvalid": "Vol invalide. Exemple : TU 721, avec la date et l'heure d'arrivée.",
+    "csvColumns": "Colonnes manquantes : {columns}.",
+    "csvTooLong": "Fichier trop long : {n} lignes maximum.",
+    "nothingDue": "Aucun solde à verser.",
+    "reauthFailed": "Mot de passe incorrect : remboursement non effectué."
   },
   "email": {
     "invite": {
@@ -1371,5 +1414,79 @@
     "lodgingIssueText": "Toutes nos excuses. Choisissez un autre logement pour les mêmes dates, sans supplément.",
     "noAlternative": "Aucun autre logement libre pour l'instant : notre équipe vous contacte.",
     "chooseThis": "Choisir ce logement"
+  },
+  "audit": {
+    "title": "Journal d'audit",
+    "subtitle": "Actions sensibles : tarifs, remboursements, versements, médecins, imports.",
+    "empty": "Aucune action enregistrée.",
+    "actor": "Par",
+    "action": "Action",
+    "details": "Détails"
+  },
+  "import": {
+    "title": "Import CSV",
+    "subtitle": "Importez d'abord les médicaments, puis les médecins. Séparateur ; ou , accepté.",
+    "medicationsTitle": "Médicaments",
+    "medicationsText": "Les lignes déjà présentes (même nom, dosage et forme) sont ignorées.",
+    "doctorsTitle": "Médecins",
+    "doctorsText": "Chaque ligne crée un compte et envoie une invitation. Le médecin reste masqué tant que son cachet et ses tarifs ne sont pas renseignés.",
+    "file": "Fichier CSV",
+    "paste": "ou collez le contenu",
+    "run": "Importer",
+    "done": "Import terminé : {created} {created:ajouté|ajoutés}, {skipped} {skipped:ignoré|ignorés}.",
+    "doneWithErrors": "Import terminé : {created} {created:ajouté|ajoutés}, {skipped} en erreur (lignes {lines})."
+  },
+  "palette": {
+    "search": "Rechercher",
+    "placeholder": "Aller à…",
+    "placeholderSearch": "Page, patient, médecin ou référence…",
+    "none": "Aucun résultat"
+  },
+  "payoutMethod": {
+    "CASH": "Espèces",
+    "TRANSFER": "Virement"
+  },
+  "ready": {
+    "col": "Ordonnances",
+    "yes": "Prêt à prescrire",
+    "no": "{n} {n:élément manquant|éléments manquants}",
+    "yesLong": "Prêt à prescrire : numéro d'Ordre, cachet et signature sont en place.",
+    "noLong": "Pas encore prêt à prescrire. Manquant : {missing}.",
+    "missing": {
+      "license": "numéro d'Ordre",
+      "stamp": "cachet validé",
+      "signature": "signature"
+    }
+  },
+  "statement": {
+    "title": "Relevé mensuel",
+    "acts": "Actes réalisés",
+    "totalActs": "Total des honoraires",
+    "payouts": "Versements",
+    "totalPaid": "Total versé"
+  },
+  "todo": {
+    "pageTitle": "Aujourd'hui",
+    "title": "À traiter",
+    "empty": "Rien à traiter. Tout est à jour.",
+    "resolve": "Traité",
+    "apply": "Appliquer",
+    "lateRequest": "Demande {reference} sans réponse depuis plus de 24 h",
+    "lateText": "{doctor} · reçue le {date}",
+    "stamp": "Cachet à valider : {name}",
+    "stampText": "Vérifiez le cachet envoyé avant qu'il soit utilisé.",
+    "price": "Changement de tarif : {name}",
+    "priceText": "{from} → {to}",
+    "verify": "Médecin parrainé à vérifier : {name}",
+    "verifyText": "Numéro d'Ordre : {license}",
+    "verifyButton": "Vérifié",
+    "alert": {
+      "refundFailed": "Remboursement à faire à la main",
+      "autoRefund": "Remboursement automatique effectué",
+      "incident": "Incident signalé par un agent",
+      "lodgingIssue": "Logement indisponible",
+      "noAnswer": "Médecin sans réponse",
+      "other": "Alerte"
+    }
   }
 }

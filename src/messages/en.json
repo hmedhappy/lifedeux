@@ -571,7 +571,21 @@
     "note": "Note",
     "byMonth": "Earnings by month",
     "noActs": "No completed acts in the last 6 months.",
-    "received": "Payments received"
+    "received": "Payments received",
+    "acts": "Acts",
+    "month": "Month",
+    "show": "Show",
+    "statement": "Statement {month}",
+    "method": "Method",
+    "batchTitle": "Monthly batch",
+    "batchText": "Pays each doctor their full balance due ({total} in total).",
+    "batchButton": "Record the batch",
+    "batchConfirm": "Record payouts of {total} to all doctors?",
+    "batchNote": "Batch {month}",
+    "overHint": "An amount above the balance due is accepted with a warning.",
+    "dueShort": "due {amount}",
+    "history": "History",
+    "export": "CSV export {month}"
   },
   "admin": {
     "title": "Administration",
@@ -593,7 +607,9 @@
       "groupActivity": "Activity",
       "groupCatalogue": "Catalogue",
       "groupFinance": "Finance",
-      "groupSettings": "Settings"
+      "groupSettings": "Settings",
+      "audit": "Audit log",
+      "import": "CSV import"
     },
     "dashboardTitle": "Overview",
     "stats": {
@@ -690,7 +706,10 @@
       "superDoctor": "Super doctor",
       "superDoctorHint": "Can invite other doctors with a referral link.",
       "superBadge": "Super doctor",
-      "noStamp": "no stamp"
+      "noStamp": "no stamp",
+      "stepIdentity": "Identity and practice",
+      "stepPricing": "Prices",
+      "stepSignatures": "Stamp and signature"
     },
     "operationsTitle": "Procedures",
     "operationsSubtitle": "Catalogue of procedures offered on the platform.",
@@ -771,7 +790,27 @@
     "stampReviewTitle": "Stamp to validate",
     "stampReviewText": "Check the name, specialty and licence number before validating. The stamp will appear on all their prescriptions.",
     "stampApprove": "Validate the stamp",
-    "stampReject": "Reject"
+    "stampReject": "Reject",
+    "agent": "Agent",
+    "assign": "Assign",
+    "noAgent": "No agent",
+    "fieldTitle": "Field",
+    "lodgingUnavailable": "Lodging unavailable",
+    "lodgingConfirm": "Flag the lodging as unavailable? The patient will have to choose another one.",
+    "lodgingFlagged": "Lodging flagged unavailable: waiting for the patient's choice.",
+    "batchRecorded": "{n} {n:payout|payouts} recorded.",
+    "noPrescriptions": "No prescriptions.",
+    "orientation": "Referral",
+    "refusal": "Refusal reason",
+    "reauth": "Your password",
+    "refundConfirm": "Fully refund this payment?",
+    "revokeRx": "Cancel this prescription",
+    "revokeRxHint": "Contact the doctor first. The QR code will show the prescription as cancelled.",
+    "revokeReason": "Reason",
+    "revoke": "Cancel",
+    "revokeConfirm": "Permanently cancel prescription {number}?",
+    "rxRevoked": "Prescription cancelled.",
+    "payoutOverBalance": "Payout recorded. Note: it exceeds the balance due (advance)."
   },
   "scan": {
     "title": "Scan & tracking",
@@ -860,7 +899,11 @@
     "tooManyFavorites": "30 saved prescriptions at most. Delete one first.",
     "scheduleInvalid": "Invalid hours. Write for example 09:00-12:00, 14:00-17:00.",
     "vacationBooked": "Not possible: {n} {n:slot is|slots are} already booked on these dates. Move or finish those appointments first.",
-    "flightInvalid": "Invalid flight. Example: TU 721, with the arrival date and time."
+    "flightInvalid": "Invalid flight. Example: TU 721, with the arrival date and time.",
+    "csvColumns": "Missing columns: {columns}.",
+    "csvTooLong": "File too long: {n} lines at most.",
+    "nothingDue": "No balance to pay.",
+    "reauthFailed": "Wrong password: refund not made."
   },
   "email": {
     "invite": {
@@ -1371,5 +1414,79 @@
     "lodgingIssueText": "We are sorry. Choose another lodging for the same dates, at no extra cost.",
     "noAlternative": "No other lodging is free right now: our team will contact you.",
     "chooseThis": "Choose this lodging"
+  },
+  "audit": {
+    "title": "Audit log",
+    "subtitle": "Sensitive actions: prices, refunds, payouts, doctors, imports.",
+    "empty": "No actions recorded.",
+    "actor": "By",
+    "action": "Action",
+    "details": "Details"
+  },
+  "import": {
+    "title": "CSV import",
+    "subtitle": "Import medicines first, then doctors. ; or , separator accepted.",
+    "medicationsTitle": "Medicines",
+    "medicationsText": "Lines already present (same name, strength and form) are skipped.",
+    "doctorsTitle": "Doctors",
+    "doctorsText": "Each line creates an account and sends an invitation. The doctor stays hidden until stamp and prices are set.",
+    "file": "CSV file",
+    "paste": "or paste the content",
+    "run": "Import",
+    "done": "Import done: {created} added, {skipped} skipped.",
+    "doneWithErrors": "Import done: {created} added, {skipped} with errors (lines {lines})."
+  },
+  "palette": {
+    "search": "Search",
+    "placeholder": "Go to…",
+    "placeholderSearch": "Page, patient, doctor or reference…",
+    "none": "No results"
+  },
+  "payoutMethod": {
+    "CASH": "Cash",
+    "TRANSFER": "Bank transfer"
+  },
+  "ready": {
+    "col": "Prescriptions",
+    "yes": "Ready to prescribe",
+    "no": "{n} missing",
+    "yesLong": "Ready to prescribe: licence number, stamp and signature are in place.",
+    "noLong": "Not ready to prescribe yet. Missing: {missing}.",
+    "missing": {
+      "license": "licence number",
+      "stamp": "validated stamp",
+      "signature": "signature"
+    }
+  },
+  "statement": {
+    "title": "Monthly statement",
+    "acts": "Completed acts",
+    "totalActs": "Total fees",
+    "payouts": "Payouts",
+    "totalPaid": "Total paid"
+  },
+  "todo": {
+    "pageTitle": "Today",
+    "title": "To do",
+    "empty": "Nothing to do. All up to date.",
+    "resolve": "Done",
+    "apply": "Apply",
+    "lateRequest": "Request {reference} unanswered for over 24 h",
+    "lateText": "{doctor} · received {date}",
+    "stamp": "Stamp to validate: {name}",
+    "stampText": "Check the stamp sent before it is used.",
+    "price": "Price change: {name}",
+    "priceText": "{from} → {to}",
+    "verify": "Referred doctor to verify: {name}",
+    "verifyText": "Licence number: {license}",
+    "verifyButton": "Verified",
+    "alert": {
+      "refundFailed": "Refund to do by hand",
+      "autoRefund": "Automatic refund made",
+      "incident": "Incident reported by an agent",
+      "lodgingIssue": "Lodging unavailable",
+      "noAnswer": "Doctor not answering",
+      "other": "Alert"
+    }
   }
 }

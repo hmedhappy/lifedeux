@@ -571,7 +571,21 @@
     "note": "ملاحظة",
     "byMonth": "الأرباح حسب الشهر",
     "noActs": "لا توجد أعمال منجزة خلال الأشهر الستة الأخيرة.",
-    "received": "الدفعات المستلمة"
+    "received": "الدفعات المستلمة",
+    "acts": "الأعمال",
+    "month": "الشهر",
+    "show": "عرض",
+    "statement": "كشف {month}",
+    "method": "الطريقة",
+    "batchTitle": "دفعة شهرية",
+    "batchText": "يدفع لكل طبيب رصيده المستحق كاملاً ({total} إجمالاً).",
+    "batchButton": "تسجيل الدفعة",
+    "batchConfirm": "تسجيل دفع {total} لجميع الأطباء؟",
+    "batchNote": "دفعة {month}",
+    "overHint": "يُقبل مبلغ يفوق الرصيد المستحق مع تنبيه.",
+    "dueShort": "مستحق {amount}",
+    "history": "السجل",
+    "export": "تصدير CSV {month}"
   },
   "admin": {
     "title": "الإدارة",
@@ -593,7 +607,9 @@
       "groupActivity": "النشاط",
       "groupCatalogue": "الكتالوج",
       "groupFinance": "المالية",
-      "groupSettings": "الإعدادات"
+      "groupSettings": "الإعدادات",
+      "audit": "سجل التدقيق",
+      "import": "استيراد CSV"
     },
     "dashboardTitle": "نظرة عامة",
     "stats": {
@@ -690,7 +706,10 @@
       "superDoctor": "طبيب مميز",
       "superDoctorHint": "يمكنه دعوة أطباء آخرين برابط إحالة.",
       "superBadge": "طبيب مميز",
-      "noStamp": "بدون ختم"
+      "noStamp": "بدون ختم",
+      "stepIdentity": "الهوية والعيادة",
+      "stepPricing": "الأسعار",
+      "stepSignatures": "الختم والتوقيع"
     },
     "operationsTitle": "العمليات",
     "operationsSubtitle": "قائمة العمليات المقترحة على المنصّة.",
@@ -771,7 +790,27 @@
     "stampReviewTitle": "ختم بانتظار الاعتماد",
     "stampReviewText": "تحقق من الاسم والتخصص ورقم الهيئة قبل الاعتماد. سيظهر الختم على جميع وصفاته.",
     "stampApprove": "اعتماد الختم",
-    "stampReject": "رفض"
+    "stampReject": "رفض",
+    "agent": "المرافق",
+    "assign": "تعيين",
+    "noAgent": "بدون مرافق",
+    "fieldTitle": "الميدان",
+    "lodgingUnavailable": "الإقامة غير متاحة",
+    "lodgingConfirm": "الإبلاغ عن عدم توفر الإقامة؟ سيختار المريض إقامة أخرى.",
+    "lodgingFlagged": "تم الإبلاغ عن عدم توفر الإقامة: بانتظار اختيار المريض.",
+    "batchRecorded": "تم تسجيل {n} دفعة.",
+    "noPrescriptions": "لا توجد وصفات.",
+    "orientation": "التوجيه",
+    "refusal": "سبب الرفض",
+    "reauth": "كلمة المرور",
+    "refundConfirm": "استرداد هذا الدفع بالكامل؟",
+    "revokeRx": "إلغاء هذه الوصفة",
+    "revokeRxHint": "تواصل مع الطبيب أولاً. سيُظهر رمز QR الوصفة كملغاة.",
+    "revokeReason": "السبب",
+    "revoke": "إلغاء",
+    "revokeConfirm": "إلغاء الوصفة {number} نهائياً؟",
+    "rxRevoked": "تم إلغاء الوصفة.",
+    "payoutOverBalance": "تم تسجيل الدفعة. تنبيه: تتجاوز الرصيد المستحق (سلفة)."
   },
   "scan": {
     "title": "المسح والمتابعة",
@@ -860,7 +899,11 @@
     "tooManyFavorites": "الحد الأقصى 30 وصفة محفوظة. احذف واحدة أولاً.",
     "scheduleInvalid": "مواعيد غير صالحة. اكتب مثلاً 09:00-12:00, 14:00-17:00.",
     "vacationBooked": "غير ممكن: {n} موعد محجوز في هذه التواريخ. انقل هذه المواعيد أو أنهها أولاً.",
-    "flightInvalid": "رحلة غير صالحة. مثال: TU 721 مع تاريخ ووقت الوصول."
+    "flightInvalid": "رحلة غير صالحة. مثال: TU 721 مع تاريخ ووقت الوصول.",
+    "csvColumns": "أعمدة ناقصة: {columns}.",
+    "csvTooLong": "الملف طويل جداً: {n} سطر كحد أقصى.",
+    "nothingDue": "لا يوجد رصيد للدفع.",
+    "reauthFailed": "كلمة مرور خاطئة: لم يتم الاسترداد."
   },
   "email": {
     "invite": {
@@ -1371,5 +1414,79 @@
     "lodgingIssueText": "نعتذر. اختر إقامة أخرى لنفس التواريخ دون تكلفة إضافية.",
     "noAlternative": "لا توجد إقامة أخرى متاحة حالياً: سيتواصل معك فريقنا.",
     "chooseThis": "اختيار هذه الإقامة"
+  },
+  "audit": {
+    "title": "سجل التدقيق",
+    "subtitle": "الإجراءات الحساسة: الأسعار، الاستردادات، الدفعات، الأطباء، الاستيراد.",
+    "empty": "لا توجد إجراءات مسجلة.",
+    "actor": "بواسطة",
+    "action": "الإجراء",
+    "details": "التفاصيل"
+  },
+  "import": {
+    "title": "استيراد CSV",
+    "subtitle": "استورد الأدوية أولاً ثم الأطباء. يُقبل الفاصل ; أو ,.",
+    "medicationsTitle": "الأدوية",
+    "medicationsText": "يتم تجاهل الأسطر الموجودة مسبقاً.",
+    "doctorsTitle": "الأطباء",
+    "doctorsText": "كل سطر ينشئ حساباً ويرسل دعوة. يبقى الطبيب مخفياً حتى يُحدد ختمه وأسعاره.",
+    "file": "ملف CSV",
+    "paste": "أو الصق المحتوى",
+    "run": "استيراد",
+    "done": "اكتمل الاستيراد: أضيف {created}، تم تجاهل {skipped}.",
+    "doneWithErrors": "اكتمل الاستيراد: أضيف {created}، {skipped} بأخطاء (الأسطر {lines})."
+  },
+  "palette": {
+    "search": "بحث",
+    "placeholder": "انتقل إلى…",
+    "placeholderSearch": "صفحة، مريض، طبيب أو مرجع…",
+    "none": "لا نتائج"
+  },
+  "payoutMethod": {
+    "CASH": "نقداً",
+    "TRANSFER": "تحويل بنكي"
+  },
+  "ready": {
+    "col": "الوصفات",
+    "yes": "جاهز للوصف",
+    "no": "عناصر ناقصة: {n}",
+    "yesLong": "جاهز للوصف: رقم الهيئة والختم والتوقيع متوفرة.",
+    "noLong": "غير جاهز للوصف بعد. ناقص: {missing}.",
+    "missing": {
+      "license": "رقم الهيئة",
+      "stamp": "ختم معتمد",
+      "signature": "التوقيع"
+    }
+  },
+  "statement": {
+    "title": "Monthly statement",
+    "acts": "Completed acts",
+    "totalActs": "Total fees",
+    "payouts": "Payouts",
+    "totalPaid": "Total paid"
+  },
+  "todo": {
+    "pageTitle": "اليوم",
+    "title": "للمعالجة",
+    "empty": "لا شيء للمعالجة. كل شيء محدث.",
+    "resolve": "تمت المعالجة",
+    "apply": "تطبيق",
+    "lateRequest": "الطلب {reference} دون رد لأكثر من 24 ساعة",
+    "lateText": "{doctor} · استُلم في {date}",
+    "stamp": "ختم للاعتماد: {name}",
+    "stampText": "تحقق من الختم المرسل قبل استخدامه.",
+    "price": "تغيير السعر: {name}",
+    "priceText": "{from} ← {to}",
+    "verify": "طبيب مُحال للتحقق: {name}",
+    "verifyText": "رقم الهيئة: {license}",
+    "verifyButton": "تم التحقق",
+    "alert": {
+      "refundFailed": "استرداد يدوي مطلوب",
+      "autoRefund": "تم استرداد تلقائي",
+      "incident": "حادث أبلغ عنه مرافق",
+      "lodgingIssue": "الإقامة غير متاحة",
+      "noAnswer": "طبيب لا يرد",
+      "other": "تنبيه"
+    }
   }
 }

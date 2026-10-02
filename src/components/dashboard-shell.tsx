@@ -1,3 +1,4 @@
+import { CommandPalette } from "./command-palette";
 import { Header } from "./header";
 import { SideNav, TabBar, type NavItem } from "./nav-links";
 import type { Locale } from "@/lib/i18n";
@@ -20,6 +21,7 @@ export function DashboardShell({
       <div className="mx-auto flex w-full max-w-7xl gap-8 px-4 py-6 sm:px-6 md:py-8 lg:px-10">
         <aside className="no-print hidden w-60 shrink-0 md:block">
           <div className="sticky top-24">
+            <CommandPalette commands={items.map(({ href, label, group }) => ({ href, label, group }))} search />
             <SideNav items={items} />
           </div>
         </aside>

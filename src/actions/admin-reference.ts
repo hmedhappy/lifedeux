@@ -8,6 +8,8 @@ import { fail, ok, type ActionState } from "@/lib/action-state";
 import { parseMoneyToCents } from "@/lib/format";
 import { toLocale } from "@/lib/i18n";
 import { medicationSearchText } from "@/lib/search-text";
+import { MAX_IMPORT_ROWS, parseCsv } from "@/lib/csv";
+import { audit } from "@/lib/audit";
 
 async function isAdmin() {
   const user = await getCurrentUser();
@@ -54,4 +56,43 @@ export async function deleteMedicationAction(localeRaw: string, id: string): Pro
     db.medication.delete({ where: { id } }),
   ]);
   revalidatePath(`/${locale}/admin/medications`);
+}
+
+async function readCsv(formData: FormData): Promise<string> {
+  const file = formData.get("file");
+  if (file && typeof file === "object" && "text" in file && file.size > 0) return (await file.text()).slice(0, 2_000_000);
+  return String(formData.get("csv") ?? "");
+}
+
+/**
+ * Medication catalogue import. Columns: name (required), dci, form, strength,
+ * specialty (slug). Existing lines (same name, strength and form) are skipped.
+ */
+export async function importMedicationsAction(localeRaw: string, _: ActionState, formData: FormData): Promise<ActionState> {
+  const locale = toLocale(localeRaw);
+  const user = await getCurrentUser();
+  if (user?.role !== "ADMIN") return fail("errors.forbidden");
+  const { headers, rows } = parseCsv(await readCsv(formData));
+  if (!headers.includes("name")) return fail("errors.csvColumns", { columns: "name" });
+  if (rows.length > MAX_IMPORT_ROWS) return fail("errors.csvTooLong", { n: MAX_IMPORT_ROWS });
+  const specialties = new Map((await db.specialty.findMany({ select: { id: true, slug: true } })).map((s) => [s.slug, s.id]));
+  let created = 0;
+  let skipped = 0;
+  for (const r of rows) {
+    const m = medicationSchema.safeParse({ name: r.name, dci: r.dci, form: r.form, strength: r.strength, specialtyId: specialties.get(r.specialty ?? "") });
+    if (!m.success) {
+      skipped++;
+      continue;
+    }
+    const exists = await db.medication.findFirst({ where: { name: m.data.name, strength: m.data.strength, form: m.data.form } });
+    if (exists) {
+      skipped++;
+      continue;
+    }
+    await db.medication.create({ data: { ...m.data, searchText: medicationSearchText(m.data) } });
+    created++;
+  }
+  await audit(user.id, "import.medications", null, { created, skipped });
+  revalidatePath(`/${locale}/admin/medications`);
+  return ok("import.done", { vars: { created, skipped } });
 }

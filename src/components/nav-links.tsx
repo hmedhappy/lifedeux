@@ -5,6 +5,8 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import {
+  ScrollText,
+  Upload,
   BedDouble,
   CalendarClock,
   CalendarDays,
@@ -51,6 +53,8 @@ const ICONS = {
   pill: Pill,
   specialty: Stethoscope,
   settings: Settings,
+  upload: Upload,
+  audit: ScrollText,
   scan: ScanLine,
   tasks: ClipboardList,
   more: LayoutGrid,
