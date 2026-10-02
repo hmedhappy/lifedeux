@@ -550,7 +550,8 @@
     "accepted": "Consultation {reference} acceptée : le paiement est encaissé et le patient prévenu.",
     "stampLink": "Envoyer mon cachet",
     "stampMissingBanner": "Cachet manquant : vos consultations en ligne restent masquées tant qu'il n'est pas validé.",
-    "stampPendingBanner": "Cachet reçu, en cours de validation par l'équipe LifeDeux."
+    "stampPendingBanner": "Cachet reçu, en cours de validation par l'équipe LifeDeux.",
+    "moveAsked": "Changement demandé"
   },
   "payouts": {
     "earned": "Total dû",

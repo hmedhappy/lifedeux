@@ -48,7 +48,7 @@ export default async function ReferralsPage({ params }: { params: Promise<{ loca
         {referrals.length === 0 ? (
           <EmptyState title={t("referral.empty")} />
         ) : (
-          <ul className="divide-y divide-line rounded-2xl border border-line">
+          <ul className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-white shadow-card">
             {referrals.map((r) => (
               <li key={r.id} className="flex flex-wrap items-center gap-4 px-5 py-4" data-testid="referral-row">
                 <Avatar name={`${r.user.firstName} ${r.user.lastName}`} src={r.photoUrl} size={40} />

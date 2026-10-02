@@ -550,7 +550,8 @@
     "accepted": "تم قبول الاستشارة {reference}: تم تحصيل الدفع وإبلاغ المريض.",
     "stampLink": "إرسال ختمي",
     "stampMissingBanner": "الختم غير موجود: تبقى استشاراتك عبر الإنترنت مخفية حتى يتم اعتماده.",
-    "stampPendingBanner": "تم استلام الختم وهو قيد المراجعة من فريق LifeDeux."
+    "stampPendingBanner": "تم استلام الختم وهو قيد المراجعة من فريق LifeDeux.",
+    "moveAsked": "طلب تغيير"
   },
   "payouts": {
     "earned": "إجمالي المستحق",

@@ -550,7 +550,8 @@
     "accepted": "Consultation {reference} accepted: the payment is collected and the patient notified.",
     "stampLink": "Send my stamp",
     "stampMissingBanner": "Stamp missing: your online consultations stay hidden until it is validated.",
-    "stampPendingBanner": "Stamp received, being validated by the LifeDeux team."
+    "stampPendingBanner": "Stamp received, being validated by the LifeDeux team.",
+    "moveAsked": "Change requested"
   },
   "payouts": {
     "earned": "Total owed",

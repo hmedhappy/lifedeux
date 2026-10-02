@@ -18,11 +18,12 @@ export default async function DoctorConsultationsPage({ params }: { params: Prom
     include: { patient: true, slot: true, _count: { select: { prescriptions: { where: { status: "ISSUED" } } } } },
     orderBy: { slot: { startsAt: "asc" } },
   });
-  const upcoming = consultations.filter((c) => c.status !== "COMPLETED");
-  const past = consultations.filter((c) => c.status === "COMPLETED").reverse();
+  const done = (c: { status: string }) => c.status === "COMPLETED" || c.status === "NO_SHOW";
+  const upcoming = consultations.filter((c) => !done(c));
+  const past = consultations.filter(done).reverse();
 
   const list = (items: typeof consultations) => (
-    <ul className="divide-y divide-line rounded-2xl border border-line">
+    <ul className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-white shadow-card">
       {items.map((c) => {
         const state = chatState(c);
         return (
@@ -42,6 +43,7 @@ export default async function DoctorConsultationsPage({ params }: { params: Prom
                 </p>
               </div>
               <span className="text-sm text-muted">{formatMoney(c.doctorFee, c.currency, locale)}</span>
+              {c.rescheduleSlotId && <Badge tone="amber">{t("doctorArea.moveAsked")}</Badge>}
               {c._count.prescriptions > 0 && <Badge tone="blue">{t("rx.count", { n: c._count.prescriptions })}</Badge>}
               {state === "open" ? <Badge tone="green">{t("chat.live")}</Badge> : <StatusBadge status={c.status} t={t} />}
             </Link>
