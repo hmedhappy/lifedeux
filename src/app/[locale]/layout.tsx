@@ -12,6 +12,10 @@ import { appUrl } from "@/lib/settings";
 const jakarta = Poppins({ subsets: ["latin", "latin-ext"], weight: ["400", "500", "600", "700"], variable: "--font-jakarta", display: "swap" });
 const arabic = Tajawal({ subsets: ["arabic"], weight: ["400", "500", "700"], variable: "--font-arabic", display: "swap" });
 
+// Every page reads live data (database, session). Rendering at request time also keeps
+// `next build` working without a database, as in the Docker image build.
+export const dynamic = "force-dynamic";
+
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
