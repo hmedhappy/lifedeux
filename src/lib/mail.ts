@@ -34,10 +34,10 @@ export async function sendMail(mail: Mail): Promise<void> {
 
 function layout(title: string, body: string, cta?: { label: string; href: string }): string {
   const button = cta
-    ? `<p style="margin:28px 0"><a href="${cta.href}" style="background:#FF385C;color:#fff;padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:600">${cta.label}</a></p>`
+    ? `<p style="margin:28px 0"><a href="${cta.href}" style="background:#0F766E;color:#fff;padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:600">${cta.label}</a></p>`
     : "";
   return `<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:auto;color:#222">
-  <h1 style="font-size:20px;color:#FF385C">LifeDeux</h1>
+  <h1 style="font-size:20px;color:#0F766E">LifeDeux</h1>
   <h2 style="font-size:18px">${title}</h2>
   <p style="line-height:1.6">${body}</p>${button}
   <p style="color:#717171;font-size:12px">LifeDeux</p></div>`;
@@ -51,6 +51,7 @@ export async function sendTemplate(
   template:
     | "invite"
     | "reset"
+    | "loginCode"
     | "requestReceived"
     | "newRequest"
     | "confirmed"

@@ -3,8 +3,14 @@ import type { Prisma } from "@prisma/client";
 import { db } from "./db";
 import { MIN_LEAD_HOURS } from "./constants";
 import { CONSULT_MIN_LEAD_HOURS } from "./consultation-rules";
+import { specialtiesForSymptom } from "./symptoms";
 
-const activeDoctor = { active: true, user: { active: true } } as const;
+/** Publicly listed doctors: active accounts; referred doctors only once the admin has verified them. */
+const activeDoctor = {
+  active: true,
+  user: { active: true },
+  NOT: { referredById: { not: null }, verifiedAt: null },
+} satisfies Prisma.DoctorWhereInput;
 
 /** Share of the consultation price owed to the doctor when the admin set no explicit fee. */
 export const DEFAULT_CONSULTATION_FEE_RATIO = 0.7;
@@ -40,6 +46,7 @@ export async function listPublicDoctors(
   filters: { specialtySlug?: string; q?: string; operationSlug?: string; surgeryOnly?: boolean } = {},
 ) {
   const q = filters.q?.trim();
+  const symptomSlugs = q ? specialtiesForSymptom(q) : [];
   const where: Prisma.DoctorWhereInput = {
     ...activeDoctor,
     ...(filters.specialtySlug ? { specialty_: { slug: filters.specialtySlug, active: true } } : {}),
@@ -56,6 +63,7 @@ export async function listPublicDoctors(
             { specialty_: { nameFr: { contains: q, mode: "insensitive" } } },
             { specialty_: { nameEn: { contains: q, mode: "insensitive" } } },
             { specialty_: { nameAr: { contains: q } } },
+            ...(symptomSlugs.length ? [{ specialty_: { slug: { in: symptomSlugs } } }] : []),
           ],
         }
       : {}),
@@ -76,12 +84,25 @@ export async function listPublicDoctors(
     orderBy: { createdAt: "asc" },
     take: 60,
   });
-  return doctors.map((d) => ({
-    ...d,
-    fromPrice: d.operations.length ? Math.min(...d.operations.map((o) => o.price)) : null,
-    consultation: consultationOffer(d),
-    nextSlot: d.slots[0]?.startsAt ?? null,
-  }));
+  const ratings = await doctorRatings(doctors.map((d) => d.id));
+  return doctors
+    .map((d) => ({
+      ...d,
+      fromPrice: d.operations.length ? Math.min(...d.operations.map((o) => o.price)) : null,
+      consultation: consultationOffer(d),
+      nextSlot: d.slots[0]?.startsAt ?? null,
+      rating: ratings.get(d.id) ?? null,
+    }))
+    // Soonest availability first; doctors without a free slot go last.
+    .sort((a, b) => (a.nextSlot?.getTime() ?? Infinity) - (b.nextSlot?.getTime() ?? Infinity));
+}
+
+/** Average rating and number of visible reviews per doctor. */
+export async function doctorRatings(doctorIds: string[]) {
+  const rows = doctorIds.length
+    ? await db.review.groupBy({ by: ["doctorId"], where: { doctorId: { in: doctorIds }, hidden: false }, _avg: { rating: true }, _count: true })
+    : [];
+  return new Map(rows.map((r) => [r.doctorId, { average: Math.round((r._avg.rating ?? 0) * 10) / 10, count: r._count }]));
 }
 
 export async function getPublicDoctor(id: string) {
@@ -106,7 +127,23 @@ export async function getPublicDoctor(id: string) {
       take: 200,
     }),
   ]);
-  return { ...doctor, operationSlots, consultationSlots, consultation: consultationOffer(doctor) };
+  const [ratings, reviews] = await Promise.all([
+    doctorRatings([id]),
+    db.review.findMany({
+      where: { doctorId: id, hidden: false },
+      include: { patient: { select: { firstName: true, lastName: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+    }),
+  ]);
+  return {
+    ...doctor,
+    operationSlots,
+    consultationSlots,
+    consultation: consultationOffer(doctor),
+    rating: ratings.get(id) ?? null,
+    reviews: reviews.map((r) => ({ id: r.id, rating: r.rating, text: r.text, createdAt: r.createdAt, author: `${r.patient.firstName} ${r.patient.lastName.charAt(0)}.` })),
+  };
 }
 
 export async function listActiveStays(minCapacity = 1) {

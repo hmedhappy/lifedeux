@@ -22,6 +22,7 @@ function toKonnectAmount(cents: number, currency: string): number {
 
 export const konnectProvider: PaymentProvider = {
   id: "konnect",
+  supportsHold: false,
   async createCheckout(req) {
     const res = await fetch(`${apiUrl()}/payments/init-payment`, {
       method: "POST",

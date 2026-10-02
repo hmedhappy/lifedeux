@@ -40,18 +40,26 @@ function lookup(messages: unknown, key: string): string | undefined {
   return typeof node === "string" ? node : undefined;
 }
 
-export function createT(messages: Messages): TFunction {
+/**
+ * Messages use `{name}` for values and `{n:singular|plural}` for a word that agrees
+ * with a number, e.g. "{n} {n:médecin|médecins}". French treats 0 as singular.
+ */
+export function createT(messages: Messages, locale?: Locale): TFunction {
   return (key, vars) => {
     const template = lookup(messages, key) ?? lookup(fr, key) ?? key;
     if (!vars) return template;
-    return template.replace(/\{(\w+)\}/g, (_, name: string) =>
-      name in vars ? String(vars[name]) : `{${name}}`,
-    );
+    return template
+      .replace(/\{(\w+):([^}|]*)\|([^}]*)\}/g, (_, name: string, one: string, other: string) => {
+        const n = Number(vars[name]);
+        const singular = Math.abs(n) === 1 || (locale === "fr" && n === 0);
+        return singular ? one : other;
+      })
+      .replace(/\{(\w+)\}/g, (_, name: string) => (name in vars ? String(vars[name]) : `{${name}}`));
   };
 }
 
 export function getT(locale: Locale): TFunction {
-  return createT(getMessages(locale));
+  return createT(getMessages(locale), locale);
 }
 
 /** Picks the localized field of a record having `<base>Fr`, `<base>En`, `<base>Ar` columns. */

@@ -23,7 +23,7 @@ export type StayOption = {
   available: boolean;
 };
 
-type Companion = { firstName: string; lastName: string; passportNumber: string };
+type Companion = { firstName: string; lastName: string; passportNumber: string | null };
 
 export type OptionsConfig = {
   stays: StayOption[];
@@ -163,7 +163,7 @@ export function OptionsForm({ action }: { action: (state: ActionState, formData:
               name={`companion_${i}_passport`}
               placeholder={t("fields.passport")}
               aria-label={t("fields.passport")}
-              defaultValue={initial.companions[i]?.passportNumber}
+              defaultValue={initial.companions[i]?.passportNumber ?? ""}
               required
             />
           </fieldset>

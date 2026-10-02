@@ -5,6 +5,7 @@ import type { PaymentProvider } from "./types";
 /** Local fake checkout, only for development and automated tests. */
 const mockProvider: PaymentProvider = {
   id: "mock",
+  supportsHold: true,
   async createCheckout(req) {
     const base = new URL(req.successUrl).origin;
     return {
@@ -29,6 +30,14 @@ export function availableProviders(): PaymentProvider[] {
 
 export function getProvider(id: string): PaymentProvider | undefined {
   return availableProviders().find((p) => p.id === id);
+}
+
+/** Countries paying in Tunisian dinars see Konnect first, everyone else Stripe (cards, Apple Pay, Google Pay). */
+export function providersFor(country: string | null | undefined, options: { hold?: boolean } = {}): PaymentProvider[] {
+  const list = availableProviders().filter((p) => !options.hold || p.supportsHold);
+  const tunisia = !!country && /tunis|tunisie|تونس/i.test(country);
+  const rank = (p: PaymentProvider) => (p.id === "mock" ? 2 : (p.id === "konnect") === tunisia ? 0 : 1);
+  return [...list].sort((a, b) => rank(a) - rank(b));
 }
 
 export type { PaymentProvider } from "./types";

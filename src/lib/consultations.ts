@@ -22,7 +22,7 @@ export async function getConsultationForUser(id: string, user: User) {
 
 export type ChatMessage = {
   id: string;
-  kind: "TEXT" | "IMAGE" | "PRESCRIPTION";
+  kind: "TEXT" | "IMAGE" | "PRESCRIPTION" | "SYSTEM";
   mine: boolean;
   senderName: string;
   text: string | null;

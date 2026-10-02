@@ -29,17 +29,23 @@ enum ConsultationStatus {
   PAID
   COMPLETED
   CANCELLED
+  /// The patient did not show up; handled by the doctor from the consultation.
+  NO_SHOW
 }
 
 enum MessageKind {
   TEXT
   IMAGE
   PRESCRIPTION
+  /// Automatic line in the conversation ("Dr X a rejoint", orientation…).
+  SYSTEM
 }
 
 enum PrescriptionStatus {
   DRAFT
   ISSUED
+  /// Cancelled (and possibly replaced): its QR code no longer verifies.
+  REVOKED
 }
 
 enum SlotStatus {
@@ -75,9 +81,18 @@ enum TrackingStep {
 
 enum PaymentStatus {
   PENDING
+  /// Card authorised (hold), captured when the doctor accepts.
+  AUTHORIZED
   SUCCEEDED
   FAILED
   REFUNDED
+  /// Hold released without charging the patient.
+  CANCELED
+}
+
+enum PayoutMethod {
+  CASH
+  TRANSFER
 }
 
 model User {
@@ -95,17 +110,36 @@ model User {
   consentAt       DateTime?
   inviteToken     String?   @unique
   inviteExpiresAt DateTime?
+  /// Google account id when the user signs in with Google.
+  googleSub       String?   @unique
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  doctor          Doctor?
-  bookings        Booking[]       @relation("PatientBookings")
-  consultations   Consultation[]  @relation("PatientConsultations")
-  prescriptions   Prescription[]  @relation("PatientPrescriptions")
-  messages        Message[]
-  trackingEvents  TrackingEvent[]
-  payoutsRecorded DoctorPayout[]
-  accessLogs      AccessLog[]
+  doctor           Doctor?
+  bookings         Booking[]       @relation("PatientBookings")
+  consultations    Consultation[]  @relation("PatientConsultations")
+  prescriptions    Prescription[]  @relation("PatientPrescriptions")
+  messages         Message[]
+  trackingEvents   TrackingEvent[]
+  payoutsRecorded  DoctorPayout[]
+  accessLogs       AccessLog[]
+  reviews          Review[]
+  assignedBookings Booking[]       @relation("AgentBookings")
+  incidents        Incident[]
+  auditLogs        AuditLog[]
+}
+
+/// One-time sign-in code sent by email (passwordless login and booking without an account).
+model LoginCode {
+  id        String    @id @default(cuid())
+  email     String
+  codeHash  String
+  attempts  Int       @default(0)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email, createdAt])
 }
 
 model Doctor {
@@ -123,25 +157,41 @@ model Doctor {
   active            Boolean  @default(true)
   createdAt         DateTime @default(now())
 
-  specialtyId           String?
-  specialty_            Specialty?             @relation(fields: [specialtyId], references: [id])
+  specialtyId              String?
+  specialty_               Specialty?             @relation(fields: [specialtyId], references: [id])
   /// Registration number with the medical council, printed on prescriptions.
-  licenseNumber         String?
-  offersConsultation    Boolean                @default(true)
+  licenseNumber            String?
+  offersConsultation       Boolean                @default(true)
   /// Price paid by the patient and share owed to the doctor, per online consultation (cents).
-  consultationPrice     Int?
-  consultationFee       Int?
-  consultationMinutes   Int                    @default(30)
-  stampImageId          String?
-  signatureImageId      String?
+  consultationPrice        Int?
+  consultationFee          Int?
+  consultationMinutes      Int                    @default(30)
+  stampImageId             String?
+  signatureImageId         String?
   /// Set for super-doctors: code used in their referral link.
-  referralCode          String?                @unique
-  referredById          String?
-  referredBy            Doctor?                @relation("Referrals", fields: [referredById], references: [id])
-  referrals             Doctor[]               @relation("Referrals")
+  referralCode             String?                @unique
+  referredById             String?
+  referredBy               Doctor?                @relation("Referrals", fields: [referredById], references: [id])
+  referrals                Doctor[]               @relation("Referrals")
   /// Default prescription design: "builtin:teal", "builtin:rose" or a PrescriptionTemplate id.
-  prescriptionTemplate  String?
-  prescriptionTemplates PrescriptionTemplate[]
+  prescriptionTemplate     String?
+  prescriptionTemplates    PrescriptionTemplate[]
+  /// Accept consultation requests automatically (off by default).
+  instantBooking           Boolean                @default(false)
+  /// Break kept free after each consultation, in minutes (0-15).
+  bufferMinutes            Int                    @default(0)
+  /// Weekly availability: { "1": [["09:00","12:00"]], … } keyed by JS weekday (0 = Sunday).
+  weeklySchedule           Json?
+  /// Set by the admin after checking the licence number and stamp (referred doctors).
+  verifiedAt               DateTime?
+  /// Stamp uploaded by the doctor, waiting for admin validation.
+  pendingStampImageId      String?
+  /// Consultation price requested by the doctor, waiting for admin validation (cents).
+  pendingConsultationPrice Int?
+  onboardingDoneAt         DateTime?
+  scheduleExceptions       ScheduleException[]
+  prescriptionFavorites    PrescriptionFavorite[]
+  reviews                  Review[]
 
   operations    DoctorOperation[]
   slots         Slot[]
@@ -208,29 +258,44 @@ model Medication {
 }
 
 model Consultation {
-  id              String             @id @default(cuid())
-  reference       String             @unique
-  patientId       String
-  patient         User               @relation("PatientConsultations", fields: [patientId], references: [id])
-  doctorId        String
-  doctor          Doctor             @relation(fields: [doctorId], references: [id])
-  slotId          String
-  slot            Slot               @relation(fields: [slotId], references: [id])
-  status          ConsultationStatus @default(REQUESTED)
-  reason          String?            @db.Text
-  refusalReason   String?
-  durationMinutes Int
-  price           Int
-  doctorFee       Int
-  currency        String
-  confirmedAt     DateTime?
-  paymentDeadline DateTime?
-  paidAt          DateTime?
-  endedAt         DateTime?
-  cancelledAt     DateTime?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  id                    String             @id @default(cuid())
+  reference             String             @unique
+  patientId             String
+  patient               User               @relation("PatientConsultations", fields: [patientId], references: [id])
+  doctorId              String
+  doctor                Doctor             @relation(fields: [doctorId], references: [id])
+  slotId                String
+  slot                  Slot               @relation(fields: [slotId], references: [id])
+  status                ConsultationStatus @default(REQUESTED)
+  reason                String?            @db.Text
+  refusalReason         String?
+  durationMinutes       Int
+  price                 Int
+  doctorFee             Int
+  currency              String
+  confirmedAt           DateTime?
+  paymentDeadline       DateTime?
+  paidAt                DateTime?
+  endedAt               DateTime?
+  cancelledAt           DateTime?
+  /// New slot proposed by the patient, waiting for the doctor's approval.
+  rescheduleSlotId      String?
+  rescheduleRequestedAt DateTime?
+  /// Structured orientation given by the doctor (cabinet, surgery, emergency…).
+  orientation           String?
+  patientSeenAt         DateTime?
+  doctorSeenAt          DateTime?
+  patientTypingAt       DateTime?
+  doctorTypingAt        DateTime?
+  /// Reminders already sent, so the jobs never send them twice.
+  reminderDaySentAt     DateTime?
+  reminderSoonSentAt    DateTime?
+  doctorNudgedAt        DateTime?
+  adminAlertedAt        DateTime?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
 
+  review        Review?
   messages      Message[]
   payments      Payment[]
   prescriptions Prescription[]
@@ -251,6 +316,8 @@ model Message {
   text           String?      @db.Text
   imageId        String?
   prescriptionId String?
+  /// Read by the other participant.
+  readAt         DateTime?
   createdAt      DateTime     @default(now())
 
   @@index([consultationId, createdAt])
@@ -273,10 +340,58 @@ model Prescription {
   issuedAt       DateTime?
   /// Design used for the PDF, frozen when the prescription is issued.
   templateRef    String?
+  revokedAt      DateTime?
+  revokeReason   String?
+  /// The prescription issued to replace this one ("Annuler et remplacer").
+  replacedById   String?
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
 
   items PrescriptionItem[]
+}
+
+/// A doctor's saved prescription ("protocole"), reused in one click.
+model PrescriptionFavorite {
+  id        String   @id @default(cuid())
+  doctorId  String
+  doctor    Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  name      String
+  /// [{ medicationId, name, dosage, frequency, duration, instructions }]
+  items     Json
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@index([doctorId])
+}
+
+/// Verified review left by a patient after a completed consultation.
+model Review {
+  id             String       @id @default(cuid())
+  consultationId String       @unique
+  consultation   Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  doctorId       String
+  doctor         Doctor       @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patientId      String
+  patient        User         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  rating         Int
+  text           String?      @db.Text
+  hidden         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  @@index([doctorId, createdAt])
+}
+
+/// Days a doctor is away (vacation): no slot is generated between the two dates.
+model ScheduleException {
+  id        String   @id @default(cuid())
+  doctorId  String
+  doctor    Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  startsOn  String
+  endsOn    String
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([doctorId])
 }
 
 /// A doctor's own prescription design, based on one of the built-in layouts.
@@ -357,47 +472,55 @@ model Accommodation {
 }
 
 model Booking {
-  id                 String         @id @default(cuid())
-  reference          String         @unique
-  patientId          String
-  patient            User           @relation("PatientBookings", fields: [patientId], references: [id])
-  doctorId           String
-  doctor             Doctor         @relation(fields: [doctorId], references: [id])
-  operationId        String
-  operation          Operation      @relation(fields: [operationId], references: [id])
-  slotId             String
-  slot               Slot           @relation(fields: [slotId], references: [id])
-  status             BookingStatus  @default(REQUESTED)
-  trackingStep       TrackingStep?
-  patientNote        String?        @db.Text
-  refusalReason      String?
-  recoveryNights     Int
-  optionsChosen      Boolean        @default(false)
-  withTransport      Boolean        @default(false)
-  accommodationId    String?
-  accommodation      Accommodation? @relation(fields: [accommodationId], references: [id])
-  companionsCount    Int            @default(0)
-  arrivalDate        DateTime?
-  departureDate      DateTime?
-  nights             Int            @default(0)
-  operationPrice     Int
-  transportPrice     Int            @default(0)
-  accommodationPrice Int            @default(0)
-  totalAmount        Int
-  currency           String
-  doctorFee          Int
-  qrToken            String?        @unique
-  confirmedAt        DateTime?
-  paymentDeadline    DateTime?
-  paidAt             DateTime?
-  cancelledAt        DateTime?
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
+  id                   String         @id @default(cuid())
+  reference            String         @unique
+  patientId            String
+  patient              User           @relation("PatientBookings", fields: [patientId], references: [id])
+  doctorId             String
+  doctor               Doctor         @relation(fields: [doctorId], references: [id])
+  operationId          String
+  operation            Operation      @relation(fields: [operationId], references: [id])
+  slotId               String
+  slot                 Slot           @relation(fields: [slotId], references: [id])
+  status               BookingStatus  @default(REQUESTED)
+  trackingStep         TrackingStep?
+  patientNote          String?        @db.Text
+  refusalReason        String?
+  recoveryNights       Int
+  optionsChosen        Boolean        @default(false)
+  withTransport        Boolean        @default(false)
+  accommodationId      String?
+  accommodation        Accommodation? @relation(fields: [accommodationId], references: [id])
+  companionsCount      Int            @default(0)
+  arrivalDate          DateTime?
+  departureDate        DateTime?
+  nights               Int            @default(0)
+  operationPrice       Int
+  transportPrice       Int            @default(0)
+  accommodationPrice   Int            @default(0)
+  totalAmount          Int
+  currency             String
+  doctorFee            Int
+  qrToken              String?        @unique
+  flightNumber         String?
+  flightArrivalAt      DateTime?
+  /// Field agent in charge of the patient (assigned by the admin).
+  agentId              String?
+  agent                User?          @relation("AgentBookings", fields: [agentId], references: [id])
+  /// The chosen accommodation became unavailable: the patient must pick another one.
+  accommodationIssueAt DateTime?
+  confirmedAt          DateTime?
+  paymentDeadline      DateTime?
+  paidAt               DateTime?
+  cancelledAt          DateTime?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
 
   companions     Companion[]
   payments       Payment[]
   trackingEvents TrackingEvent[]
   accessLogs     AccessLog[]
+  incidents      Incident[]
 
   @@index([status])
   @@index([patientId])
@@ -411,7 +534,8 @@ model Companion {
   booking        Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   firstName      String
   lastName       String
-  passportNumber String
+  /// Can be completed until 7 days before departure.
+  passportNumber String?
 }
 
 model Payment {
@@ -425,6 +549,8 @@ model Payment {
   amount         Int
   currency       String
   status         PaymentStatus @default(PENDING)
+  /// Card hold (authorisation) captured later, when the doctor accepts.
+  hold           Boolean       @default(false)
   checkoutUrl    String?       @db.Text
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
@@ -434,15 +560,16 @@ model Payment {
 }
 
 model DoctorPayout {
-  id           String   @id @default(cuid())
+  id           String       @id @default(cuid())
   doctorId     String
-  doctor       Doctor   @relation(fields: [doctorId], references: [id])
+  doctor       Doctor       @relation(fields: [doctorId], references: [id])
   amount       Int
   paidAt       DateTime
+  method       PayoutMethod @default(CASH)
   note         String?
   recordedById String
-  recordedBy   User     @relation(fields: [recordedById], references: [id])
-  createdAt    DateTime @default(now())
+  recordedBy   User         @relation(fields: [recordedById], references: [id])
+  createdAt    DateTime     @default(now())
 }
 
 model TrackingEvent {
@@ -465,6 +592,63 @@ model AccessLog {
   createdAt DateTime @default(now())
 }
 
+/// Problem reported by a field agent (late flight, patient absent, accommodation…).
+model Incident {
+  id         String    @id @default(cuid())
+  bookingId  String
+  booking    Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  agentId    String
+  agent      User      @relation(fields: [agentId], references: [id])
+  kind       String
+  note       String?   @db.Text
+  imageId    String?
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([resolvedAt])
+}
+
+/// Something the admin must look at ("À traiter"), created by the system.
+model Alert {
+  id             String    @id @default(cuid())
+  kind           String
+  severity       String    @default("normal")
+  message        String
+  bookingId      String?
+  consultationId String?
+  doctorId       String?
+  resolvedAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([resolvedAt, createdAt])
+}
+
+/// Trace of sensitive admin actions (prices, refunds, payouts, doctor changes).
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String
+  actor     User     @relation(fields: [actorId], references: [id])
+  action    String
+  target    String?
+  data      Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+/// Every notification sent (email, WhatsApp), used to avoid duplicates and for support.
+model NotificationLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  channel   String
+  template  String
+  target    String
+  status    String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 /// Singleton row (id = 1) holding platform-wide settings editable by admins.
 model Setting {
   id                      Int    @id @default(1)
@@ -474,6 +658,8 @@ model Setting {
   maxCompanions           Int    @default(2)
   supportPhone            String @default("+216 00 000 000")
   supportEmail            String @default("contact@lifedeux.com")
+  /// WhatsApp number shown in the floating support button (digits, with country code).
+  supportWhatsapp         String @default("21600000000")
 }
 
 /// Uploaded pictures (stays, doctors), served by /api/images/[id]. Stored in the

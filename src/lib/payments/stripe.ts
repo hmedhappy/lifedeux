@@ -14,6 +14,7 @@ const stripeLocales = new Set(["fr", "en", "ar"]);
 
 export const stripeProvider: PaymentProvider = {
   id: "stripe",
+  supportsHold: true,
   async createCheckout(req) {
     const session = await stripeClient().checkout.sessions.create(
       {
@@ -35,6 +36,7 @@ export const stripeProvider: PaymentProvider = {
         payment_intent_data: {
           metadata: { paymentId: req.paymentId, bookingId: req.bookingId },
           statement_descriptor_suffix: "LIFEDEUX",
+          ...(req.hold ? { capture_method: "manual" as const } : {}),
         },
         success_url: req.successUrl,
         cancel_url: req.cancelUrl,

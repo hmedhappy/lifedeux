@@ -4,9 +4,11 @@ import { formatMoney } from "@/lib/format";
 import type { Locale, TFunction } from "@/lib/i18n";
 import { Avatar } from "./ui";
 import { Photo } from "./photo";
-import { Scissors, Video } from "lucide-react";
+import { Scissors, Star, Video } from "lucide-react";
+import { specialtyTint } from "@/lib/specialty-tint";
 import { SpecialtyIcon } from "./specialty-icon";
 
+/** Compact doctor card: who, what, how soon, how much. Languages and details stay on the profile. */
 export function DoctorCard({
   doctor,
   locale,
@@ -16,75 +18,78 @@ export function DoctorCard({
   specialty,
   currency,
   nextSlot,
+  rating,
+  service,
 }: {
   doctor: Doctor & { user: Pick<User, "firstName" | "lastName"> };
   locale: Locale;
   t: TFunction;
   fromPrice: number | null;
   consultationPrice?: number | null;
-  specialty?: { name: string; icon: string } | null;
+  specialty?: { name: string; icon: string; slug?: string } | null;
   currency: string;
   nextSlot?: string | null;
+  rating?: { average: number; count: number } | null;
+  /** Opens the profile on this tab (e.g. "operation" from the surgery list). */
+  service?: "consultation" | "operation";
 }) {
   const name = `Dr ${doctor.user.firstName} ${doctor.user.lastName}`;
+  const showSurgery = service === "operation" || consultationPrice == null;
+  const price = showSurgery ? fromPrice : consultationPrice;
   return (
     <Link
-      href={`/${locale}/doctors/${doctor.id}`}
-      className="group flex h-full flex-col rounded-2xl border border-line bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:shadow-float motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      href={`/${locale}/doctors/${doctor.id}${service ? `?service=${service}` : ""}`}
+      className="group flex h-full flex-col rounded-2xl border border-line bg-white p-4 shadow-card transition duration-200 hover:-translate-y-0.5 hover:shadow-float sm:p-5"
       data-testid="doctor-card"
     >
-      <div className="flex items-start gap-4">
-        <Avatar name={`${doctor.user.firstName} ${doctor.user.lastName}`} src={doctor.photoUrl} size={64} />
-        <div className="min-w-0">
-          <p className="truncate text-base font-semibold text-ink group-hover:underline">{name}</p>
+      <div className="flex items-start gap-3.5">
+        <Avatar name={name} src={doctor.photoUrl} size={56} />
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-semibold text-ink">{name}</p>
           {specialty && (
-            <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-brand-dark">
-              <SpecialtyIcon name={specialty.icon} className="h-4 w-4" />
-              {specialty.name}
+            <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-ink-soft">
+              <span className={`flex h-5 w-5 items-center justify-center rounded-md ${specialtyTint(specialty.slug)}`}>
+                <SpecialtyIcon name={specialty.icon} className="h-3.5 w-3.5" />
+              </span>
+              <span className="truncate">{specialty.name}</span>
             </p>
           )}
-          <p className="mt-0.5 text-sm text-muted">
-            {doctor.clinicName} · {doctor.city}
+          <p className="mt-0.5 flex items-center gap-2 text-sm text-muted">
+            <span className="truncate">{doctor.city}</span>
+            {rating && (
+              <span className="inline-flex shrink-0 items-center gap-0.5 font-semibold text-ink">
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden />
+                {rating.average.toFixed(1)}
+                <span className="font-normal text-muted">({rating.count})</span>
+              </span>
+            )}
           </p>
         </div>
-      </div>
-      <div className="mt-4 flex flex-wrap gap-2 text-xs">
-        {consultationPrice != null && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 font-medium text-emerald-700">
-            <Video className="h-3.5 w-3.5" aria-hidden />
-            {t("doctors.online")}
-          </span>
-        )}
-        {fromPrice !== null && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2.5 py-1 font-medium text-brand-dark">
-            <Scissors className="h-3.5 w-3.5" aria-hidden />
-            {t("doctors.surgery")}
-          </span>
-        )}
-        <span className="rounded-full bg-surface px-2.5 py-1 text-ink">{t("doctors.experience", { n: doctor.yearsOfExperience })}</span>
-        {doctor.languages.slice(0, 3).map((lang) => (
-          <span key={lang} className="rounded-full bg-surface px-2.5 py-1 text-ink">
-            {lang}
-          </span>
-        ))}
-      </div>
-      <div className="mt-auto pt-4">
-      <div className="flex items-end justify-between gap-3 border-t border-line pt-4">
-        <div className="text-sm text-muted">{nextSlot ? t("doctors.nextSlot", { date: nextSlot }) : t("doctors.noSlotSoon")}</div>
-        <div className="text-end">
-          {consultationPrice != null ? (
-            <>
-              <span className="block text-xs text-muted">{t("doctors.consultFrom")}</span>
-              <span className="font-semibold text-ink">{formatMoney(consultationPrice, currency, locale)}</span>
-            </>
-          ) : fromPrice !== null ? (
-            <>
-              <span className="block text-xs text-muted">{t("doctors.from")}</span>
-              <span className="font-semibold text-ink">{formatMoney(fromPrice, currency, locale)}</span>
-            </>
-          ) : null}
+        <div className="flex shrink-0 gap-1">
+          {consultationPrice != null && (
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-soft text-brand" title={t("doctors.online")}>
+              <Video className="h-3.5 w-3.5" aria-hidden />
+              <span className="sr-only">{t("doctors.online")}</span>
+            </span>
+          )}
+          {fromPrice !== null && (
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-trip-soft text-trip" title={t("doctors.surgery")}>
+              <Scissors className="h-3.5 w-3.5" aria-hidden />
+              <span className="sr-only">{t("doctors.surgery")}</span>
+            </span>
+          )}
         </div>
       </div>
+      <div className="mt-auto flex items-center justify-between gap-3 pt-4">
+        <span className={`inline-flex min-h-8 items-center rounded-full px-3 text-xs font-semibold ${nextSlot ? "bg-emerald-50 text-emerald-800" : "bg-surface text-muted"}`}>
+          {nextSlot ? t("doctors.nextSlot", { date: nextSlot }) : t("doctors.noSlotSoon")}
+        </span>
+        {price != null && (
+          <span className="text-end text-sm">
+            <span className="text-muted">{showSurgery ? t("doctors.from") : t("doctors.consultFrom")} </span>
+            <span className="font-bold text-ink">{formatMoney(price, currency, locale)}</span>
+          </span>
+        )}
       </div>
     </Link>
   );

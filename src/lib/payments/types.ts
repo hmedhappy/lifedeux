@@ -10,6 +10,8 @@ export type CheckoutRequest = {
   cancelUrl: string;
   webhookUrl: string;
   locale: string;
+  /** Authorise only (card hold); the amount is captured later. */
+  hold?: boolean;
 };
 
 export type CheckoutSession = {
@@ -19,5 +21,7 @@ export type CheckoutSession = {
 
 export interface PaymentProvider {
   id: "stripe" | "konnect" | "mock";
+  /** Can hold a card and capture later (Stripe, test mode); Konnect cannot. */
+  supportsHold: boolean;
   createCheckout(request: CheckoutRequest): Promise<CheckoutSession>;
 }

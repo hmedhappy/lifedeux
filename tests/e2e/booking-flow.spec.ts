@@ -110,7 +110,7 @@ test("doctor publishes slots", async () => {
   await doctor.locator('input[name="from"]').fill(slotDay);
   await doctor.locator('input[name="times"]').fill("10:00, 15:30");
   await doctor.getByRole("button", { name: "Créer les créneaux" }).click();
-  await expect(doctor.getByRole("status").filter({ hasText: "2 créneau(x) créé(s)" })).toBeVisible();
+  await expect(doctor.getByRole("status").filter({ hasText: "2 créneaux créés" })).toBeVisible();
 });
 
 test("patient registers and requests an appointment", async ({ browser }) => {

@@ -25,7 +25,7 @@ export default async function RegisterPage({
 
   return (
     <Container className="flex justify-center py-16">
-      <div className="w-full max-w-lg rounded-2xl border border-line p-8">
+      <div className="w-full max-w-lg rounded-3xl border border-line bg-white p-6 shadow-card sm:p-8">
         <h1 className="text-center text-lg font-semibold text-ink">{t("auth.registerTitle")}</h1>
         <p className="mt-1 text-center text-sm text-muted">{t("auth.registerSubtitle")}</p>
         <ActionForm action={registerAction.bind(null, locale)} className="mt-8 space-y-4">
@@ -38,15 +38,16 @@ export default async function RegisterPage({
               <Input name="lastName" autoComplete="family-name" required />
             </Field>
           </div>
+          <p className="-mt-2 text-xs text-muted">{t("fields.latinHint")}</p>
           <Field label={t("fields.email")}>
             <Input type="email" name="email" autoComplete="email" required />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={t("fields.phone")} hint={t("fields.phoneHint")}>
-              <Input type="tel" name="phone" autoComplete="tel" required />
+            <Field label={t("fields.phoneOptional")} hint={t("fields.phoneHint")}>
+              <Input type="tel" name="phone" autoComplete="tel" />
             </Field>
-            <Field label={t("fields.country")}>
-              <Input name="country" autoComplete="country-name" required />
+            <Field label={t("fields.countryOptional")}>
+              <Input name="country" autoComplete="country-name" />
             </Field>
           </div>
           <Field label={t("fields.password")} hint={t("fields.passwordHint")}>
@@ -54,7 +55,7 @@ export default async function RegisterPage({
           </Field>
           <label className="flex items-start gap-3 text-sm text-ink">
             <input type="checkbox" name="consent" required className="mt-1 h-4 w-4 accent-brand" />
-            <span>{t("auth.consent")}</span>
+            <span>{t("auth.consentGeneral")}</span>
           </label>
           <SubmitButton size="lg" className="w-full">
             {t("auth.registerButton")}

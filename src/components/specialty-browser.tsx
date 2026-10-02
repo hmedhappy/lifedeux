@@ -4,35 +4,27 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { normalizeSearch } from "@/lib/search-text";
+import { specialtyTint } from "@/lib/specialty-tint";
+import { specialtiesForSymptom } from "@/lib/symptoms";
 import { useI18n } from "./i18n-provider";
 import { SpecialtyIcon } from "./specialty-icon";
 
 export type SpecialtyTile = { slug: string; name: string; names: string[]; icon: string; count: number };
 
-/** Soft, distinct tints so neighbouring cards do not look identical. */
-const TINTS = [
-  "from-rose-50 to-rose-100 text-brand",
-  "from-sky-50 to-sky-100 text-sky-600",
-  "from-emerald-50 to-emerald-100 text-emerald-600",
-  "from-amber-50 to-amber-100 text-amber-600",
-  "from-violet-50 to-violet-100 text-violet-600",
-  "from-teal-50 to-teal-100 text-teal-600",
-  "from-orange-50 to-orange-100 text-orange-600",
-  "from-indigo-50 to-indigo-100 text-indigo-600",
-];
-
 export function SpecialtyBrowser({ specialties, initialQuery = "" }: { specialties: SpecialtyTile[]; initialQuery?: string }) {
   const { t, locale } = useI18n();
   const [query, setQuery] = useState(initialQuery);
   const needle = normalizeSearch(query);
+  // A symptom ("mal de dos") also brings up the specialties that treat it.
+  const bySymptom = useMemo(() => new Set(specialtiesForSymptom(query)), [query]);
   const visible = useMemo(
-    () => (needle ? specialties.filter((s) => s.names.some((n) => normalizeSearch(n).includes(needle))) : specialties),
-    [needle, specialties],
+    () => (needle ? specialties.filter((s) => bySymptom.has(s.slug) || s.names.some((n) => normalizeSearch(n).includes(needle))) : specialties),
+    [needle, specialties, bySymptom],
   );
 
   return (
     <div>
-      <form action={`/${locale}/doctors`} className="mx-auto flex max-w-2xl items-center gap-2 rounded-full border border-line bg-white p-2 ps-5 shadow-float" role="search">
+      <form action={`/${locale}/doctors`} className="mx-auto flex max-w-2xl items-center gap-2 rounded-full border border-line-strong bg-white p-1.5 ps-5 shadow-float" role="search">
         <Search className="h-5 w-5 shrink-0 text-muted" aria-hidden />
         <input
           type="search"
@@ -44,7 +36,7 @@ export function SpecialtyBrowser({ specialties, initialQuery = "" }: { specialti
           className="min-w-0 flex-1 bg-transparent py-2 text-sm text-ink placeholder:text-muted focus:outline-none"
           data-testid="specialty-search"
         />
-        <button type="submit" className="rounded-full bg-brand px-5 py-3 text-sm font-semibold text-white">
+        <button type="submit" className="min-h-11 rounded-full bg-brand px-5 text-sm font-semibold text-white hover:bg-brand-dark">
           {t("specialties.searchDoctors")}
         </button>
       </form>
@@ -53,14 +45,14 @@ export function SpecialtyBrowser({ specialties, initialQuery = "" }: { specialti
         {t("specialties.count", { n: visible.length })}
       </p>
       <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        {visible.map((s, i) => (
+        {visible.map((s) => (
           <li key={s.slug}>
             <Link
               href={`/${locale}/doctors?specialty=${s.slug}`}
               data-testid="specialty-card"
-              className="group flex h-full flex-col gap-4 rounded-2xl border border-line bg-white p-4 transition duration-200 hover:-translate-y-0.5 hover:border-transparent hover:shadow-float focus-visible:outline-2 focus-visible:outline-ink motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+              className="group flex h-full flex-col gap-4 rounded-2xl border border-line bg-white p-4 shadow-card transition duration-200 hover:-translate-y-0.5 hover:shadow-float"
             >
-              <span className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${TINTS[i % TINTS.length]} transition group-hover:scale-105 motion-reduce:transition-none`}>
+              <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${specialtyTint(s.slug)} transition group-hover:scale-105`}>
                 <SpecialtyIcon name={s.icon} className="h-6 w-6" />
               </span>
               <span className="flex flex-1 flex-col">

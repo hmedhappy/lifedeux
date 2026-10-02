@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { fail, type ActionState } from "@/lib/action-state";
+import { fail, ok, type ActionState } from "@/lib/action-state";
+import { isLatinName } from "@/lib/latin";
 import { isAccommodationAvailable, markPaymentFailed, markPaymentSucceeded } from "@/lib/bookings";
 import { MIN_LEAD_HOURS } from "@/lib/constants";
 import { formatDateTime } from "@/lib/format";
@@ -35,6 +36,15 @@ export async function requestBookingAction(
   const operationId = String(formData.get("operationId") ?? "");
   const note = String(formData.get("note") ?? "").trim().slice(0, 1000) || null;
   if (!slotId) return fail("errors.chooseSlot");
+  if (formData.get("consent") !== "on") return fail("errors.consentRequired");
+
+  // Surgery needs a way to reach the patient abroad: phone and country, asked only once.
+  const phone = String(formData.get("phone") ?? "").trim().slice(0, 30) || patient.phone;
+  const country = String(formData.get("country") ?? "").trim().slice(0, 80) || patient.country;
+  if (!phone || phone.length < 6 || !country) return fail("errors.contactRequired");
+  if (phone !== patient.phone || country !== patient.country) {
+    await db.user.update({ where: { id: patient.id }, data: { phone, country } });
+  }
 
   const offer = await db.doctorOperation.findUnique({
     where: { doctorId_operationId: { doctorId, operationId } },
@@ -288,4 +298,29 @@ export async function mockCheckoutAction(localeRaw: string, paymentId: string, f
     ? `/account/consultations/${payment.consultationId}`
     : `/account/bookings/${payment.bookingId}`;
   redirect(`/${locale}${target}?payment=${succeed ? "success" : "cancelled"}`);
+}
+
+const profileSchema = z.object({
+  firstName: z.string().trim().min(1).max(80).refine(isLatinName, { message: "latin" }),
+  lastName: z.string().trim().min(1).max(80).refine(isLatinName, { message: "latin" }),
+  phone: z.string().trim().max(30).optional().transform((v) => v || null),
+  country: z.string().trim().max(80).optional().transform((v) => v || null),
+  birthDate: z
+    .string()
+    .optional()
+    .transform((v) => (v ? new Date(`${v}T12:00:00Z`) : null))
+    .refine((d) => d === null || (!Number.isNaN(d.getTime()) && d < new Date() && d.getUTCFullYear() > 1900)),
+  locale: z.enum(["fr", "en", "ar"]),
+});
+
+/** The patient edits their own profile; names stay in Latin letters (they appear on prescriptions). */
+export async function updateProfileAction(localeRaw: string, _: ActionState, formData: FormData): Promise<ActionState> {
+  toLocale(localeRaw);
+  const patient = await currentPatient();
+  if (!patient) return fail("errors.loginRequired");
+  const parsed = profileSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return fail(parsed.error.issues[0]?.message === "latin" ? "errors.nameNotLatin" : "errors.missingFields");
+  await db.user.update({ where: { id: patient.id }, data: parsed.data });
+  revalidatePath(`/${parsed.data.locale}/account`);
+  return ok("profile.saved");
 }

@@ -2,17 +2,18 @@ import type { BookingStatus, ConsultationStatus, TrackingStep } from "@prisma/cl
 import clsx from "clsx";
 import type { TFunction } from "@/lib/i18n";
 import { trackingSequence } from "@/lib/tracking";
-import { Badge } from "./ui";
+import { Badge, type BadgeTone } from "./ui";
 
-const tones: Record<BookingStatus, "gray" | "green" | "amber" | "red" | "blue" | "rose"> = {
+const tones: Record<BookingStatus | ConsultationStatus, BadgeTone> = {
   REQUESTED: "amber",
   CONFIRMED: "blue",
   REFUSED: "red",
   EXPIRED: "gray",
   PAID: "green",
-  IN_PROGRESS: "rose",
+  IN_PROGRESS: "trip",
   COMPLETED: "gray",
   CANCELLED: "gray",
+  NO_SHOW: "red",
 };
 
 export function StatusBadge({ status, t }: { status: BookingStatus | ConsultationStatus; t: TFunction }) {

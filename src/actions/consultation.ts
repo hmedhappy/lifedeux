@@ -14,6 +14,7 @@ import { consultationOffer } from "@/lib/queries";
 import { isDoctorRole } from "@/lib/roles";
 import { appUrl, getSettings } from "@/lib/settings";
 import { bookingReference } from "@/lib/tokens";
+import { IMAGE_PATH_PREFIX, saveUploadedImages } from "@/lib/images";
 
 async function currentPatient() {
   const user = await getCurrentUser();
@@ -39,6 +40,7 @@ export async function requestConsultationAction(
   const slotId = String(formData.get("slotId") ?? "");
   const reason = String(formData.get("reason") ?? "").trim().slice(0, 1000) || null;
   if (!slotId) return fail("errors.chooseSlot");
+  if (formData.get("consent") !== "on") return fail("errors.consentRequired");
 
   const doctor = await db.doctor.findFirst({
     where: { id: doctorId, active: true, user: { active: true } },
@@ -71,6 +73,20 @@ export async function requestConsultationAction(
     });
   });
   if (!consultation) return fail("errors.slotTaken");
+
+  // Photos sent with the request go straight into the (private) conversation.
+  const photos = await saveUploadedImages(formData, "photos", 3, { private: true, consultationId: consultation.id });
+  if (!("error" in photos) && photos.paths.length) {
+    await db.message.createMany({
+      data: photos.paths.map((path, i) => ({
+        consultationId: consultation.id,
+        senderId: patient.id,
+        kind: "IMAGE" as const,
+        imageId: path.slice(IMAGE_PATH_PREFIX.length),
+        createdAt: new Date(Date.now() + i),
+      })),
+    });
+  }
 
   await Promise.all([
     sendTemplate(
