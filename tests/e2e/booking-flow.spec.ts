@@ -9,7 +9,9 @@ const stamp = Date.now();
 const doctorEmail = `dr.e2e.${stamp}@test.dev`;
 const patientEmail = `patient.e2e.${stamp}@test.dev`;
 const slotDay = futureWeekday(12);
-const lastName = `Testeur ${stamp % 100000}`;
+// Names must be in Latin letters (no digits): encode the run id as letters.
+const letters = (n: number) => [...String(n % 100000)].map((d) => "abcdefghij"[Number(d)]).join("");
+const lastName = `Testeur ${letters(stamp)}`;
 const doctorName = `Dr Nadia ${lastName}`;
 
 async function newPage(browser: Browser): Promise<Page> {
@@ -55,9 +57,11 @@ test("protected areas require the right role", async ({ page }) => {
 
 test("wrong password is rejected", async ({ page }) => {
   await page.goto("/fr/login");
-  await page.getByLabel(/email/i).fill(E2E_ENV.ADMIN_EMAIL);
-  await page.locator('input[name="password"]').fill("not-the-password");
-  await page.locator('form button[type="submit"]').click();
+  await page.locator("details:has([data-testid=password-login]) > summary").click();
+  const form = page.locator("form:has([data-testid=password-login])");
+  await form.locator('input[name="email"]').fill(E2E_ENV.ADMIN_EMAIL);
+  await form.locator('input[name="password"]').fill("not-the-password");
+  await page.getByTestId("password-login").click();
   await expect(page.getByRole("alert").filter({ hasText: /./ })).toContainText("incorrect");
 });
 
@@ -76,11 +80,14 @@ test("admin creates a doctor who activates the account from the invitation", asy
   await admin.locator('input[name="city"]').fill("Tunis");
   await admin.locator('input[name="clinicAddress"]').fill("1 rue du Test, Tunis");
   await admin.locator('textarea[name="bio"]').fill("Chirurgienne de test.");
+  await admin.locator('input[name="licenseNumber"]').fill("TN-URO-E2E");
+  // The new-doctor form has three steps: identity, prices, stamp and signature.
+  await admin.getByTestId("step-next").click();
   const op = await db.operation.findUniqueOrThrow({ where: { slug: "prothese-penienne" } });
   await admin.locator(`input[name="op_${op.id}"]`).check();
   await admin.locator(`input[name="price_${op.id}"]`).fill("5000");
   await admin.locator(`input[name="fee_${op.id}"]`).fill("3000");
-  await admin.locator('input[name="licenseNumber"]').fill("TN-URO-E2E");
+  await admin.getByTestId("step-next").click();
   await admin.getByTestId("stamp-file").setInputFiles({ name: "cachet.png", mimeType: "image/png", buffer: Buffer.from(demoStamp()) });
   await admin.getByRole("button", { name: "Créer et envoyer l'invitation" }).click();
 
@@ -101,11 +108,13 @@ test("admin creates a doctor who activates the account from the invitation", asy
   await doctor.locator('input[name="confirm"]').fill("Doctor12345!");
   await doctor.getByRole("button", { name: "Activer mon compte" }).click();
   await expect(doctor).toHaveURL(/\/fr\/doctor$/);
-  await expect(doctor.getByRole("heading", { name: "Demandes de rendez-vous" })).toBeVisible();
+  await expect(doctor.getByRole("heading", { name: `Bonjour Dr ${lastName}` })).toBeVisible();
 });
 
 test("doctor publishes slots", async () => {
   await doctor.goto("/fr/doctor/slots");
+  // One-off slots (procedures) are folded under the weekly schedule.
+  await doctor.getByText("Créneaux ponctuels").click();
   await expect(doctor.locator('input[name="kind"][value="OPERATION"]')).toBeChecked();
   await doctor.locator('input[name="from"]').fill(slotDay);
   await doctor.locator('input[name="times"]').fill("10:00, 15:30");
@@ -139,6 +148,10 @@ test("patient registers and requests an appointment", async ({ browser }) => {
 
   await patient.getByTestId("slot-times").getByRole("button", { name: "10:00" }).click();
   await patient.locator('textarea[name="note"]').fill("Arrivée depuis Paris.");
+  // Consent is required.
+  await patient.getByRole("button", { name: "Demander ce rendez-vous" }).click();
+  await expect(patient.getByRole("alert").filter({ hasText: /./ })).toBeVisible();
+  await patient.getByTestId("booking-consent").check();
   await patient.getByRole("button", { name: "Demander ce rendez-vous" }).click();
   await expect(patient).toHaveURL(/\/fr\/account\/bookings\/\w+\?requested=1/);
   await expect(patient.getByText("En attente de confirmation").first()).toBeVisible();
@@ -151,11 +164,15 @@ test("patient registers and requests an appointment", async ({ browser }) => {
 
 test("doctor confirms the request with the recovery length", async () => {
   await doctor.goto("/fr/doctor");
-  const card = doctor.getByTestId("request-card").filter({ hasText: "Paul Martin" });
-  await expect(card).toContainText("Arrivée depuis Paris.");
-  await card.locator('input[name="recoveryNights"]').fill("6");
-  await card.getByRole("button", { name: "Confirmer pour Paul" }).click();
-  await expect(doctor.getByRole("status").filter({ hasText: "confirmé" })).toBeVisible();
+  // Inbox: contacts are hidden until payment (first name and initial only).
+  await doctor.getByTestId("inbox-row").filter({ hasText: "Paul M." }).click();
+  const sheet = doctor.getByTestId("inbox-detail");
+  await expect(sheet).toContainText("Arrivée depuis Paris.");
+  await expect(sheet).not.toContainText("+33 6 11 22 33 44");
+  await sheet.locator('input[type="number"]').fill("6");
+  await doctor.getByTestId("inbox-accept").click();
+  // The acceptance is sent after the 5-second "Annuler" window.
+  await expect.poll(async () => (await db.booking.findUniqueOrThrow({ where: { id: bookingId } })).status, { timeout: 15_000 }).toBe("CONFIRMED");
   const booking = await db.booking.findUniqueOrThrow({ where: { id: bookingId } });
   expect(booking.status).toBe("CONFIRMED");
   expect(booking.recoveryNights).toBe(6);
@@ -171,6 +188,8 @@ test("patient chooses companions, a house, and pays", async () => {
   await patient.locator('input[name="companion_0_firstName"]').fill("Marie");
   await patient.locator('input[name="companion_0_lastName"]').fill("Martin");
   await patient.locator('input[name="companion_0_passport"]').fill("FR1234567");
+  // Options are chosen in steps: travellers, lodging, then transfer and total.
+  await patient.getByTestId("step-next").click();
 
   // The single-person studio is too small for two travellers.
   await expect(patient.getByTestId("stay-option").filter({ hasText: "Studio confort" })).toBeDisabled();
@@ -182,7 +201,8 @@ test("patient chooses companions, a house, and pays", async () => {
   await expect(patient.getByTestId("booking-total")).toHaveText(/^5\s930\s€$/);
   await expect(patient.getByTestId("live-travellers")).toHaveText("2");
   await expect(patient.getByTestId("live-stay")).toHaveText(/Maison avec jardin/);
-  await patient.getByRole("button", { name: "Continuer vers le paiement" }).last().click();
+  await patient.getByTestId("step-next").click();
+  await patient.getByTestId("options-submit").click();
 
   await expect(patient.getByRole("heading", { name: "Paiement" })).toBeVisible();
   await expect(patient.getByTestId("booking-total")).toContainText("5");
@@ -256,6 +276,8 @@ test("field agent scans the QR code and follows the patient; doctor marks the op
     await agent.getByRole("button", { name: `Valider : ${step}` }).click();
     await expect(agent.getByRole("button", { name: `Valider : ${step}` })).toHaveCount(0);
   }
+  // Only the surgeon confirms the operation.
+  await expect(agent.getByTestId("scan-doctor-step")).toBeVisible();
 
   await doctor.goto("/fr/doctor/patients");
   await doctor.getByRole("button", { name: "Marquer comme opéré" }).click();
@@ -280,12 +302,14 @@ test("admin sees the doctor's balance and records a cash payout", async () => {
   await admin.goto("/fr/admin/payouts");
   const row = admin.locator("tr").filter({ hasText: doctorName });
   await expect(row).toContainText(/3\s000/);
-  await admin.locator('select[name="doctorId"]').selectOption({ label: doctorName });
+  const doc = await db.doctor.findFirstOrThrow({ where: { user: { email: doctorEmail } } });
+  await admin.locator('select[name="doctorId"]').selectOption(doc.id);
   await admin.locator('input[name="amount"]').fill("3000");
   await admin.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(admin.getByRole("status").filter({ hasText: "Versement enregistré" })).toBeVisible();
   await admin.reload();
-  await expect(admin.locator("tr").filter({ hasText: doctorName }).first().locator("td").last()).toHaveText(/^0\s€$/);
+  // Columns: doctor, acts, earned, paid, balance, statement.
+  await expect(admin.locator("tr").filter({ hasText: doctorName }).first().locator("td").nth(4)).toHaveText(/^0\s€$/);
 
   await doctor.goto("/fr/doctor/payouts");
   await expect(doctor.getByText("Déjà versé")).toBeVisible();

@@ -26,6 +26,16 @@ Règles métier principales :
 - pas d'ordonnance sans cachet téléversé ; une ordonnance envoyée n'est plus modifiable et toute modification en base est détectée par la page de vérification ;
 - la recherche de médicaments passe par `src/lib/medications.ts` (PostgreSQL aujourd'hui), prévu pour être remplacé par Elasticsearch sans toucher au reste.
 
+### Relooking (design « Lagon »)
+
+Décisions détaillées dans [`docs/RELOOKING.md`](docs/RELOOKING.md). En bref :
+
+- **Patient** : réservation sans compte (connexion par code email ou Google à la fin), créneau **garanti par empreinte bancaire** et débité seulement à l'acceptation, annulation gratuite et remboursement intégral jusqu'à 24 h avant, changement d'horaire validé par le médecin, avis, espace « Rendez-vous · Messages · Documents », catalogue `/surgery` avec simulateur de prix, préparation du voyage, fiche QR en PDF.
+- **Médecin** : « Aujourd'hui » avec boîte de réception (acceptation annulable 5 s, motifs de refus, balayage mobile), semaine type sur 4 semaines, profil, gains par mois, chat avec présence / « écrit… » / lu, messages rapides, orientation, « Patient absent », ordonnances types, posologie en un clic, « Annuler et remplacer », cachet validé par l'admin.
+- **Admin** : file « À traiter », journal d'audit, remboursements > 500 € avec mot de passe, versements par lot avec relevé PDF et export CSV, import CSV, palette ⌘K.
+- **Agent** : scanner compatible iPhone, file hors ligne, signalement d'incident avec photo.
+- **Notifications** : email + WhatsApp (facultatif), rappels la veille et 10 min avant, relance du médecin à 24 h, alerte admin à 48 h, planning des agents.
+
 ## Stack
 
 Next.js 16 (App Router, Server Actions) · TypeScript · PostgreSQL + Prisma · Tailwind CSS 4 · Stripe · Konnect · Nodemailer · Vitest · Playwright.
@@ -101,6 +111,8 @@ npm run build
 npm run test:e2e         # parcours complet dans un vrai navigateur (base E2E_DATABASE_URL)
 ```
 
+Depuis le relooking, les tests couvrent aussi : réservation sans compte avec code email (et refus des noms non latins), empreinte bancaire puis encaissement à l'acceptation depuis la boîte de réception, annulation remboursée à plus de 24 h, rappels et relances idempotents.
+
 Les tests de bout en bout couvrent : pages publiques FR/EN/AR, contrôle d'accès par rôle, création d'un médecin par l'admin et activation par invitation, publication de créneaux, inscription patient, mot de passe oublié, envoi de photos (et rejet des faux fichiers image), demande, confirmation, choix accompagnant + logement, paiement, fiche QR, impossibilité de réserver deux fois un logement, suivi par l'agent et le médecin, versements en espèces, webhooks Stripe signés et falsifiés, tâche d'expiration ; et côté consultation : navigation et recherche par spécialité (FR/EN/AR), demande, acceptation, paiement, chat texte + photo (photos privées, accès refusé aux tiers), ordonnance (recherche de médicament, lignes incomplètes refusées, aperçu, brouillon invisible au patient, signature, PDF), vérification publique par QR (et détection d'une modification), fin de consultation (chat en lecture seule), médecin sans cachet, parrainage par un super-médecin, gestion admin des spécialités, médicaments et consultations.
 
 ## Limites connues
@@ -109,5 +121,7 @@ Les tests de bout en bout couvrent : pages publiques FR/EN/AR, contrôle d'accè
 - Paymee et Flouci ne sont pas branchés ; l'interface `PaymentProvider` (`src/lib/payments`) permet de les ajouter.
 - La limitation des tentatives de connexion est en mémoire (une seule instance) ; utilisez Redis si vous en lancez plusieurs.
 - Le chat interroge le serveur toutes les 3 s (pas de WebSocket) : simple et fiable derrière nginx, suffisant pour du texte et des photos.
-- Le PDF d'ordonnance utilise les polices standard (caractères latins) : les noms en arabe y sont remplacés par « ? ». Une police arabe embarquée sera nécessaire pour les ordonnances en arabe.
+- Le PDF d'ordonnance est en caractères latins (choix produit) : les noms et les lignes libres sont refusés s'ils contiennent de l'arabe.
+- WhatsApp : les messages envoyés à l'initiative de la plateforme passent par un modèle approuvé par Meta ; sans `WHATSAPP_TOKEN`, seules les notifications email partent.
+- Les autorisations de carte (empreinte Stripe) expirent au bout de 7 jours : si le médecin accepte plus tard, le patient paie normalement avant une échéance.
 - Stripe et Konnect n'ont pas été testés avec de vraies clés : le webhook Stripe est testé avec des signatures générées localement, la création de session Checkout et Konnect ne l'ont pas été.

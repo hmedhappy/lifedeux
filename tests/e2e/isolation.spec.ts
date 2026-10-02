@@ -11,6 +11,7 @@ test("refusing one patient's request leaves the other patient's request untouche
     await login(page, email, DEMO_PASSWORD);
     await page.goto(`/fr/doctors/${doc.id}?service=operation`);
     await page.locator("[data-testid=slot-times] button").first().click();
+    await page.getByTestId("booking-consent").check();
     await page.getByRole("button", { name: "Demander ce rendez-vous" }).click();
     await expect(page).toHaveURL(/requested=1/);
     const id = page.url().split("/bookings/")[1].split("?")[0];
@@ -19,20 +20,22 @@ test("refusing one patient's request leaves the other patient's request untouche
 
   const doctor = await (await browser.newContext()).newPage();
   await login(doctor, "dr.gharbi@demo.lifedeux.com", DEMO_PASSWORD);
-  const card = doctor.getByTestId("request-card").filter({ hasText: refs["nadia@demo.lifedeux.com"] });
-  await card.locator('input[name="reason"]').fill("Créneau indisponible");
-
-  // The confirmation names the patient and the reference; dismissing it changes nothing.
-  let message = "";
-  doctor.once("dialog", (d) => { message = d.message(); void d.dismiss(); });
-  await card.getByRole("button", { name: "Refuser" }).click();
-  expect(message).toContain("Nadia Ben Ali");
-  expect(message).toContain(refs["nadia@demo.lifedeux.com"]);
+  // The inbox shows first name and initial; the detail names the reference.
+  await doctor.getByTestId("inbox-row").filter({ hasText: "Nadia B." }).click();
+  await doctor.getByTestId("inbox-refuse").click();
+  const reasons = doctor.getByTestId("inbox-refuse-sheet");
+  // Closing the reason sheet changes nothing.
+  await doctor.keyboard.press("Escape");
+  await expect(reasons).toHaveCount(0);
   expect((await db.booking.findUniqueOrThrow({ where: { reference: refs["nadia@demo.lifedeux.com"] } })).status).toBe("REQUESTED");
 
-  doctor.once("dialog", (d) => void d.accept());
-  await card.getByRole("button", { name: "Refuser" }).click();
-  await expect(doctor).toHaveURL(/done=refused/);
+  await doctor.getByTestId("inbox-row").filter({ hasText: "Nadia B." }).click();
+  await doctor.getByTestId("inbox-refuse").click();
+  await reasons.getByRole("button", { name: "Je ne suis pas disponible" }).click();
+  await doctor.getByTestId("inbox-refuse-send").click();
+  await expect
+    .poll(async () => (await db.booking.findUniqueOrThrow({ where: { reference: refs["nadia@demo.lifedeux.com"] } })).status, { timeout: 10_000 })
+    .toBe("REFUSED");
 
   const [nadia, jean] = await Promise.all(
     [refs["nadia@demo.lifedeux.com"], refs["patient@demo.lifedeux.com"]].map((reference) => db.booking.findUniqueOrThrow({ where: { reference } })),

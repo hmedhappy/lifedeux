@@ -91,6 +91,17 @@ cd lifedeux
 ./deploy/deploy.sh        # récupère le code (git pull), reconstruit, redémarre ; les données sont conservées
 ```
 
+## Variables ajoutées par le relooking (toutes facultatives)
+
+| Variable | Rôle | Sans elle |
+| --- | --- | --- |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Bouton « Continuer avec Google ». URI de redirection à déclarer : `https://lifedeux.afdev.site/api/auth/google/callback` | Connexion par code reçu par email |
+| `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`, `WHATSAPP_TEMPLATE` | Notifications WhatsApp (Meta Cloud API). Le modèle doit être approuvé, avec une seule variable `{{1}}`, en fr / en / ar | Notifications par email seulement |
+
+`CRON_SECRET` (déjà présent) sert maintenant aussi aux rappels : le conteneur `cron` appelle `/api/cron/expire` **toutes les 5 minutes** (rappels la veille et 10 min avant, relance du médecin à 24 h, alerte admin à 48 h, planning des agents, semaines types).
+
+Le numéro WhatsApp du support affiché aux patients se règle dans **Admin → Paramètres**.
+
 ## Passer en vrai paiement (Stripe)
 
 1. Dans `.env.production` : `PAYMENT_MOCK=false`, `STRIPE_SECRET_KEY=sk_live_…`.

@@ -2,6 +2,8 @@
 
 Source : questionnaire de 145 questions (4 études UX/UI : patient, médecin, admin/terrain, design system), rempli par le product owner, plus 5 précisions. Livraison **en une seule fois**, patient mobile d'abord dans la conception.
 
+**Statut : livré** (phases R1 à R10). Écarts assumés : la navigation admin garde un 5ᵉ groupe « Réglages » (Équipe, Paramètres) ; sur ordinateur, l'espace de consultation médecin affiche le résumé patient au-dessus du couple chat | ordonnance (voir §5).
+
 Légende : ✅ recommandation suivie · ✏️ choix différent de la recommandation · 🔌 nécessite des identifiants externes (fonctionne en mode dégradé sans eux).
 
 ## 1. Identité et design system

@@ -22,6 +22,7 @@ test("a patient can reset a forgotten password", async ({ page }) => {
   await page.context().clearCookies();
 
   await page.goto("/fr/login");
+  await page.locator("details:has([data-testid=password-login]) > summary").click();
   await page.getByRole("link", { name: "Mot de passe oublié ?" }).click();
   // The login page also has an email field: wait for the navigation before typing.
   await expect(page).toHaveURL(/\/fr\/forgot$/);

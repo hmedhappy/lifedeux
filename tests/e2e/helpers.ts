@@ -6,12 +6,20 @@ export const db = new PrismaClient({ datasources: { db: { url: E2E_ENV.DATABASE_
 
 export const DEMO_PASSWORD = "Demo12345!";
 
+/** Password sign-in (folded under "Se connecter avec un mot de passe" since the email-code login). */
 export async function login(page: Page, email: string, password: string, locale = "fr") {
   await page.goto(`/${locale}/login`);
-  await page.getByLabel(/email/i).fill(email);
-  await page.locator('input[name="password"]').fill(password);
-  await page.locator('form button[type="submit"]').click();
+  const form = page.locator("form:has([data-testid=password-login])");
+  if (!(await form.locator('input[name="password"]').isVisible())) await page.locator("details:has([data-testid=password-login]) > summary").click();
+  await form.locator('input[name="email"]').fill(email);
+  await form.locator('input[name="password"]').fill(password);
+  await page.getByTestId("password-login").click();
   await expect(page).not.toHaveURL(/\/login/);
+}
+
+/** Confirms the sheet opened by a confirm button (replaces the old native dialogs). */
+export async function confirmSheet(page: Page) {
+  await page.getByTestId("confirm-sheet").getByRole("button").last().click();
 }
 
 /** A weekday at least `days` days from now, as YYYY-MM-DD. */

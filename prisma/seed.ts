@@ -222,6 +222,7 @@ async function main() {
 
   await seedSampleBookings(patientIds);
   await seedSampleConsultations(patientIds);
+  await seedRelookingDemo();
 
   console.log(`\nSeed done with demo data. Password for every demo account: ${demoPassword}\n`);
   console.table([
@@ -425,6 +426,8 @@ async function seedConsultationDoctors(password: string) {
       },
     });
     if (d.superDoctor) superDoctorId = doctor.id;
+    // Referred demo doctors are already checked by the admin, so they are visible.
+    if (d.referred) await db.doctor.updateMany({ where: { id: doctor.id, verifiedAt: null }, data: { verifiedAt: new Date() } });
     await ensureSignatureImages(doctor.id, d.stamp);
     await createConsultationSlots(doctor.id);
     if (operation) {
@@ -550,3 +553,27 @@ main()
     process.exit(1);
   })
   .finally(() => db.$disconnect());
+
+/** Review on the completed demo consultation and a saved prescription for Dr Amira. Idempotent. */
+async function seedRelookingDemo() {
+  const done = await db.consultation.findUnique({ where: { reference: "LC-DEMO05" } });
+  if (done && !(await db.review.findUnique({ where: { consultationId: done.id } }))) {
+    await db.review.create({
+      data: { consultationId: done.id, doctorId: done.doctorId, patientId: done.patientId, rating: 5, text: "[Démo] Très à l'écoute, ordonnance reçue en quelques minutes." },
+    });
+  }
+  const amira = await db.doctor.findFirst({ where: { user: { email: "dr.amira@demo.lifedeux.com" } } });
+  if (amira && (await db.prescriptionFavorite.count({ where: { doctorId: amira.id } })) === 0) {
+    await db.prescriptionFavorite.create({
+      data: {
+        doctorId: amira.id,
+        name: "Eczéma adulte",
+        items: [
+          { medicationId: null, name: "Dermocorticoïde crème", dosage: "1 application", frequency: "le soir", duration: "7 jours", instructions: "Sur les plaques uniquement" },
+          { medicationId: null, name: "Crème émolliente", dosage: "1 application", frequency: "matin et soir", duration: "1 mois", instructions: "" },
+        ],
+        notes: "Éviter les savons parfumés.",
+      },
+    });
+  }
+}

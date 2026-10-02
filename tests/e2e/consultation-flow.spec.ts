@@ -1,12 +1,14 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { demoPhoto } from "../../prisma/lib/demo-images";
-import { DEMO_PASSWORD, db, login } from "./helpers";
+import { DEMO_PASSWORD, confirmSheet, db, login } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
 const stamp = Date.now();
 const patientEmail = `consult.e2e.${stamp}@test.dev`;
-const patientFirst = `Lina${stamp % 10000}`;
+// Names are Latin letters only (no digits): encode the run id as letters.
+const letters = (n: number) => [...String(n % 100000)].map((d) => "abcdefghij"[Number(d)]).join("");
+const patientFirst = `Lina${letters(stamp)}`;
 
 async function newPage(browser: Browser): Promise<Page> {
   return (await browser.newContext()).newPage();
@@ -58,14 +60,17 @@ test("patient requests an online consultation", async ({ browser }) => {
   await patient.goto(`/fr/doctors/${doc.id}`);
   await expect(patient.getByRole("tab", { name: "Consultation en ligne" })).toHaveCount(0); // single service: no tabs
   await patient.locator("[data-testid=slot-times] button").first().click();
-  await patient.locator('textarea[name="reason"]').fill("Eczéma sur les mains.");
+  await patient.getByRole("button", { name: "Suivi", exact: true }).click();
+  await patient.locator('textarea[name="reasonText"]').fill("Eczéma sur les mains.");
+  await patient.getByTestId("booking-consent").check();
   await patient.getByRole("button", { name: "Demander la consultation" }).click();
   await expect(patient).toHaveURL(/\/fr\/account\/consultations\/\w+\?requested=1/);
-  await expect(patient.getByText("En attente d'acceptation")).toBeVisible();
+  await expect(patient.getByTestId("consult-timeline")).toContainText("Accord du médecin");
   consultationId = patient.url().split("/consultations/")[1].split("?")[0];
 
   const c = await db.consultation.findUniqueOrThrow({ where: { id: consultationId }, include: { slot: true } });
   expect(c.status).toBe("REQUESTED");
+  expect(c.reason).toBe("Suivi — Eczéma sur les mains.");
   expect(c.reference).toMatch(/^LC-/);
   expect(c.slot.status).toBe("HELD");
   expect(c.slot.kind).toBe("CONSULTATION");
@@ -74,28 +79,33 @@ test("patient requests an online consultation", async ({ browser }) => {
   await expect(patient.getByTestId("consultation-card").filter({ hasText: c.reference })).toBeVisible();
 });
 
-test("doctor accepts, then the patient pays", async ({ browser }) => {
+test("the patient secures the slot with a card hold; the doctor's acceptance charges it", async ({ browser }) => {
+  // Before the doctor answers, the card is only held (nothing is charged).
+  await patient.goto(`/fr/account/consultations/${consultationId}`);
+  await patient.getByTestId("hold-submit").click();
+  await expect(patient).toHaveURL(/\/fr\/payment\/mock\//);
+  await patient.getByRole("button", { name: "Autoriser (empreinte)" }).click();
+  await expect(patient).toHaveURL(new RegExp(`/fr/account/consultations/${consultationId}\\?payment=success`));
+  await expect(patient.getByTestId("hold-done")).toBeVisible();
+  expect((await db.payment.findFirstOrThrow({ where: { consultationId } })).status).toBe("AUTHORIZED");
+
   doctor = await newPage(browser);
   await login(doctor, "dr.amira@demo.lifedeux.com", DEMO_PASSWORD);
-  const card = doctor.getByTestId("consult-request-card").filter({ hasText: `${patientFirst} Consult` });
-  await expect(card).toContainText("Eczéma sur les mains.");
-  await card.getByRole("button", { name: `Accepter la consultation de ${patientFirst}` }).click();
-  await expect(doctor).toHaveURL(/done=confirmed/);
-  expect((await db.consultation.findUniqueOrThrow({ where: { id: consultationId } })).status).toBe("CONFIRMED");
-
-  await patient.goto(`/fr/account/consultations/${consultationId}`);
-  await expect(patient.getByText("Créneau accepté")).toBeVisible();
-  await patient.getByRole("button", { name: /^Payer/ }).click();
-  await expect(patient).toHaveURL(/\/fr\/payment\/mock\//);
-  await patient.getByRole("button", { name: "Simuler un paiement réussi" }).click();
-  await expect(patient).toHaveURL(new RegExp(`/fr/account/consultations/${consultationId}\\?payment=success`));
-  // Paid but not started yet: the conversation is visible but closed.
-  await expect(patient.getByTestId("chat-input")).toBeDisabled();
+  await doctor.getByTestId("inbox-row").filter({ hasText: `${patientFirst} C.` }).click();
+  const sheet = doctor.getByTestId("inbox-detail");
+  await expect(sheet).toContainText("Eczéma sur les mains.");
+  await expect(sheet).toContainText("garanti");
+  await doctor.getByTestId("inbox-accept").click();
+  // Accepted after the 5-second undo window: the hold is captured at once.
+  await expect.poll(async () => (await db.consultation.findUniqueOrThrow({ where: { id: consultationId } })).status, { timeout: 15_000 }).toBe("PAID");
 
   const c = await db.consultation.findUniqueOrThrow({ where: { id: consultationId }, include: { slot: true, payments: true } });
-  expect(c.status).toBe("PAID");
   expect(c.slot.status).toBe("BOOKED");
   expect(c.payments.some((p) => p.status === "SUCCEEDED")).toBe(true);
+  // Paid but not started yet: the timeline says when the conversation opens.
+  await patient.goto(`/fr/account/consultations/${consultationId}`);
+  await expect(patient.getByTestId("consult-next")).toContainText("La conversation s'ouvrira");
+  await expect(patient.getByTestId("chat-input")).toHaveCount(0);
 });
 
 test("at the scheduled time both sides chat with text and photos", async () => {
@@ -167,6 +177,7 @@ test("doctor writes a prescription with a live preview and sends it", async () =
   const template = await db.prescriptionTemplate.findFirstOrThrow({ where: { name: "Papier du cabinet", doctor: { user: { email: "dr.amira@demo.lifedeux.com" } } } });
   await expect(editor.getByTestId("rx-template")).toHaveValue(template.id);
 
+  await editor.getByText("Plus d'options").click();
   await editor.getByTestId("rx-search").fill("amox");
   await editor.getByTestId("rx-result").filter({ hasText: "Clamoxyl" }).click();
   const item = editor.getByTestId("rx-item");
@@ -177,8 +188,8 @@ test("doctor writes a prescription with a live preview and sends it", async () =
   await expect(live.locator("svg[role=img]")).toContainText("APERÇU");
 
   // Incomplete lines are refused.
-  doctor.once("dialog", (d) => void d.accept());
-  await editor.getByRole("button", { name: "Signer et envoyer" }).click();
+  await editor.getByTestId("rx-send").click();
+  await confirmSheet(doctor);
   await expect(editor.getByRole("alert").filter({ hasText: /./ })).toContainText("Complétez chaque ligne");
 
   await item.locator('input[name="dosage"]').fill("1 gélule");
@@ -202,10 +213,10 @@ test("doctor writes a prescription with a live preview and sends it", async () =
   expect((await patient.request.get(`/api/prescriptions/${draft.id}/pdf`)).status()).toBe(404);
 
   await live.click();
-  const dialog = doctor.getByRole("dialog");
+  const dialog = doctor.getByTestId("rx-preview");
   await expect(dialog.locator("svg[role=img]")).toContainText("Clamoxyl");
-  doctor.once("dialog", (d) => void d.accept());
-  await dialog.getByTestId("rx-preview").getByRole("button", { name: "Signer et envoyer" }).click();
+  await dialog.getByRole("button", { name: "Signer et envoyer" }).click();
+  await confirmSheet(doctor);
   await expect(doctor.getByText("Ordonnance envoyée au patient.")).toBeVisible();
 
   const issued = await db.prescription.findUniqueOrThrow({ where: { id: draft.id } });
@@ -247,8 +258,8 @@ test("a pharmacist verifies the prescription from its QR link", async ({ page })
 });
 
 test("doctor ends the consultation and the chat becomes read-only", async () => {
-  doctor.once("dialog", (d) => void d.accept());
-  await doctor.getByRole("button", { name: "Terminer la consultation" }).click();
+  await doctor.getByTestId("consult-end").click();
+  await confirmSheet(doctor);
   await expect(doctor.getByTestId("chat-input")).toBeDisabled();
   expect((await db.consultation.findUniqueOrThrow({ where: { id: consultationId } })).status).toBe("COMPLETED");
   await expect(patient.getByTestId("chat-input")).toBeDisabled();
@@ -281,9 +292,13 @@ test("a super-doctor refers a colleague who joins immediately", async ({ browser
   await join.goto(new URL(link).pathname);
   await expect(join.getByText("Dr Hichem Mansour")).toBeVisible();
   await join.locator('input[name="firstName"]').fill("Omar");
-  await join.locator('input[name="lastName"]').fill(`Parrainé ${stamp % 10000}`);
+  await join.locator('input[name="lastName"]').fill(`Parrainé ${letters(stamp)}`);
   await join.locator('input[name="email"]').fill(email);
   await join.locator('input[name="phone"]').fill("+216 22 333 444");
+  await join.locator('input[name="password"]').fill("Doctor12345!");
+  await join.locator('input[name="consent"]').check();
+  // Two steps: the account, then the practice.
+  await join.getByTestId("step-next").click();
   await join.locator('select[name="specialtyId"]').selectOption({ label: "Neurologie" });
   await join.locator('input[name="specialty"]').fill("Neurologue");
   await join.locator('input[name="licenseNumber"]').fill("TN-NEU-9999");
@@ -291,8 +306,6 @@ test("a super-doctor refers a colleague who joins immediately", async ({ browser
   await join.locator('input[name="clinicName"]').fill("Cabinet Omar");
   await join.locator('input[name="clinicAddress"]').fill("Rue de la Plage, Bizerte");
   await join.locator('input[name="stampFile"]').setInputFiles({ name: "cachet.png", mimeType: "image/png", buffer: Buffer.from(demoPhoto()) });
-  await join.locator('input[name="password"]').fill("Doctor12345!");
-  await join.locator('input[name="consent"]').check();
   await join.getByRole("button", { name: "Créer mon compte médecin" }).click();
   await expect(join).toHaveURL(/\/fr\/doctor\/slots\?welcome=1/);
   await expect(join.getByText("Bienvenue sur LifeDeux")).toBeVisible();
@@ -303,10 +316,13 @@ test("a super-doctor refers a colleague who joins immediately", async ({ browser
   const created = await db.user.findUniqueOrThrow({ where: { email }, include: { doctor: { include: { referredBy: { include: { user: true } } } } } });
   expect(created.role).toBe("DOCTOR");
   expect(created.doctor?.referredBy?.user.email).toBe("dr.mansour@demo.lifedeux.com");
-  expect(created.doctor?.stampImageId).toBeTruthy();
+  // A referred doctor's stamp waits for the admin, and the doctor stays hidden until verified.
+  expect(created.doctor?.stampImageId).toBeNull();
+  expect(created.doctor?.pendingStampImageId).toBeTruthy();
+  expect(created.doctor?.verifiedAt).toBeNull();
 
   await superDoc.reload();
-  await expect(superDoc.getByTestId("referral-row").filter({ hasText: `Parrainé ${stamp % 10000}` })).toBeVisible();
+  await expect(superDoc.getByTestId("referral-row").filter({ hasText: `Parrainé ${letters(stamp)}` })).toBeVisible();
 
   const bad = await newPage(browser);
   await bad.goto("/fr/join/DR-NOPE");
