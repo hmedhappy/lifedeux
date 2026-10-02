@@ -993,16 +993,17 @@
       "invalid": "Cette consultation ne peut plus être annulée."
     },
     "rebookTitle": "Besoin d'un suivi ?",
-    "rebookText": "Reprenez rendez-vous avec le même médecin en quelques secondes."
+    "rebookText": "Reprenez rendez-vous avec le même médecin en quelques secondes.",
+    "noShowText": "Le médecin vous a attendu, mais vous ne vous êtes pas présenté(e). Comme pour une annulation à moins de 24 h, la consultation n'est pas remboursée. Contactez-nous en cas de problème."
   },
   "chat": {
     "title": "Conversation",
-    "live": "En ligne",
+    "live": "En cours",
     "waiting": "Pas encore ouverte",
     "closed": "Consultation terminée",
     "call": "Appel audio",
     "video": "Appel vidéo",
-    "soon": "bientôt disponible",
+    "soon": "bientôt",
     "empty": "Dites bonjour pour commencer la consultation.",
     "waitingText": "La conversation s'ouvrira peu avant l'heure du rendez-vous.",
     "image": "Photo",
@@ -1012,7 +1013,28 @@
     "placeholder": "Écrivez votre message…",
     "closedPlaceholder": "La conversation n'est pas ouverte",
     "send": "Envoyer",
-    "sendFailed": "Le message n'a pas pu être envoyé."
+    "sendFailed": "Le message n'a pas pu être envoyé.",
+    "online": "En ligne",
+    "typing": "écrit…",
+    "read": "Lu",
+    "sent": "Envoyé",
+    "system": {
+      "joined": "{name} a rejoint la conversation",
+      "noShow": "Le patient ne s'est pas présenté. La consultation est close.",
+      "ended": "{name} a terminé la consultation",
+      "orientClinic": "{name} vous propose un rendez-vous au cabinet",
+      "orientSurgery": "{name} vous propose une intervention",
+      "seeSurgery": "Voir les interventions",
+      "orientClinicMine": "Vous avez proposé un rendez-vous au cabinet",
+      "orientSurgeryMine": "Vous avez proposé une intervention"
+    },
+    "quick": {
+      "1": "Bonjour, je suis avec vous.",
+      "2": "Depuis quand avez-vous ces symptômes ?",
+      "3": "Pouvez-vous m'envoyer une photo ?",
+      "4": "Avez-vous des allergies ou un traitement en cours ?",
+      "5": "Je vous envoie l'ordonnance dans la conversation."
+    }
   },
   "rx": {
     "title": "Ordonnance",
@@ -1135,5 +1157,27 @@
     "send": "Publier mon avis",
     "thanks": "Merci pour votre avis !",
     "yours": "Merci, votre avis est publié avec votre prénom et l'initiale de votre nom."
+  },
+  "workspace": {
+    "chat": "Chat",
+    "prescription": "Ordonnance",
+    "patient": "Patient",
+    "fold": "Replier",
+    "age": "{n} ans",
+    "contactsHidden": "Les coordonnées du patient s'affichent après le paiement.",
+    "history": "Historique avec vous",
+    "firstVisit": "Première consultation avec vous.",
+    "end": "Terminer",
+    "more": "Plus d'actions",
+    "orientClinic": "Orienter vers mon cabinet",
+    "orientSurgery": "Proposer une intervention",
+    "noShow": "Patient absent",
+    "noShowLater": "Possible 15 min après l'heure, si le patient n'est pas venu.",
+    "noShowDone": "Patient absent",
+    "chatLater": "La conversation sera disponible une fois la consultation payée.",
+    "requestedNotice": "Demande en attente de votre réponse, depuis « Aujourd'hui ».",
+    "rescheduleAsked": "Le patient demande à déplacer la consultation au {date}.",
+    "rescheduleAccept": "Accepter",
+    "rescheduleRefuse": "Refuser"
   }
 }

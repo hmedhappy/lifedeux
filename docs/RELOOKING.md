@@ -68,6 +68,8 @@ Légende : ✅ recommandation suivie · ✏️ choix différent de la recommanda
   - mobile : onglets Chat · Ordonnance · Patient ;
   - ordinateur : 3 colonnes (patient + historique avec ce médecin | chat | ordonnance repliable).
 - ✅ Bouton « Patient absent », messages rapides, bouton « Orienter » (cabinet ou chirurgie), bouton « Terminer » dans l'en-tête.
+  - Règle « Patient absent » : possible 15 min après l'heure prévue si le patient n'a jamais rejoint la conversation. La consultation passe en « Absent », **sans remboursement** (même règle qu'une annulation à moins de 24 h) ; le médecin est rémunéré. L'admin peut toujours rembourser à la main.
+  - Ordinateur : la disposition finale est « résumé patient en haut, puis chat | ordonnance repliable » ; 3 colonnes côte à côte laissaient un chat trop étroit à côté du menu.
 - ✅ Nouvelle consultation avec le même médecin en un clic.
 - ✅ Son et compteur dans l'onglet quand un message arrive.
 

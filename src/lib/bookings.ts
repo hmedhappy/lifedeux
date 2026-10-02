@@ -236,7 +236,7 @@ export async function doctorBalances() {
   ]);
   const consultations = await db.consultation.groupBy({
     by: ["doctorId"],
-    where: { status: "COMPLETED" },
+    where: { status: { in: ["COMPLETED", "NO_SHOW"] } },
     _sum: { doctorFee: true },
     _count: true,
   });

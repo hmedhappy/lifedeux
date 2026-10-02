@@ -993,16 +993,17 @@
       "invalid": "This consultation can no longer be cancelled."
     },
     "rebookTitle": "Need a follow-up?",
-    "rebookText": "Book again with the same doctor in a few seconds."
+    "rebookText": "Book again with the same doctor in a few seconds.",
+    "noShowText": "The doctor waited, but you did not show up. As with a cancellation less than 24 h before, the consultation is not refunded. Contact us if something went wrong."
   },
   "chat": {
     "title": "Conversation",
-    "live": "Online",
+    "live": "Live",
     "waiting": "Not open yet",
     "closed": "Consultation ended",
     "call": "Audio call",
     "video": "Video call",
-    "soon": "coming soon",
+    "soon": "soon",
     "empty": "Say hello to start the consultation.",
     "waitingText": "The conversation opens shortly before the appointment.",
     "image": "Photo",
@@ -1012,7 +1013,28 @@
     "placeholder": "Type your message…",
     "closedPlaceholder": "The conversation is not open",
     "send": "Send",
-    "sendFailed": "The message could not be sent."
+    "sendFailed": "The message could not be sent.",
+    "online": "Online",
+    "typing": "typing…",
+    "read": "Read",
+    "sent": "Sent",
+    "system": {
+      "joined": "{name} joined the conversation",
+      "noShow": "The patient did not show up. The consultation is closed.",
+      "ended": "{name} ended the consultation",
+      "orientClinic": "{name} suggests an in-person visit at the practice",
+      "orientSurgery": "{name} suggests a procedure",
+      "seeSurgery": "See procedures",
+      "orientClinicMine": "You suggested an in-person visit at the practice",
+      "orientSurgeryMine": "You suggested a procedure"
+    },
+    "quick": {
+      "1": "Hello, I am with you.",
+      "2": "Since when have you had these symptoms?",
+      "3": "Can you send me a photo?",
+      "4": "Do you have allergies or current treatment?",
+      "5": "I am sending the prescription in the conversation."
+    }
   },
   "rx": {
     "title": "Prescription",
@@ -1135,5 +1157,27 @@
     "send": "Post my review",
     "thanks": "Thank you for your review!",
     "yours": "Thank you, your review is shown with your first name and last initial."
+  },
+  "workspace": {
+    "chat": "Chat",
+    "prescription": "Prescription",
+    "patient": "Patient",
+    "fold": "Fold",
+    "age": "{n} years old",
+    "contactsHidden": "The patient's contact details show after payment.",
+    "history": "History with you",
+    "firstVisit": "First consultation with you.",
+    "end": "End",
+    "more": "More actions",
+    "orientClinic": "Refer to my practice",
+    "orientSurgery": "Suggest a procedure",
+    "noShow": "Patient absent",
+    "noShowLater": "Possible 15 min after the time, if the patient did not come.",
+    "noShowDone": "Patient absent",
+    "chatLater": "The conversation will be available once the consultation is paid.",
+    "requestedNotice": "Request waiting for your answer, from \"Today\".",
+    "rescheduleAsked": "The patient asks to move the consultation to {date}.",
+    "rescheduleAccept": "Accept",
+    "rescheduleRefuse": "Decline"
   }
 }

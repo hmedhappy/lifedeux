@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "./db";
-import { CONSULT_MIN_LEAD_HOURS, CONSULT_PAYMENT_CUTOFF_MINUTES, canChangeFreely } from "./consultation-rules";
+import { CHAT_AUTO_CLOSE_HOURS, CONSULT_MIN_LEAD_HOURS, CONSULT_PAYMENT_CUTOFF_MINUTES, canChangeFreely } from "./consultation-rules";
 import { formatDateTime } from "./format";
 import { getT, toLocale } from "./i18n";
 import { sendTemplate } from "./mail";
@@ -244,6 +244,12 @@ export async function expireStaleConsultations(now = new Date()): Promise<number
     await releaseConsultationPayments(c.id);
     await sendTemplate(c.patient, "expired", { reference: c.reference });
   }
+
+  // Fallback close: a paid consultation nobody ended is completed 24 h after its start.
+  await db.consultation.updateMany({
+    where: { status: "PAID", endedAt: null, slot: { startsAt: { lt: new Date(now.getTime() - CHAT_AUTO_CLOSE_HOURS * 3_600_000) } } },
+    data: { status: "COMPLETED", endedAt: now },
+  });
 
   const moves = await db.consultation.findMany({
     where: { rescheduleSlotId: { not: null } },

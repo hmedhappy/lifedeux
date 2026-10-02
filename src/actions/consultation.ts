@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { fail, ok, type ActionState } from "@/lib/action-state";
-import { CONSULT_MIN_LEAD_HOURS } from "@/lib/consultation-rules";
+import { CONSULT_MIN_LEAD_HOURS, canMarkNoShow } from "@/lib/consultation-rules";
 import {
   acceptConsultation,
   answerReschedule,
@@ -251,10 +251,45 @@ export async function endConsultationAction(localeRaw: string, id: string): Prom
   const locale = toLocale(localeRaw);
   const me = await currentDoctor();
   if (!me) redirect(`/${locale}/login`);
-  await db.consultation.updateMany({
+  const res = await db.consultation.updateMany({
     where: { id, doctorId: me.doctor.id, status: "PAID" },
     data: { status: "COMPLETED", endedAt: new Date() },
   });
+  if (res.count) await db.message.create({ data: { consultationId: id, senderId: me.user.id, kind: "SYSTEM", text: "ended" } });
   revalidatePath(`/${locale}/doctor/consultations/${id}`);
   redirect(`/${locale}/doctor/consultations/${id}`);
+}
+
+/**
+ * The patient never came: allowed 15 min after the start if they did not join. The slot
+ * was reserved for them, so it is not refunded (same rule as a cancellation within 24 h).
+ */
+export async function markNoShowAction(localeRaw: string, id: string): Promise<void> {
+  const locale = toLocale(localeRaw);
+  const me = await currentDoctor();
+  if (!me) redirect(`/${locale}/login`);
+  const c = await db.consultation.findFirst({ where: { id, doctorId: me.doctor.id, status: "PAID" }, include: { slot: true } });
+  if (c && canMarkNoShow(c)) {
+    await db.$transaction([
+      db.consultation.update({ where: { id: c.id }, data: { status: "NO_SHOW", endedAt: new Date() } }),
+      db.message.create({ data: { consultationId: c.id, senderId: me.user.id, kind: "SYSTEM", text: "noShow" } }),
+    ]);
+  }
+  revalidatePath(`/${locale}/doctor/consultations/${id}`);
+  redirect(`/${locale}/doctor/consultations/${id}`);
+}
+
+/** Structured orientation: an in-person visit at the doctor's practice, or surgery. */
+export async function orientConsultationAction(localeRaw: string, id: string, kind: "CLINIC" | "SURGERY"): Promise<void> {
+  const locale = toLocale(localeRaw);
+  const me = await currentDoctor();
+  if (!me) redirect(`/${locale}/login`);
+  const c = await db.consultation.findFirst({ where: { id, doctorId: me.doctor.id, status: { in: ["PAID", "COMPLETED"] } } });
+  if (c) {
+    await db.$transaction([
+      db.consultation.update({ where: { id: c.id }, data: { orientation: kind } }),
+      db.message.create({ data: { consultationId: c.id, senderId: me.user.id, kind: "SYSTEM", text: `orientation:${kind}` } }),
+    ]);
+  }
+  revalidatePath(`/${locale}/doctor/consultations/${id}`);
 }

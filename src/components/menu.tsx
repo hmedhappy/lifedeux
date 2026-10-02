@@ -54,7 +54,8 @@ export function Dropdown({
         <div
           id={id}
           onClick={(e) => {
-            if ((e.target as HTMLElement).closest("a,button[type=submit]")) setOpen(false);
+            // Close after the click is handled: removing a form synchronously would cancel its submission.
+            if ((e.target as HTMLElement).closest("a,button[type=submit]")) setTimeout(() => setOpen(false), 0);
           }}
           className={clsx(
             "absolute z-50 mt-2 animate-modal-in overflow-hidden rounded-2xl border border-line bg-white py-2 shadow-sheet",

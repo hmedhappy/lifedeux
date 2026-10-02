@@ -168,7 +168,21 @@ export default async function PatientConsultationPage({
 
       {showChat ? (
         <div className="mt-6 space-y-4">
-          <Chat consultationId={c.id} peerName={doctorName} peerSubtitle={specialty} initialMessages={messages} initialState={chat} />
+          {c.status === "NO_SHOW" && <Notice tone="warning">{t("consult.noShowText")}</Notice>}
+          <Chat
+            consultationId={c.id}
+            peerName={doctorName}
+            peerSubtitle={specialty}
+            peerPhoto={c.doctor.photoUrl}
+            initialMessages={messages}
+            initialState={chat}
+            orientation={{
+              clinic: `${c.doctor.clinicName}, ${c.doctor.clinicAddress}`,
+              surgeryHref: `/${locale}/doctors/${c.doctorId}?service=operation`,
+            }}
+            backHref={`/${locale}/account`}
+            fullscreenMobile={chat === "open"}
+          />
           {chat === "closed" && (
             <AfterCare
               t={t}

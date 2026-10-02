@@ -24,7 +24,7 @@ export function chatState(
   c: { status: string; endedAt: Date | null; slot: { startsAt: Date } },
   now = new Date(),
 ): ChatState {
-  if (c.status === "COMPLETED" || c.endedAt) return "closed";
+  if (c.status === "COMPLETED" || c.status === "NO_SHOW" || c.endedAt) return "closed";
   if (c.status !== "PAID") return "not_paid";
   const opens = c.slot.startsAt.getTime() - CHAT_OPENS_MINUTES_BEFORE * 60_000;
   const closes = c.slot.startsAt.getTime() + CHAT_AUTO_CLOSE_HOURS * 3_600_000;
@@ -36,4 +36,27 @@ export function chatState(
 /** Slots starting before this instant have (or had) their chat open. */
 export function chatOpensBefore(now = new Date()): Date {
   return new Date(now.getTime() + CHAT_OPENS_MINUTES_BEFORE * 60_000);
+}
+
+/** The doctor may mark the patient absent this long after the start if they never came. */
+export const NO_SHOW_AFTER_MINUTES = 15;
+
+/** A person counts as "in the conversation" if their screen polled this recently. */
+export const PRESENCE_SECONDS = 12;
+
+/** "… is typing" lasts this long after the last key press. */
+export const TYPING_SECONDS = 5;
+
+export function chatOpensAt(startsAt: Date): Date {
+  return new Date(startsAt.getTime() - CHAT_OPENS_MINUTES_BEFORE * 60_000);
+}
+
+/** "Patient absent" is offered once the wait is over and the patient never joined. */
+export function canMarkNoShow(
+  c: { status: string; patientSeenAt: Date | null; slot: { startsAt: Date } },
+  now = new Date(),
+): boolean {
+  if (c.status !== "PAID") return false;
+  if (now.getTime() < c.slot.startsAt.getTime() + NO_SHOW_AFTER_MINUTES * 60_000) return false;
+  return !c.patientSeenAt || c.patientSeenAt < chatOpensAt(c.slot.startsAt);
 }

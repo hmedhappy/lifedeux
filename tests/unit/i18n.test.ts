@@ -46,6 +46,8 @@ const DYNAMIC_KEYS = [
   ...["consultation", "surgery"].map((s) => `booking.consent${s[0].toUpperCase()}${s.slice(1)}`),
   ...["cancelled", "refunded", "refundPending", "tooLate", "invalid"].map((s) => `consult.cancelOutcome.${s}`),
   ...["requested", "accepted", "paid", "consultation", "prescription"].map((s) => `consult.steps.${s}`),
+  ...["joined", "noShow", "ended", "orientSurgery", "orientClinic", "orientSurgeryMine", "orientClinicMine"].map((s) => `chat.system.${s}`),
+  ...[1, 2, 3, 4, 5].map((n) => `chat.quick.${n}`),
   "payment.mockHold",
   "payment.mockPay",
 ];

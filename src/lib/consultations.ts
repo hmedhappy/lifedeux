@@ -31,6 +31,9 @@ export type ChatMessage = {
   createdAt: string;
 };
 
+/** What the polling client learns about the other side. */
+export type PeerStatus = { online: boolean; typing: boolean; seenAt: string | null };
+
 export async function loadMessages(consultationId: string, viewerId: string, after?: Date): Promise<ChatMessage[]> {
   const rows = await db.message.findMany({
     where: { consultationId, ...(after ? { createdAt: { gt: after } } : {}) },
