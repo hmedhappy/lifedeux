@@ -31,7 +31,7 @@ export default async function ProfilePage({
       <Card>
         <ActionForm action={updateProfileAction.bind(null, locale)} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={t("fields.firstName")}>
+            <Field label={t("fields.firstName")} hint={t("fields.latinHint")}>
               <Input name="firstName" defaultValue={user.firstName} autoComplete="given-name" required />
             </Field>
             <Field label={t("fields.lastName")}>

@@ -125,7 +125,7 @@ export function ConfirmSheet({
       <p className="text-ink-soft">{message}</p>
       <div className="mt-6 grid gap-2 sm:grid-cols-2">
         <Button type="button" variant="secondary" onClick={onCancel}>
-          {t("common.cancel")}
+          {t("common.back")}
         </Button>
         <Button type="button" variant={tone === "danger" ? "dangerSolid" : "primary"} onClick={onConfirm} data-autofocus>
           {confirmLabel ?? t("common.confirm")}

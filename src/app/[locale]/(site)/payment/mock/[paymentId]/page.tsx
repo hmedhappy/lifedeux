@@ -27,7 +27,7 @@ export default async function MockCheckoutPage({ params }: { params: Promise<{ l
 
   const action = mockCheckoutAction.bind(null, locale, payment.id);
   return (
-    <Container className="flex justify-center py-16">
+    <Container className="flex justify-center py-8 sm:py-16">
       <div className="w-full max-w-md space-y-6 rounded-3xl border border-line bg-white p-8 shadow-card">
         <h1 className="text-lg font-semibold text-ink">{t("payment.mockTitle")}</h1>
         <Notice tone="warning">{t("payment.mockInfo")}</Notice>

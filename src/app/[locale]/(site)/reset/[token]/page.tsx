@@ -13,9 +13,9 @@ export default async function ResetPasswordPage({ params }: { params: Promise<{ 
   const valid = user && user.active && user.inviteExpiresAt && user.inviteExpiresAt > new Date();
 
   return (
-    <Container className="flex justify-center py-16">
-      <div className="w-full max-w-md rounded-2xl border border-line p-8">
-        <h1 className="text-center text-lg font-semibold text-ink">{t("auth.resetTitle")}</h1>
+    <Container className="flex justify-center py-8 sm:py-16">
+      <div className="w-full max-w-md animate-fade-in rounded-3xl border border-line bg-white p-6 shadow-card sm:p-8">
+        <h1 className="text-center text-xl font-bold tracking-tight text-ink">{t("auth.resetTitle")}</h1>
         {!valid ? (
           <div className="mt-6 space-y-4 text-center">
             <Notice tone="error">{t("errors.resetInvalid")}</Notice>

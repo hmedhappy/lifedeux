@@ -15,6 +15,7 @@ import { stripeClient } from "@/lib/payments/stripe";
 import { appUrl } from "@/lib/settings";
 import { randomToken, referralCode } from "@/lib/tokens";
 import { IMAGE_PATH_PREFIX, isPhotoRef, saveUploadedImages } from "@/lib/images";
+import { isLatinName } from "@/lib/latin";
 
 async function currentAdmin() {
   const user = await getCurrentUser();
@@ -22,6 +23,10 @@ async function currentAdmin() {
 }
 
 const text = (max: number) => z.string().trim().min(1).max(max);
+/** Names are printed on prescriptions, whose PDF is in Latin letters only. */
+const latinName = () => text(80).refine(isLatinName, { message: "latin" });
+const parseError = (error?: z.ZodError) =>
+  error?.issues.some((i) => i.message === "latin") ? "errors.nameNotLatin" : "errors.missingFields";
 const optionalText = (max: number) =>
   z
     .string()
@@ -55,8 +60,8 @@ async function issueInvite(userId: string, locale: string) {
 /* ----------------------------- Doctors ----------------------------- */
 
 const doctorSchema = z.object({
-  firstName: text(80),
-  lastName: text(80),
+  firstName: latinName(),
+  lastName: latinName(),
   phone: optionalText(30),
   specialty: text(120),
   bio: text(4000),
@@ -125,7 +130,7 @@ export async function createDoctorAction(localeRaw: string, _: ActionState, form
   if (!(await currentAdmin())) return fail("errors.forbidden");
   const parsed = doctorSchema.safeParse(Object.fromEntries(formData));
   const email = z.string().trim().toLowerCase().email().safeParse(formData.get("email"));
-  if (!parsed.success || !email.success) return fail("errors.missingFields");
+  if (!parsed.success || !email.success) return fail(parseError(parsed.error));
   const pricing = await readPricing(formData);
   const extras = readConsultation(formData);
   if (!pricing || !extras) return fail("errors.pricing");
@@ -184,7 +189,7 @@ export async function updateDoctorAction(
   const locale = toLocale(localeRaw);
   if (!(await currentAdmin())) return fail("errors.forbidden");
   const parsed = doctorSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return fail("errors.missingFields");
+  if (!parsed.success) return fail(parseError(parsed.error));
   const pricing = await readPricing(formData);
   const extras = readConsultation(formData);
   if (!pricing || !extras) return fail("errors.pricing");
@@ -258,14 +263,14 @@ export async function inviteTeamMemberAction(localeRaw: string, _: ActionState, 
   const parsed = z
     .object({
       email: z.string().trim().toLowerCase().email(),
-      firstName: text(80),
-      lastName: text(80),
+      firstName: latinName(),
+      lastName: latinName(),
       phone: optionalText(30),
       role: z.enum(["AGENT", "ADMIN"]),
       locale: z.enum(["fr", "en", "ar"]),
     })
     .safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return fail("errors.missingFields");
+  if (!parsed.success) return fail(parseError(parsed.error));
   if (await db.user.findUnique({ where: { email: parsed.data.email } })) return fail("errors.emailTaken");
   const user = await db.user.create({ data: { ...parsed.data, role: parsed.data.role as Role } });
   const link = await issueInvite(user.id, locale);

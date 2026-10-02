@@ -24,14 +24,14 @@ export default async function RegisterPage({
   if (user) redirect(`/${locale}${homeFor(user.role)}`);
 
   return (
-    <Container className="flex justify-center py-16">
+    <Container className="flex justify-center py-8 sm:py-16">
       <div className="w-full max-w-lg rounded-3xl border border-line bg-white p-6 shadow-card sm:p-8">
-        <h1 className="text-center text-lg font-semibold text-ink">{t("auth.registerTitle")}</h1>
+        <h1 className="text-center text-xl font-bold tracking-tight text-ink">{t("auth.registerTitle")}</h1>
         <p className="mt-1 text-center text-sm text-muted">{t("auth.registerSubtitle")}</p>
         <ActionForm action={registerAction.bind(null, locale)} className="mt-8 space-y-4">
           <input type="hidden" name="next" value={next ?? ""} />
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={t("fields.firstName")}>
+            <Field label={t("fields.firstName")} hint={t("fields.latinHint")}>
               <Input name="firstName" autoComplete="given-name" required />
             </Field>
             <Field label={t("fields.lastName")}>

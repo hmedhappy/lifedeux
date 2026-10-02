@@ -161,7 +161,7 @@ export function AuthPanel({
         <form onSubmit={verify} className="space-y-3">
           <p className="text-sm text-ink-soft">{t("auth.newAccount")}</p>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label={t("fields.firstName")}>
+            <Field label={t("fields.firstName")} hint={t("fields.latinHint")}>
               <Input name="firstName" autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required autoFocus data-testid="auth-first-name" />
             </Field>
             <Field label={t("fields.lastName")}>

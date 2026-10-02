@@ -16,7 +16,8 @@
     "search": "بحث",
     "confirmTitle": "تأكيد",
     "confirm": "تأكيد",
-    "undo": "تراجع"
+    "undo": "تراجع",
+    "back": "رجوع"
   },
   "nav": {
     "doctors": "الأطباء",
@@ -545,7 +546,8 @@
     "upcoming": "القادمة",
     "past": "المنتهية",
     "noConsultations": "لا توجد استشارات بعد.",
-    "slotKind": "نوع الموعد"
+    "slotKind": "نوع الموعد",
+    "accepted": "تم قبول الاستشارة {reference}: تم تحصيل الدفع وإبلاغ المريض."
   },
   "payouts": {
     "earned": "إجمالي المستحق",

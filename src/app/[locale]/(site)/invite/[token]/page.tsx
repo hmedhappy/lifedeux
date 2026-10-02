@@ -12,9 +12,9 @@ export default async function InvitePage({ params }: { params: Promise<{ locale:
   const valid = user && user.inviteExpiresAt && user.inviteExpiresAt > new Date();
 
   return (
-    <Container className="flex justify-center py-16">
-      <div className="w-full max-w-md rounded-2xl border border-line p-8">
-        <h1 className="text-center text-lg font-semibold text-ink">{t("auth.inviteTitle")}</h1>
+    <Container className="flex justify-center py-8 sm:py-16">
+      <div className="w-full max-w-md animate-fade-in rounded-3xl border border-line bg-white p-6 shadow-card sm:p-8">
+        <h1 className="text-center text-xl font-bold tracking-tight text-ink">{t("auth.inviteTitle")}</h1>
         {!valid ? (
           <div className="mt-6">
             <Notice tone="error">{t("errors.inviteInvalid")}</Notice>

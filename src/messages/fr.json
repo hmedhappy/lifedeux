@@ -16,7 +16,8 @@
     "search": "Rechercher",
     "confirmTitle": "Confirmer",
     "confirm": "Confirmer",
-    "undo": "Annuler"
+    "undo": "Annuler",
+    "back": "Retour"
   },
   "nav": {
     "doctors": "Médecins",
@@ -545,7 +546,8 @@
     "upcoming": "À venir",
     "past": "Terminées",
     "noConsultations": "Aucune consultation pour l'instant.",
-    "slotKind": "Type de créneau"
+    "slotKind": "Type de créneau",
+    "accepted": "Consultation {reference} acceptée : le paiement est encaissé et le patient prévenu."
   },
   "payouts": {
     "earned": "Total dû",

@@ -79,7 +79,8 @@ export default async function PatientConsultationPage({
   const canMove = (c.status === "CONFIRMED" || c.status === "PAID") && freeChange && !c.rescheduleSlotId;
   const moveOptions = canMove ? toSlotOptions(await moveCandidates(c.doctorId), locale) : [];
 
-  const showChat = chat === "open" || chat === "closed" || chat === "waiting";
+  // Before the chat opens, the timeline (with its options) says what comes next.
+  const showChat = chat === "open" || chat === "closed";
   const messages = showChat ? await loadMessages(c.id, user.id) : [];
   const ended = ["REFUSED", "EXPIRED", "CANCELLED"].includes(c.status);
   const done: Record<(typeof STEPS)[number], boolean> = {
@@ -167,16 +168,7 @@ export default async function PatientConsultationPage({
 
       {showChat ? (
         <div className="mt-6 space-y-4">
-          {chat === "waiting" && (
-            <>
-              <Notice tone="info">
-                {t("consult.waitingText", { date: formatDateTime(c.slot.startsAt, locale), minutes: CHAT_OPENS_MINUTES_BEFORE })}
-              </Notice>
-              <AutoRefresh every={30000} times={120} />
-            </>
-          )}
           <Chat consultationId={c.id} peerName={doctorName} peerSubtitle={specialty} initialMessages={messages} initialState={chat} />
-          {chat === "waiting" && options}
           {chat === "closed" && (
             <AfterCare
               t={t}
@@ -226,6 +218,7 @@ export default async function PatientConsultationPage({
                       </span>
                       <div className="min-w-0 flex-1 pt-1">
                         <p className={clsx("font-semibold", isDone || isCurrent ? "text-ink" : "text-muted")}>{t(`consult.steps.${step}`)}</p>
+                        {isCurrent && step === "consultation" && <AutoRefresh every={30000} times={120} />}
                         {isCurrent && (
                           <div className="mt-3 animate-fade-in" data-testid="consult-next">
                             <StepAction

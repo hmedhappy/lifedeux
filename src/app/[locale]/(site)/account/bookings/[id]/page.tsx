@@ -4,14 +4,15 @@ import { AutoRefresh } from "@/components/auto-refresh";
 import { ActionForm, ConfirmSubmit, SubmitButton } from "@/components/forms";
 import { LiveOptionsSummary, OptionsForm, OptionsProvider, type OptionsConfig, type StayOption } from "@/components/options-form";
 import { JourneyStepper, StatusBadge, TrackingTimeline, journeyIndex } from "@/components/status";
-import { Avatar, Button, Container, LinkButton, Notice } from "@/components/ui";
+import { ArrowLeft, Scissors } from "lucide-react";
+import { Avatar, Button, Container, Disclosure, LinkButton, Notice } from "@/components/ui";
 import { cancelBookingAction, chooseOptionsAction, editOptionsAction, startPaymentAction } from "@/actions/patient";
 import { requireRole } from "@/lib/auth";
 import { expireOverdueBookings } from "@/lib/bookings";
 import { db } from "@/lib/db";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
 import { getT, localized, toLocale } from "@/lib/i18n";
-import { availableProviders } from "@/lib/payments";
+import { providersFor } from "@/lib/payments";
 import { computeStay } from "@/lib/pricing";
 import { getSettings } from "@/lib/settings";
 
@@ -95,32 +96,40 @@ export default async function BookingPage({
         }
       : null;
 
-  const providers = availableProviders();
+  const providers = providersFor(user.country);
   const trackingTimes = Object.fromEntries(booking.trackingEvents.map((e) => [e.step, formatDateTime(e.createdAt, locale)]));
 
   return (
-    <Container className="py-10">
-      <Link href={`/${locale}/account`} className="text-sm font-medium text-ink underline">
-        ← {t("account.title")}
+    <Container className="py-6 sm:py-10">
+      <Link href={`/${locale}/account`} className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-ink-soft hover:text-ink">
+        <ArrowLeft className="h-4 w-4 rtl:-scale-x-100" aria-hidden />
+        {t("account.title")}
       </Link>
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-          {localized(booking.operation, "name", locale)}
-        </h1>
-        <StatusBadge status={booking.status} t={t} />
-      </div>
-      <p className="mt-1 text-muted">
-        {t("booking.reference")} <span className="font-mono font-semibold text-ink">{booking.reference}</span>
-      </p>
+      <header className="mt-2 flex flex-wrap items-center gap-4">
+        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-trip-soft text-trip">
+          <Scissors className="h-7 w-7" aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-xl font-bold tracking-tight text-ink sm:text-2xl">{localized(booking.operation, "name", locale)}</h1>
+            <StatusBadge status={booking.status} t={t} />
+          </div>
+          <p className="mt-0.5 flex flex-wrap gap-x-3 text-sm text-muted">
+            <span>{doctorName}</span>
+            <span className="font-medium text-ink">{formatDateTime(booking.slot.startsAt, locale)}</span>
+            <span className="font-mono text-xs">{booking.reference}</span>
+          </p>
+        </div>
+      </header>
 
       {step >= 0 && (
-        <div className="mt-8 max-w-3xl">
+        <div className="mt-6 max-w-3xl">
           <JourneyStepper index={step} t={t} />
         </div>
       )}
 
       <Wrap config={optionsConfig}>
-      <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_380px]">
+      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_360px]">
         <div className="min-w-0 space-y-8">
           {requested && booking.status === "REQUESTED" && <Notice tone="success">{t("booking.requestSent")}</Notice>}
           {payment === "success" && booking.status === "CONFIRMED" && (
@@ -190,7 +199,7 @@ export default async function BookingPage({
                   <fieldset className="space-y-3">
                     <legend className="mb-3 text-sm font-medium text-ink">{t("pay.method")}</legend>
                     {providers.map((p, i) => (
-                      <label key={p.id} className="flex cursor-pointer items-start gap-4 rounded-2xl border-2 border-line p-5 has-[:checked]:border-ink">
+                      <label key={p.id} className="flex cursor-pointer items-start gap-3 rounded-2xl border-2 border-line p-4 transition has-[:checked]:border-brand has-[:checked]:bg-brand-soft/40">
                         <input type="radio" name="provider" value={p.id} defaultChecked={i === 0} className="mt-1 h-4 w-4 accent-brand" />
                         <span>
                           <span className="block font-semibold text-ink">{t(`pay.providers.${p.id}.title`)}</span>
@@ -210,14 +219,14 @@ export default async function BookingPage({
 
           {(booking.status === "PAID" || booking.status === "IN_PROGRESS" || booking.status === "COMPLETED") && (
             <section className="space-y-6">
-              <div className="rounded-2xl border border-line p-6">
-                <h2 className="text-xl font-semibold text-ink">{t("booking.paidTitle")}</h2>
+              <div className="rounded-3xl border border-line bg-white p-6 shadow-card">
+                <h2 className="text-lg font-semibold text-ink">{t("booking.paidTitle")}</h2>
                 <p className="mt-2 text-muted">{t("booking.paidText")}</p>
                 <LinkButton href={`/${locale}/account/bookings/${booking.id}/ticket`} size="lg" className="mt-6">
                   {t("booking.viewTicket")}
                 </LinkButton>
               </div>
-              <div className="rounded-2xl border border-line p-6">
+              <div className="rounded-3xl border border-line bg-white p-6 shadow-card">
                 <h2 className="mb-6 text-lg font-semibold text-ink">{t("booking.trackingTitle")}</h2>
                 <TrackingTimeline
                   current={booking.trackingStep}
@@ -230,14 +239,18 @@ export default async function BookingPage({
           )}
 
           {(booking.status === "REQUESTED" || booking.status === "CONFIRMED") && (
-            <form action={cancelBookingAction.bind(null, locale, booking.id)} className="border-t border-line pt-6">
-              <ConfirmSubmit message={t("booking.cancelConfirm")}>{t("booking.cancel")}</ConfirmSubmit>
-            </form>
+            <Disclosure summary={t("consult.moreOptions")}>
+              <form action={cancelBookingAction.bind(null, locale, booking.id)}>
+                <ConfirmSubmit message={t("booking.cancelConfirm")} variant="danger" testId="booking-cancel">
+                  {t("booking.cancel")}
+                </ConfirmSubmit>
+              </form>
+            </Disclosure>
           )}
         </div>
 
         <aside>
-          <div className="sticky top-28 space-y-5 rounded-2xl border border-line p-6 shadow-float">
+          <div className="space-y-5 rounded-3xl border border-line bg-white p-5 shadow-card lg:sticky lg:top-24">
             <div className="flex items-center gap-4">
               <Avatar name={`${booking.doctor.user.firstName} ${booking.doctor.user.lastName}`} src={booking.doctor.photoUrl} size={52} />
               <div>
@@ -304,8 +317,8 @@ function Row({ label, value }: { label: string; value: string }) {
 
 function StatusBlock({ title, text, action }: { title: string; text: string; action?: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-line p-6">
-      <h2 className="text-xl font-semibold text-ink">{title}</h2>
+    <div className="rounded-3xl border border-line bg-white p-6 shadow-card">
+      <h2 className="text-lg font-semibold text-ink">{title}</h2>
       <p className="mt-2 text-muted">{text}</p>
       {action && <div className="mt-6">{action}</div>}
     </div>

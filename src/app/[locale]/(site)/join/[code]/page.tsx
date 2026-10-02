@@ -52,7 +52,7 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
               <p className="mt-1 text-muted">{t("referral.joinSubtitle")}</p>
               <ActionForm action={joinAsDoctorAction.bind(null, locale, code)} className="mt-8 space-y-5">
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label={t("fields.firstName")}>
+                  <Field label={t("fields.firstName")} hint={t("fields.latinHint")}>
                     <Input name="firstName" autoComplete="given-name" required />
                   </Field>
                   <Field label={t("fields.lastName")}>

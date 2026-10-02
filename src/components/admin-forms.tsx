@@ -36,7 +36,7 @@ export function DoctorForm({
   return (
     <ActionForm action={action} className="space-y-8">
       <section className="grid gap-4 sm:grid-cols-2">
-        <Field label={t("fields.firstName")}>
+        <Field label={t("fields.firstName")} hint={t("fields.latinHint")}>
           <Input name="firstName" defaultValue={doctor?.user.firstName} required />
         </Field>
         <Field label={t("fields.lastName")}>

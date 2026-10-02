@@ -58,7 +58,7 @@ export default async function AdminTeamPage({ params }: { params: Promise<{ loca
       <Card>
         <h2 className="text-lg font-semibold text-ink">{t("admin.inviteMember")}</h2>
         <ActionForm action={inviteTeamMemberAction.bind(null, locale)} className="mt-5 grid gap-4 sm:grid-cols-2" resetOnSuccess>
-          <Field label={t("fields.firstName")}>
+          <Field label={t("fields.firstName")} hint={t("fields.latinHint")}>
             <Input name="firstName" required />
           </Field>
           <Field label={t("fields.lastName")}>

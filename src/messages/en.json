@@ -16,7 +16,8 @@
     "search": "Search",
     "confirmTitle": "Please confirm",
     "confirm": "Confirm",
-    "undo": "Undo"
+    "undo": "Undo",
+    "back": "Back"
   },
   "nav": {
     "doctors": "Doctors",
@@ -545,7 +546,8 @@
     "upcoming": "Upcoming",
     "past": "Completed",
     "noConsultations": "No consultations yet.",
-    "slotKind": "Slot type"
+    "slotKind": "Slot type",
+    "accepted": "Consultation {reference} accepted: the payment is collected and the patient notified."
   },
   "payouts": {
     "earned": "Total owed",
