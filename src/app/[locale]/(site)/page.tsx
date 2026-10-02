@@ -47,7 +47,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <h1 className="mt-4 text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-5xl">{t("home.heroTitle")}</h1>
             <p className="mx-auto mt-4 hidden max-w-xl text-lg text-muted sm:block">{t("home.heroSubtitle")}</p>
 
-            <form action={`/${locale}/doctors`} role="search" className="mx-auto mt-6 flex max-w-xl items-center gap-2 rounded-full border border-line-strong bg-white p-1.5 ps-5 shadow-float sm:mt-8">
+            <form action={`/${locale}/doctors`} role="search" className="mx-auto mt-6 flex max-w-xl items-center gap-2 rounded-full border border-line-strong bg-white p-1.5 ps-4 shadow-float sm:mt-8 sm:ps-5">
               <Search className="h-5 w-5 shrink-0 text-muted" aria-hidden />
               <input
                 name="q"
@@ -56,8 +56,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 className="min-w-0 flex-1 bg-transparent py-2 text-base text-ink placeholder:text-muted focus:outline-none md:text-sm"
                 data-testid="home-search"
               />
-              <button type="submit" className="min-h-11 rounded-full bg-brand px-5 text-sm font-semibold text-white transition hover:bg-brand-dark">
-                {t("home.searchButton")}
+              {/* Phones: a round arrow button, so the field keeps the width for typing. */}
+              <button
+                type="submit"
+                aria-label={t("home.searchButton")}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-semibold text-white transition hover:bg-brand-dark sm:w-auto sm:px-5"
+              >
+                <ArrowRight className="h-5 w-5 rtl:-scale-x-100 sm:hidden" aria-hidden />
+                <span className="hidden sm:inline">{t("home.searchButton")}</span>
               </button>
             </form>
           </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { ArrowRight, Search } from "lucide-react";
 import { normalizeSearch } from "@/lib/search-text";
 import { specialtyTint } from "@/lib/specialty-tint";
 import { specialtiesForSymptom } from "@/lib/symptoms";
@@ -24,7 +24,7 @@ export function SpecialtyBrowser({ specialties, initialQuery = "" }: { specialti
 
   return (
     <div>
-      <form action={`/${locale}/doctors`} className="mx-auto flex max-w-2xl items-center gap-2 rounded-full border border-line-strong bg-white p-1.5 ps-5 shadow-float" role="search">
+      <form action={`/${locale}/doctors`} className="mx-auto flex max-w-2xl items-center gap-2 rounded-full border border-line-strong bg-white p-1.5 ps-4 shadow-float sm:ps-5" role="search">
         <Search className="h-5 w-5 shrink-0 text-muted" aria-hidden />
         <input
           type="search"
@@ -33,11 +33,17 @@ export function SpecialtyBrowser({ specialties, initialQuery = "" }: { specialti
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t("specialties.searchPlaceholder")}
           aria-label={t("specialties.searchPlaceholder")}
-          className="min-w-0 flex-1 bg-transparent py-2 text-sm text-ink placeholder:text-muted focus:outline-none"
+          className="min-w-0 flex-1 bg-transparent py-2 text-base text-ink placeholder:text-muted focus:outline-none sm:text-sm"
           data-testid="specialty-search"
         />
-        <button type="submit" className="min-h-11 rounded-full bg-brand px-5 text-sm font-semibold text-white hover:bg-brand-dark">
-          {t("specialties.searchDoctors")}
+        {/* Phones: a round arrow button, so the field keeps the width for typing. */}
+        <button
+          type="submit"
+          aria-label={t("specialties.searchDoctors")}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-semibold text-white hover:bg-brand-dark sm:w-auto sm:px-5"
+        >
+          <ArrowRight className="h-5 w-5 rtl:-scale-x-100 sm:hidden" aria-hidden />
+          <span className="hidden sm:inline">{t("specialties.searchDoctors")}</span>
         </button>
       </form>
 

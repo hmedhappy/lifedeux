@@ -306,7 +306,11 @@ export function Chat({
                     </span>
                   </a>
                 )}
-                {m.text && <p className="whitespace-pre-wrap break-words">{m.text}</p>}
+                {m.text && (
+                  <p className="whitespace-pre-wrap break-words" dir="auto">
+                    {m.text}
+                  </p>
+                )}
                 <p className={clsx("mt-0.5 flex items-center justify-end gap-1 text-[10px]", m.mine ? "text-white/75" : "text-muted")}>
                   {time(m.createdAt)}
                   {m.mine &&
@@ -356,7 +360,7 @@ export function Chat({
           e.preventDefault();
           send(text);
         }}
-        className="flex items-end gap-2 border-t border-line p-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))]"
+        className="flex items-end gap-1 border-t border-line p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:gap-2 sm:p-2.5"
       >
         <input
           ref={fileRef}
@@ -371,7 +375,7 @@ export function Chat({
           onClick={() => fileRef.current?.click()}
           disabled={!open || sending}
           aria-label={t("chat.attach")}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink hover:bg-surface disabled:opacity-40"
+          className="flex h-11 w-10 shrink-0 sm:w-11 items-center justify-center rounded-full text-ink hover:bg-surface disabled:opacity-40"
         >
           <ImagePlus className="h-5 w-5" aria-hidden />
         </button>
@@ -383,7 +387,7 @@ export function Chat({
             title={t("workspace.prescription")}
             aria-pressed={panels.rxOpen}
             className={clsx(
-              "flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition hover:bg-surface",
+              "flex h-11 w-10 shrink-0 items-center justify-center rounded-full transition hover:bg-surface sm:w-11",
               panels.rxOpen ? "text-brand lg:bg-brand-soft" : "text-ink",
             )}
             data-testid="chat-rx-toggle"
@@ -401,10 +405,11 @@ export function Chat({
             }
           }}
           rows={1}
+          dir="auto"
           disabled={!open}
           placeholder={open ? t("chat.placeholder") : t("chat.closedPlaceholder")}
           aria-label={t("chat.placeholder")}
-          className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-line bg-white px-4 py-2.5 text-base focus:border-brand focus:outline-none disabled:bg-surface sm:text-sm"
+          className="max-h-32 min-h-11 min-w-0 flex-1 resize-none rounded-2xl border border-line bg-white px-3 py-2.5 text-base placeholder:truncate focus:border-brand focus:outline-none disabled:bg-surface sm:px-4 sm:text-sm"
           data-testid="chat-input"
         />
         <button

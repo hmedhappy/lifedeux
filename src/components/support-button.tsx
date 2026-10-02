@@ -17,7 +17,7 @@ export function SupportButton({ phone }: { phone: string }) {
         rel="noopener"
         aria-label={t("support.label")}
         title={t("support.label")}
-        className="no-print fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] end-4 z-30 flex h-12 w-12 items-center justify-center rounded-full border border-line bg-white text-[#128C7E] shadow-float transition hover:scale-105 md:bottom-6"
+        className="support-fab no-print fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] end-4 z-30 flex h-12 w-12 items-center justify-center rounded-full border border-line bg-white text-[#128C7E] shadow-float transition hover:scale-105 md:bottom-6"
         data-testid="support-whatsapp"
       >
         <MessageCircleQuestion className="h-6 w-6" aria-hidden />

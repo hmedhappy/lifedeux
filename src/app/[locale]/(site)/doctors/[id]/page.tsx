@@ -240,7 +240,8 @@ export default async function DoctorPage({
         </aside>
       </div>
 
-      {service && (
+      {/* Doctors, admins and agents cannot book: no "choose a slot" bar for them. */}
+      {service && (!user || user.role === "PATIENT") && (
         <BookingBar
           price={price}
           nextSlot={slots[0] ? slots[0].full : null}

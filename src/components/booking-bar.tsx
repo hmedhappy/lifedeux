@@ -27,7 +27,7 @@ export function BookingBar({
   return (
     <>
       <div className="h-24 lg:hidden" aria-hidden />
-      <div className="no-print fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] z-30 border-t border-line bg-white/95 px-4 py-3 shadow-sheet backdrop-blur md:bottom-0 lg:hidden">
+      <div className="booking-bar no-print fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] z-30 border-t border-line bg-white/95 px-4 py-3 shadow-sheet backdrop-blur md:bottom-0 lg:hidden">
         <div className="mx-auto flex max-w-3xl items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-lg font-bold leading-tight text-ink">{price}</p>

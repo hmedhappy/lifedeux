@@ -21,7 +21,8 @@ export default async function MessagesPage({ params }: { params: Promise<{ local
     include: {
       doctor: { include: { user: true, specialty_: true } },
       slot: true,
-      messages: { orderBy: { createdAt: "desc" }, take: 1 },
+      // Automatic lines ("joined", "ended") are codes, not something to preview.
+      messages: { where: { kind: { not: "SYSTEM" } }, orderBy: { createdAt: "desc" }, take: 1 },
       _count: { select: { messages: { where: { senderId: { not: user.id }, readAt: null } } } },
     },
     orderBy: { slot: { startsAt: "desc" } },
@@ -42,13 +43,10 @@ export default async function MessagesPage({ params }: { params: Promise<{ local
               <Link href={`/${locale}/account/consultations/${c.id}`} className="flex items-center gap-3 px-4 py-3.5 transition hover:bg-surface" data-testid="conversation">
                 <Avatar name={`${c.doctor.user.firstName} ${c.doctor.user.lastName}`} src={c.doctor.photoUrl} size={48} />
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="truncate font-semibold text-ink">
-                      Dr {c.doctor.user.firstName} {c.doctor.user.lastName}
-                    </p>
-                    <span className="shrink-0 text-xs text-muted">{formatDateTime(last?.createdAt ?? c.slot.startsAt, locale)}</span>
-                  </div>
-                  <p className="truncate text-sm text-muted">
+                  <p className="truncate font-semibold text-ink">
+                    Dr {c.doctor.user.firstName} {c.doctor.user.lastName}
+                  </p>
+                  <p className="truncate text-sm text-muted" dir="auto">
                     {last
                       ? last.kind === "IMAGE"
                         ? t("chat.image")
@@ -60,14 +58,17 @@ export default async function MessagesPage({ params }: { params: Promise<{ local
                         : c.doctor.specialty}
                   </p>
                 </div>
-                {state === "open" ? (
-                  <Badge tone="green">
-                    <LiveDot />
-                    {t("chat.live")}
-                  </Badge>
-                ) : c._count.messages > 0 ? (
-                  <span className="min-w-6 rounded-full bg-coral px-2 py-0.5 text-center text-xs font-bold text-white">{c._count.messages}</span>
-                ) : null}
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  <span className="text-xs text-muted">{formatDateTime(last?.createdAt ?? c.slot.startsAt, locale)}</span>
+                  {state === "open" ? (
+                    <Badge tone="green">
+                      <LiveDot />
+                      {t("chat.live")}
+                    </Badge>
+                  ) : c._count.messages > 0 ? (
+                    <span className="min-w-6 rounded-full bg-coral px-2 py-0.5 text-center text-xs font-bold text-white">{c._count.messages}</span>
+                  ) : null}
+                </div>
               </Link>
             </li>
           ))}

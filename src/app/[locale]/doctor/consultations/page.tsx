@@ -30,22 +30,27 @@ export default async function DoctorConsultationsPage({ params }: { params: Prom
           <li key={c.id}>
             <Link
               href={`/${locale}/doctor/consultations/${c.id}`}
-              className="flex flex-wrap items-center gap-4 px-5 py-4 transition hover:bg-surface"
+              className="flex items-start gap-3 px-4 py-4 transition hover:bg-surface sm:items-center sm:gap-4 sm:px-5"
               data-testid="doctor-consultation"
             >
               <Avatar name={`${c.patient.firstName} ${c.patient.lastName}`} size={40} />
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-ink">
-                  {c.patient.firstName} {c.patient.lastName}
-                </p>
-                <p className="text-sm text-muted">
-                  {formatDateTime(c.slot.startsAt, locale)} · {c.reference}
-                </p>
+              {/* Phones: price and badges go under the name, so the date keeps its line. */}
+              <div className="min-w-0 flex-1 sm:flex sm:items-center sm:gap-4">
+                <div className="min-w-0 sm:flex-1">
+                  <p className="truncate font-medium text-ink">
+                    {c.patient.firstName} {c.patient.lastName}
+                  </p>
+                  <p className="text-sm text-muted">
+                    {formatDateTime(c.slot.startsAt, locale)} · {c.reference}
+                  </p>
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-2 sm:mt-0 sm:shrink-0 sm:gap-3">
+                  <span className="text-sm text-muted">{formatMoney(c.doctorFee, c.currency, locale)}</span>
+                  {c.rescheduleSlotId && <Badge tone="amber">{t("doctorArea.moveAsked")}</Badge>}
+                  {c._count.prescriptions > 0 && <Badge tone="blue">{t("rx.count", { n: c._count.prescriptions })}</Badge>}
+                  {state === "open" ? <Badge tone="green">{t("chat.live")}</Badge> : <StatusBadge status={c.status} t={t} />}
+                </div>
               </div>
-              <span className="text-sm text-muted">{formatMoney(c.doctorFee, c.currency, locale)}</span>
-              {c.rescheduleSlotId && <Badge tone="amber">{t("doctorArea.moveAsked")}</Badge>}
-              {c._count.prescriptions > 0 && <Badge tone="blue">{t("rx.count", { n: c._count.prescriptions })}</Badge>}
-              {state === "open" ? <Badge tone="green">{t("chat.live")}</Badge> : <StatusBadge status={c.status} t={t} />}
             </Link>
           </li>
         );
