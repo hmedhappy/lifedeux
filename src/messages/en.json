@@ -561,7 +561,10 @@
     "none": "No payout recorded",
     "date": "Date",
     "amount": "Amount",
-    "note": "Note"
+    "note": "Note",
+    "byMonth": "Earnings by month",
+    "noActs": "No completed acts in the last 6 months.",
+    "received": "Payments received"
   },
   "admin": {
     "title": "Administration",
@@ -837,7 +840,9 @@
     "ratingRequired": "Choose a rating from 1 to 5 stars.",
     "rescheduleTooLate": "The time can no longer be changed less than 24 h before.",
     "rxNotLatin": "Prescriptions are printed in Latin letters: write medicines and posology without Arabic characters.",
-    "tooManyFavorites": "30 saved prescriptions at most. Delete one first."
+    "tooManyFavorites": "30 saved prescriptions at most. Delete one first.",
+    "scheduleInvalid": "Invalid hours. Write for example 09:00-12:00, 14:00-17:00.",
+    "vacationBooked": "Not possible: {n} {n:slot is|slots are} already booked on these dates. Move or finish those appointments first."
   },
   "email": {
     "invite": {
@@ -1111,7 +1116,9 @@
     "stampHint": "PNG or JPEG. Required to write prescriptions.",
     "consent": "I certify that I am registered with the medical council and I accept the terms of use.",
     "joinButton": "Create my doctor account",
-    "welcome": "Welcome to LifeDeux! Add your first slots to start receiving patients."
+    "welcome": "Welcome to LifeDeux! Add your first slots to start receiving patients.",
+    "stepAccount": "Your account",
+    "stepPractice": "Your practice"
   },
   "rxTemplates": {
     "title": "Prescription template",
@@ -1212,5 +1219,85 @@
     "rescheduleAsked": "The patient asks to move the consultation to {date}.",
     "rescheduleAccept": "Accept",
     "rescheduleRefuse": "Decline"
+  },
+  "doctorProfile": {
+    "title": "My profile",
+    "subtitle": "What patients see on your page.",
+    "seePublic": "See my page",
+    "photo": "Photo",
+    "photoHint": "Optional. A clear, front-facing photo builds trust.",
+    "languagesHint": "Separated by commas.",
+    "consultation": "Online consultation",
+    "offers": "Offer online consultation",
+    "offersHint": "Patients book your consultation slots.",
+    "instant": "Instant booking",
+    "instantHint": "Requests are accepted automatically, without going through your inbox.",
+    "price": "Consultation price ({currency})",
+    "priceHint": "A new price applies after validation by the LifeDeux team.",
+    "pricePending": "New price requested: {price}, waiting for validation.",
+    "save": "Save",
+    "saved": "Profile saved.",
+    "savedPricePending": "Profile saved. The new price applies after validation."
+  },
+  "inbox": {
+    "accept": "Accept",
+    "accepted": "{name}'s request accepted",
+    "undo": "Undo",
+    "refused": "{name}'s request declined",
+    "held": "Slot secured by card",
+    "heldText": "The patient secured this slot: accepting charges the consultation immediately.",
+    "photos": "{n} {n:photo|photos} attached",
+    "contactsLater": "The patient's contact details show after payment.",
+    "refuseTitle": "Why decline?",
+    "refuseNote": "A word for the patient (optional)",
+    "reasons": {
+      "unavailable": "I am not available",
+      "inPerson": "An in-person examination is needed",
+      "otherSpecialty": "Belongs to another specialty",
+      "notSuitable": "Not suitable for an online consultation"
+    },
+    "swipeHint": "Tip: swipe right to accept, left to decline."
+  },
+  "schedule": {
+    "title": "Weekly schedule",
+    "text": "Set your online consultation hours: slots are published automatically for the next {weeks} weeks.",
+    "closed": "Closed",
+    "minutes": "Consultation length (min)",
+    "buffer": "Break between consultations (min)",
+    "bufferHint": "From 0 to {max} minutes.",
+    "save": "Save and publish",
+    "saved": "Weekly schedule saved: {n} {n:slot|slots} published.",
+    "exceptionsTitle": "Time off",
+    "exceptionsText": "Free slots on those days disappear. Time off that touches a booked appointment is refused.",
+    "reason": "Reason (optional)",
+    "reasonPlaceholder": "Holiday, conference…",
+    "addException": "Add",
+    "exceptionSaved": "Time off saved.",
+    "exceptionDelete": "Delete this time off? The weekly schedule slots will come back.",
+    "manual": "One-off slots (procedures, special dates)",
+    "manualText": "For procedures or a date outside your weekly schedule."
+  },
+  "steps": {
+    "next": "Continue",
+    "progress": "Steps"
+  },
+  "today": {
+    "hello": "Hello Dr {name}",
+    "subtitle": "{n} {n:request is|requests are} waiting for your answer.",
+    "inbox": "Requests",
+    "moves": "{n} time change {n:request|requests} to answer",
+    "monthEarnings": "Earnings this month",
+    "monthActs": "{n} {n:act|acts}",
+    "onboardingTitle": "Get started on LifeDeux",
+    "steps": {
+      "photo": "Complete my bio and photo",
+      "stamp": "Send my stamp",
+      "schedule": "Set my weekly schedule",
+      "price": "Set my price"
+    },
+    "next": "Next consultation",
+    "liveNow": "Consultation in progress",
+    "join": "Join",
+    "open": "Open"
   }
 }

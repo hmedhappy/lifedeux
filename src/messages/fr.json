@@ -561,7 +561,10 @@
     "none": "Aucun versement enregistré",
     "date": "Date",
     "amount": "Montant",
-    "note": "Note"
+    "note": "Note",
+    "byMonth": "Gains par mois",
+    "noActs": "Aucun acte réalisé ces 6 derniers mois.",
+    "received": "Versements reçus"
   },
   "admin": {
     "title": "Administration",
@@ -837,7 +840,9 @@
     "ratingRequired": "Choisissez une note de 1 à 5 étoiles.",
     "rescheduleTooLate": "Le changement d'horaire n'est plus possible à moins de 24 h.",
     "rxNotLatin": "L'ordonnance s'imprime en lettres latines : écrivez les médicaments et la posologie sans caractères arabes.",
-    "tooManyFavorites": "30 ordonnances types maximum. Supprimez-en une d'abord."
+    "tooManyFavorites": "30 ordonnances types maximum. Supprimez-en une d'abord.",
+    "scheduleInvalid": "Horaires invalides. Écrivez par exemple 09:00-12:00, 14:00-17:00.",
+    "vacationBooked": "Impossible : {n} {n:créneau est déjà réservé|créneaux sont déjà réservés} sur ces dates. Déplacez ou terminez ces rendez-vous d'abord."
   },
   "email": {
     "invite": {
@@ -1111,7 +1116,9 @@
     "stampHint": "PNG ou JPEG. Nécessaire pour rédiger des ordonnances.",
     "consent": "Je certifie être inscrit(e) à l'Ordre des médecins et j'accepte les conditions d'utilisation.",
     "joinButton": "Créer mon compte médecin",
-    "welcome": "Bienvenue sur LifeDeux ! Ajoutez vos premiers créneaux pour recevoir des patients."
+    "welcome": "Bienvenue sur LifeDeux ! Ajoutez vos premiers créneaux pour recevoir des patients.",
+    "stepAccount": "Votre compte",
+    "stepPractice": "Votre activité"
   },
   "rxTemplates": {
     "title": "Modèle d'ordonnance",
@@ -1212,5 +1219,85 @@
     "rescheduleAsked": "Le patient demande à déplacer la consultation au {date}.",
     "rescheduleAccept": "Accepter",
     "rescheduleRefuse": "Refuser"
+  },
+  "doctorProfile": {
+    "title": "Mon profil",
+    "subtitle": "Ce que les patients voient sur votre fiche.",
+    "seePublic": "Voir ma fiche",
+    "photo": "Photo",
+    "photoHint": "Facultative. Une photo nette, de face, inspire confiance.",
+    "languagesHint": "Séparées par des virgules.",
+    "consultation": "Consultation en ligne",
+    "offers": "Proposer la consultation en ligne",
+    "offersHint": "Les patients réservent sur vos créneaux de consultation.",
+    "instant": "Réservation immédiate",
+    "instantHint": "Les demandes sont acceptées automatiquement, sans passer par votre boîte de réception.",
+    "price": "Tarif de la consultation ({currency})",
+    "priceHint": "Un nouveau tarif s'applique après validation par l'équipe LifeDeux.",
+    "pricePending": "Nouveau tarif demandé : {price}, en attente de validation.",
+    "save": "Enregistrer",
+    "saved": "Profil enregistré.",
+    "savedPricePending": "Profil enregistré. Le nouveau tarif sera appliqué après validation."
+  },
+  "inbox": {
+    "accept": "Accepter",
+    "accepted": "Demande de {name} acceptée",
+    "undo": "Annuler",
+    "refused": "Demande de {name} refusée",
+    "held": "Créneau garanti par carte",
+    "heldText": "Le patient a garanti ce créneau : en acceptant, la consultation est payée immédiatement.",
+    "photos": "{n} {n:photo jointe|photos jointes}",
+    "contactsLater": "Les coordonnées du patient s'affichent après le paiement.",
+    "refuseTitle": "Pourquoi refuser ?",
+    "refuseNote": "Un mot pour le patient (facultatif)",
+    "reasons": {
+      "unavailable": "Je ne suis pas disponible",
+      "inPerson": "Un examen en cabinet est nécessaire",
+      "otherSpecialty": "Relève d'une autre spécialité",
+      "notSuitable": "Ne convient pas à une téléconsultation"
+    },
+    "swipeHint": "Astuce : glissez à droite pour accepter, à gauche pour refuser."
+  },
+  "schedule": {
+    "title": "Semaine type",
+    "text": "Indiquez vos plages de consultation en ligne : les créneaux sont publiés automatiquement pour les {weeks} prochaines semaines.",
+    "closed": "Fermé",
+    "minutes": "Durée d'une consultation (min)",
+    "buffer": "Pause entre deux consultations (min)",
+    "bufferHint": "De 0 à {max} minutes.",
+    "save": "Enregistrer et publier",
+    "saved": "Semaine type enregistrée : {n} {n:créneau publié|créneaux publiés}.",
+    "exceptionsTitle": "Absences et congés",
+    "exceptionsText": "Les créneaux libres de ces jours disparaissent. Une absence qui touche un rendez-vous réservé est refusée.",
+    "reason": "Motif (facultatif)",
+    "reasonPlaceholder": "Congés, congrès…",
+    "addException": "Ajouter",
+    "exceptionSaved": "Absence enregistrée.",
+    "exceptionDelete": "Supprimer cette absence ? Les créneaux de la semaine type reviendront.",
+    "manual": "Créneaux ponctuels (interventions, dates à part)",
+    "manualText": "Pour les interventions ou une date hors de votre semaine type."
+  },
+  "steps": {
+    "next": "Continuer",
+    "progress": "Étapes"
+  },
+  "today": {
+    "hello": "Bonjour Dr {name}",
+    "subtitle": "{n} {n:demande attend|demandes attendent} votre réponse.",
+    "inbox": "Demandes",
+    "moves": "{n} {n:demande de changement d'horaire|demandes de changement d'horaire} à traiter",
+    "monthEarnings": "Gains du mois",
+    "monthActs": "{n} {n:acte|actes}",
+    "onboardingTitle": "Bien démarrer sur LifeDeux",
+    "steps": {
+      "photo": "Compléter ma présentation et ma photo",
+      "stamp": "Envoyer mon cachet",
+      "schedule": "Définir ma semaine type",
+      "price": "Fixer mon tarif"
+    },
+    "next": "Prochaine consultation",
+    "liveNow": "Consultation en cours",
+    "join": "Rejoindre",
+    "open": "Ouvrir"
   }
 }

@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { expireOverdueBookings } from "@/lib/bookings";
+import { syncAllSchedules } from "@/lib/schedule";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,9 +14,11 @@ function authorized(request: Request): boolean {
   return expected.length === given.length && timingSafeEqual(expected, given);
 }
 
-/** Called by a scheduler (e.g. Vercel Cron) to release unpaid slots. */
+/** Called by a scheduler (cron) to release unpaid slots and roll weekly schedules forward. */
 export async function GET(request: Request) {
   if (!authorized(request)) return new Response("Unauthorized", { status: 401 });
   const expired = await expireOverdueBookings();
-  return Response.json({ expired });
+  // Keeps 4 weeks of slots published for doctors who use a weekly schedule.
+  const slots = await syncAllSchedules();
+  return Response.json({ expired, slots });
 }

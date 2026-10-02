@@ -49,6 +49,10 @@ const DYNAMIC_KEYS = [
   ...["joined", "noShow", "ended", "orientSurgery", "orientClinic", "orientSurgeryMine", "orientClinicMine"].map((s) => `chat.system.${s}`),
   ...[1, 2, 3, 4, 5].map((n) => `chat.quick.${n}`),
   ...["stampMissingBanner", "stampPendingBanner"].map((s) => `doctorArea.${s}`),
+  ...["unavailable", "inPerson", "otherSpecialty", "notSuitable"].map((s) => `inbox.reasons.${s}`),
+  ...["photo", "stamp", "schedule", "price"].map((s) => `today.steps.${s}`),
+  ...["next", "liveNow", "join", "open"].map((s) => `today.${s}`),
+  ...["saved", "savedPricePending"].map((s) => `doctorProfile.${s}`),
   "payment.mockHold",
   "payment.mockPay",
 ];

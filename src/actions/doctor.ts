@@ -6,12 +6,10 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { fail, ok, type ActionState } from "@/lib/action-state";
-import { PAYMENT_CUTOFF_HOURS } from "@/lib/constants";
-import { formatDateTime, fromTunisLocal } from "@/lib/format";
+import { fromTunisLocal } from "@/lib/format";
 import { toLocale } from "@/lib/i18n";
-import { sendTemplate } from "@/lib/mail";
-import { getSettings } from "@/lib/settings";
 import { advanceTracking } from "@/lib/tracking-server";
+import { acceptBooking, refuseBooking } from "@/lib/booking-flow";
 import { isDoctorRole } from "@/lib/roles";
 import { IMAGE_PATH_PREFIX, saveUploadedImages } from "@/lib/images";
 
@@ -34,34 +32,11 @@ export async function confirmBookingAction(
   const nights = z.coerce.number().int().min(1).max(60).safeParse(formData.get("recoveryNights"));
   if (!nights.success) return fail("errors.recoveryNights");
 
-  const booking = await db.booking.findFirst({
-    where: { id: bookingId, doctorId: me.doctor.id, status: "REQUESTED" },
-    include: { slot: true, patient: true },
-  });
+  const booking = await db.booking.findFirst({ where: { id: bookingId, doctorId: me.doctor.id }, select: { reference: true } });
   if (!booking) return fail("errors.invalid");
-
-  const settings = await getSettings();
-  const now = Date.now();
-  const cutoff = booking.slot.startsAt.getTime() - PAYMENT_CUTOFF_HOURS * 60 * 60 * 1000;
-  const deadline = new Date(Math.min(now + settings.paymentDeadlineHours * 60 * 60 * 1000, cutoff));
-  if (deadline.getTime() <= now) return fail("errors.tooLate");
-
-  const updated = await db.booking.updateMany({
-    where: { id: booking.id, status: "REQUESTED" },
-    data: { status: "CONFIRMED", confirmedAt: new Date(), paymentDeadline: deadline, recoveryNights: nights.data },
-  });
-  if (updated.count === 0) return fail("errors.invalid");
-
-  await sendTemplate(
-    booking.patient,
-    "confirmed",
-    {
-      reference: booking.reference,
-      date: formatDateTime(booking.slot.startsAt, toLocale(booking.patient.locale)),
-      deadline: formatDateTime(deadline, toLocale(booking.patient.locale)),
-    },
-    `/account/bookings/${booking.id}`,
-  );
+  const outcome = await acceptBooking(bookingId, me.doctor.id, nights.data);
+  if (outcome === "tooLate") return fail("errors.tooLate");
+  if (outcome === "invalid") return fail("errors.invalid");
   revalidatePath(`/${locale}/doctor`);
   redirect(`/${locale}/doctor?done=confirmed&ref=${booking.reference}`);
 }
@@ -78,18 +53,8 @@ export async function refuseBookingAction(
   const reason = String(formData.get("reason") ?? "").trim().slice(0, 500);
   if (!reason) return fail("errors.reasonRequired");
 
-  const booking = await db.booking.findFirst({
-    where: { id: bookingId, doctorId: me.doctor.id, status: { in: ["REQUESTED", "CONFIRMED"] }, paidAt: null },
-    include: { patient: true },
-  });
-  if (!booking) return fail("errors.invalid");
-
-  await db.$transaction([
-    db.booking.update({ where: { id: booking.id }, data: { status: "REFUSED", refusalReason: reason } }),
-    db.slot.updateMany({ where: { id: booking.slotId, status: "HELD" }, data: { status: "FREE" } }),
-    db.payment.updateMany({ where: { bookingId: booking.id, status: "PENDING" }, data: { status: "FAILED" } }),
-  ]);
-  await sendTemplate(booking.patient, "refused", { reference: booking.reference, reason }, `/account/bookings/${booking.id}`);
+  const booking = await db.booking.findFirst({ where: { id: bookingId, doctorId: me.doctor.id }, select: { reference: true } });
+  if (!booking || !(await refuseBooking(bookingId, me.doctor.id, reason))) return fail("errors.invalid");
   revalidatePath(`/${locale}/doctor`);
   redirect(`/${locale}/doctor?done=refused&ref=${booking.reference}`);
 }

@@ -219,7 +219,7 @@ export async function joinAsDoctorAction(
           clinicAddress: d.clinicAddress,
           city: d.city,
           referredById: referrer.id,
-          stampImageId: imageId(stamp.paths),
+          pendingStampImageId: imageId(stamp.paths),
           signatureImageId: imageId(signature.paths),
         },
       },

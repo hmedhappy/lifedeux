@@ -1,6 +1,8 @@
-import { Scissors, Video } from "lucide-react";
-import { ActionForm, SubmitButton } from "@/components/forms";
-import { Badge, Card, EmptyState, Field, Input, Notice, PageTitle } from "@/components/ui";
+import { CalendarOff, Scissors, Video } from "lucide-react";
+import { ActionForm, ConfirmSubmit, SubmitButton } from "@/components/forms";
+import { Badge, Disclosure, EmptyState, Field, Input, Notice, PageTitle } from "@/components/ui";
+import { addExceptionAction, deleteExceptionAction, saveScheduleAction } from "@/actions/doctor-settings";
+import { HORIZON_WEEKS, MAX_BUFFER_MINUTES, parseSchedule } from "@/lib/schedule-rules";
 import { addSlotsAction, deleteSlotAction } from "@/actions/doctor";
 import { requireDoctor } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -20,6 +22,11 @@ export default async function DoctorSlotsPage({
   const { doctor } = await requireDoctor(locale);
   // Surgeons publish procedure slots by default; everyone else consultation slots.
   const defaultKind = (await db.doctorOperation.count({ where: { doctorId: doctor.id } })) > 0 ? "OPERATION" : "CONSULTATION";
+  const [full, exceptions] = await Promise.all([
+    db.doctor.findUniqueOrThrow({ where: { id: doctor.id } }),
+    db.scheduleException.findMany({ where: { doctorId: doctor.id, endsOn: { gte: tunisDayKey(new Date()) } }, orderBy: { startsOn: "asc" } }),
+  ]);
+  const schedule = parseSchedule(full.weeklySchedule);
   const slots = await db.slot.findMany({
     where: { doctorId: doctor.id, startsAt: { gt: new Date() } },
     orderBy: { startsAt: "asc" },
@@ -40,8 +47,75 @@ export default async function DoctorSlotsPage({
     <div className="space-y-10">
       {welcome && <Notice tone="success">{t("referral.welcome")}</Notice>}
       <PageTitle title={t("doctorArea.slotsTitle")} subtitle={t("doctorArea.slotsSubtitle")} />
-      <Card>
-        <h2 className="text-lg font-semibold text-ink">{t("doctorArea.addSlots")}</h2>
+      <section className="rounded-3xl border border-line bg-white p-5 shadow-card sm:p-6" data-testid="schedule">
+        <h2 className="text-lg font-semibold text-ink">{t("schedule.title")}</h2>
+        <p className="mt-1 text-sm text-muted">{t("schedule.text", { weeks: HORIZON_WEEKS })}</p>
+        <ActionForm action={saveScheduleAction.bind(null, locale)} className="mt-5 space-y-4">
+          <div className="space-y-2">
+            {weekdays.map((d) => (
+              <label key={d} className="grid grid-cols-[5.5rem_1fr] items-center gap-3">
+                <span className="text-sm font-medium text-ink">{t(`weekdays.${d}`)}</span>
+                <Input
+                  name={`d${d}`}
+                  defaultValue={(schedule[String(d)] ?? []).map(([a, b]) => `${a}-${b}`).join(", ")}
+                  placeholder={d >= 1 && d <= 5 ? "09:00-12:00, 14:00-17:00" : t("schedule.closed")}
+                  data-testid={`schedule-d${d}`}
+                />
+              </label>
+            ))}
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label={t("schedule.minutes")}>
+              <Input type="number" name="minutes" min={10} max={120} step={5} defaultValue={full.consultationMinutes} required />
+            </Field>
+            <Field label={t("schedule.buffer")} hint={t("schedule.bufferHint", { max: MAX_BUFFER_MINUTES })}>
+              <Input type="number" name="buffer" min={0} max={MAX_BUFFER_MINUTES} defaultValue={full.bufferMinutes} required />
+            </Field>
+          </div>
+          <SubmitButton testId="schedule-save">{t("schedule.save")}</SubmitButton>
+        </ActionForm>
+      </section>
+
+      <section className="rounded-3xl border border-line bg-white p-5 shadow-card sm:p-6" data-testid="exceptions">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-ink">
+          <CalendarOff className="h-5 w-5 text-muted" aria-hidden />
+          {t("schedule.exceptionsTitle")}
+        </h2>
+        <p className="mt-1 text-sm text-muted">{t("schedule.exceptionsText")}</p>
+        {exceptions.length > 0 && (
+          <ul className="mt-4 divide-y divide-line">
+            {exceptions.map((e) => (
+              <li key={e.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                <span>
+                  <span className="font-medium text-ink">
+                    {formatDate(new Date(`${e.startsOn}T12:00:00Z`), locale)}
+                    {e.endsOn !== e.startsOn && ` → ${formatDate(new Date(`${e.endsOn}T12:00:00Z`), locale)}`}
+                  </span>
+                  {e.reason && <span className="ms-2 text-muted">{e.reason}</span>}
+                </span>
+                <form action={deleteExceptionAction.bind(null, locale, e.id)}>
+                  <ConfirmSubmit message={t("schedule.exceptionDelete")}>{t("rxTemplates.delete")}</ConfirmSubmit>
+                </form>
+              </li>
+            ))}
+          </ul>
+        )}
+        <ActionForm action={addExceptionAction.bind(null, locale)} className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_1.4fr_auto] sm:items-end">
+          <Field label={t("doctorArea.from")}>
+            <Input type="date" name="startsOn" min={today} required data-testid="exception-from" />
+          </Field>
+          <Field label={t("doctorArea.to")}>
+            <Input type="date" name="endsOn" min={today} />
+          </Field>
+          <Field label={t("schedule.reason")}>
+            <Input name="reason" maxLength={120} placeholder={t("schedule.reasonPlaceholder")} />
+          </Field>
+          <SubmitButton variant="secondary" testId="exception-save">{t("schedule.addException")}</SubmitButton>
+        </ActionForm>
+      </section>
+
+      <Disclosure summary={t("schedule.manual")} className="rounded-3xl border border-line bg-white px-5 py-2 shadow-card">
+        <p className="mb-3 text-sm text-muted">{t("schedule.manualText")}</p>
         <ActionForm action={addSlotsAction.bind(null, locale)} className="mt-5 space-y-5">
           <fieldset>
             <legend className="mb-2 text-sm font-medium text-ink">{t("doctorArea.slotKind")}</legend>
@@ -79,7 +153,7 @@ export default async function DoctorSlotsPage({
           </fieldset>
           <SubmitButton>{t("doctorArea.createSlots")}</SubmitButton>
         </ActionForm>
-      </Card>
+      </Disclosure>
 
       <section>
         <h2 className="mb-4 text-lg font-semibold text-ink">{t("doctorArea.upcomingSlots")}</h2>
@@ -88,7 +162,7 @@ export default async function DoctorSlotsPage({
         ) : (
           <div className="space-y-4">
             {[...days.entries()].map(([key, daySlots]) => (
-              <div key={key} className="rounded-2xl border border-line p-5">
+              <div key={key} className="rounded-3xl border border-line bg-white p-5 shadow-card">
                 <p className="font-semibold capitalize text-ink">
                   {formatDate(daySlots[0].startsAt, locale, { weekday: "long" })}
                 </p>
