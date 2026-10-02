@@ -13,6 +13,7 @@ import { sendTemplate } from "@/lib/mail";
 import { getSettings } from "@/lib/settings";
 import { advanceTracking } from "@/lib/tracking-server";
 import { isDoctorRole } from "@/lib/roles";
+import { IMAGE_PATH_PREFIX, saveUploadedImages } from "@/lib/images";
 
 async function currentDoctor() {
   const user = await getCurrentUser();
@@ -166,4 +167,32 @@ export async function deleteSlotAction(localeRaw: string, slotId: string): Promi
   // Only free slots that were never booked can be removed.
   await db.slot.deleteMany({ where: { id: slotId, doctorId: me.doctor.id, status: "FREE", bookings: { none: {} }, consultations: { none: {} } } });
   revalidatePath(`/${locale}/doctor/slots`);
+}
+
+/**
+ * The doctor sends a photo of their stamp; it is used on prescriptions once the admin
+ * validates it. The signature is the doctor's own and applies at once.
+ */
+export async function uploadSignaturesAction(localeRaw: string, _: ActionState, formData: FormData): Promise<ActionState> {
+  const locale = toLocale(localeRaw);
+  const me = await currentDoctor();
+  if (!me) return fail("errors.forbidden");
+  const opts = { private: true, types: ["image/png", "image/jpeg"] } as const;
+  const stamp = await saveUploadedImages(formData, "stampFile", 1, opts);
+  if ("error" in stamp) return fail(stamp.error);
+  const signature = await saveUploadedImages(formData, "signatureFile", 1, opts);
+  if ("error" in signature) return fail(signature.error);
+  const id = (paths: string[]) => (paths[0] ? paths[0].slice(IMAGE_PATH_PREFIX.length) : undefined);
+  const stampId = id(stamp.paths);
+  const signatureId = id(signature.paths);
+  if (!stampId && !signatureId) return fail("errors.missingFields");
+  await db.doctor.update({
+    where: { id: me.doctor.id },
+    data: { ...(stampId ? { pendingStampImageId: stampId } : {}), ...(signatureId ? { signatureImageId: signatureId } : {}) },
+  });
+  if (stampId) {
+    await db.alert.create({ data: { kind: "stampToReview", message: `Stamp to review for Dr ${me.user.lastName}`, doctorId: me.doctor.id } });
+  }
+  revalidatePath(`/${locale}/doctor`, "layout");
+  return ok(stampId ? "rxTemplates.stampSent" : "rxTemplates.signatureSaved");
 }

@@ -27,7 +27,7 @@ export type ChatMessage = {
   senderName: string;
   text: string | null;
   imageUrl: string | null;
-  prescription: { id: string; number: string | null; pdfUrl: string } | null;
+  prescription: { id: string; number: string | null; pdfUrl: string; revoked: boolean } | null;
   createdAt: string;
 };
 
@@ -43,7 +43,7 @@ export async function loadMessages(consultationId: string, viewerId: string, aft
   });
   const prescriptionIds = rows.map((r) => r.prescriptionId).filter((v): v is string => !!v);
   const prescriptions = prescriptionIds.length
-    ? await db.prescription.findMany({ where: { id: { in: prescriptionIds } }, select: { id: true, number: true } })
+    ? await db.prescription.findMany({ where: { id: { in: prescriptionIds } }, select: { id: true, number: true, status: true } })
     : [];
   return rows.map((m) => {
     const p = prescriptions.find((x) => x.id === m.prescriptionId);
@@ -54,7 +54,7 @@ export async function loadMessages(consultationId: string, viewerId: string, aft
       senderName: isDoctorRole(m.sender.role) ? `Dr ${m.sender.lastName}` : m.sender.firstName,
       text: m.text,
       imageUrl: m.imageId ? `/api/consultations/${consultationId}/images/${m.imageId}` : null,
-      prescription: p ? { id: p.id, number: p.number, pdfUrl: `/api/prescriptions/${p.id}/pdf` } : null,
+      prescription: p ? { id: p.id, number: p.number, pdfUrl: `/api/prescriptions/${p.id}/pdf`, revoked: p.status === "REVOKED" } : null,
       createdAt: m.createdAt.toISOString(),
     };
   });

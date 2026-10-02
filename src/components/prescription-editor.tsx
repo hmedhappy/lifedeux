@@ -1,16 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Expand, FileSignature, FileText, Loader2, Pill, Plus, Search, Trash2, X } from "lucide-react";
-import { issuePrescriptionAction, savePrescriptionDraftAction, type PrescriptionDraft } from "@/actions/prescription";
+import clsx from "clsx";
+import { BookmarkPlus, Expand, FileSignature, FileText, Loader2, Pill, Plus, Search, Star, Trash2 } from "lucide-react";
+import { issuePrescriptionAction, saveFavoriteAction, savePrescriptionDraftAction, type PrescriptionDraft } from "@/actions/prescription";
 import type { MedicationHit } from "@/lib/medications";
+import { POSOLOGY, type PosologyField } from "@/lib/posology";
 import { useI18n } from "./i18n-provider";
-import { Button, Input, Notice, Select, Textarea } from "./ui";
+import { ConfirmSheet, Sheet as Modal } from "./overlay";
+import { useToast } from "./toast";
+import { Button, Disclosure, Input, Notice, Select, Textarea } from "./ui";
 
-type Item = PrescriptionDraft["items"][number] & { key: string };
+type Line = PrescriptionDraft["items"][number];
+type Item = Line & { key: string };
+export type Favorite = { id: string; name: string; items: Line[]; notes: string | null };
 
+const newKey = () => Math.random().toString(36).slice(2);
 const blank = (name = "", medicationId: string | null = null): Item => ({
-  key: Math.random().toString(36).slice(2),
+  key: newKey(),
   medicationId,
   name,
   dosage: "",
@@ -21,9 +28,10 @@ const blank = (name = "", medicationId: string | null = null): Item => ({
 
 const label = (m: MedicationHit) => [m.name, m.strength, m.form].filter((v) => v && v !== "—").join(" · ");
 const PREVIEW_DELAY_MS = 400;
+const FIELDS: PosologyField[] = ["dosage", "frequency", "duration"];
 
 /** The rendered page (SVG made by the server from the same layout as the PDF). */
-function Sheet({ svg, className = "" }: { svg: string; className?: string }) {
+function Page({ svg, className = "" }: { svg: string; className?: string }) {
   return <div className={`[&>svg]:block [&>svg]:h-auto [&>svg]:w-full ${className}`} dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 
@@ -32,22 +40,32 @@ export function PrescriptionEditor({
   hasStamp,
   templates,
   defaultTemplate,
+  favorites: initialFavorites = [],
+  initial,
 }: {
   consultationId: string;
   hasStamp: boolean;
   templates: { ref: string; name: string }[];
   defaultTemplate: string;
+  favorites?: Favorite[];
+  /** A draft already saved (for instance after "Annuler et remplacer"). */
+  initial?: { items: Line[]; notes: string | null } | null;
 }) {
   const { t } = useI18n();
+  const toast = useToast();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<MedicationHit[]>([]);
   const [searching, setSearching] = useState(false);
-  const [items, setItems] = useState<Item[]>([]);
-  const [notes, setNotes] = useState("");
+  const [items, setItems] = useState<Item[]>(() => (initial?.items ?? []).map((i) => ({ ...i, key: newKey() })));
+  const [notes, setNotes] = useState(initial?.notes ?? "");
   const [templateRef, setTemplateRef] = useState(defaultTemplate);
   const [svg, setSvg] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
-  const [message, setMessage] = useState<{ tone: "error" | "success"; text: string } | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [active, setActive] = useState<string | null>(null);
+  const [favorites, setFavorites] = useState(initialFavorites);
+  const [favName, setFavName] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const previewTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -64,18 +82,9 @@ export function PrescriptionEditor({
     return () => clearTimeout(timer.current);
   }, [query]);
 
-  const payload = () => ({
-    items: items.map((i) => ({
-      medicationId: i.medicationId,
-      name: i.name,
-      dosage: i.dosage,
-      frequency: i.frequency,
-      duration: i.duration,
-      instructions: i.instructions,
-    })),
-    notes,
-    templateRef,
-  });
+  const lines = (): Line[] =>
+    items.map(({ medicationId, name, dosage, frequency, duration, instructions }) => ({ medicationId, name, dosage, frequency, duration, instructions }));
+  const payload = () => ({ items: lines(), notes, templateRef });
 
   // Live preview: re-rendered shortly after every change, as soon as there is a medicine.
   const snapshot = JSON.stringify(payload());
@@ -104,21 +113,28 @@ export function PrescriptionEditor({
 
   function add(item: Item) {
     setItems((list) => [...list, item]);
+    setActive(item.key);
     setQuery("");
     setResults([]);
+  }
+
+  function applyFavorite(f: Favorite) {
+    setItems((list) => [...list, ...f.items.map((i) => ({ ...blank(), ...i, key: newKey() }))]);
+    if (f.notes && !notes) setNotes(f.notes);
+    toast(t("rx.favoriteAdded", { name: f.name }));
   }
 
   async function saveDraft(): Promise<string | null> {
     const res = await savePrescriptionDraftAction(consultationId, payload());
     if (!res.ok) {
-      setMessage({ tone: "error", text: t(res.error) });
+      setError(t(res.error));
       return null;
     }
     return res.id;
   }
 
   function openPdf() {
-    setMessage(null);
+    setError(null);
     // Opened right away (inside the click) so the browser does not block it as a pop-up.
     const tab = window.open("about:blank", "_blank");
     start(async () => {
@@ -134,21 +150,36 @@ export function PrescriptionEditor({
   }
 
   function send() {
-    setMessage(null);
-    if (!window.confirm(t("rx.sendConfirm"))) return;
+    setConfirming(false);
+    setError(null);
     start(async () => {
       const id = await saveDraft();
       if (!id) return;
       const res = await issuePrescriptionAction(id);
       if (!res.ok) {
-        setMessage({ tone: "error", text: t(res.error) });
+        setError(t(res.error));
         return;
       }
       setExpanded(false);
       setItems([]);
       setNotes("");
       setSvg(null);
-      setMessage({ tone: "success", text: t("rx.sent") });
+      toast(t("rx.sent"), { tone: "success" });
+    });
+  }
+
+  function saveFavorite() {
+    const name = favName?.trim();
+    if (!name) return;
+    start(async () => {
+      const res = await saveFavoriteAction({ name, items: lines(), notes });
+      if (!res.ok) {
+        setError(t(res.error));
+        return;
+      }
+      setFavorites((list) => [{ id: res.id, name, items: lines(), notes }, ...list]);
+      setFavName(null);
+      toast(t("rx.favoriteSaved", { name }), { tone: "success" });
     });
   }
 
@@ -158,7 +189,7 @@ export function PrescriptionEditor({
         <FileText className="h-4 w-4" aria-hidden />
         {t("rx.openPdf")}
       </Button>
-      <Button type="button" onClick={send} disabled={pending || items.length === 0}>
+      <Button type="button" onClick={() => setConfirming(true)} disabled={pending || items.length === 0} data-testid="rx-send">
         {pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <FileSignature className="h-4 w-4" aria-hidden />}
         {t("rx.send")}
       </Button>
@@ -167,17 +198,23 @@ export function PrescriptionEditor({
 
   return (
     <div className="space-y-4" data-testid="rx-editor">
-      {templates.length > 1 && (
-        <label className="block text-sm">
-          <span className="mb-1 block font-medium text-ink">{t("rx.template")}</span>
-          <Select value={templateRef} onChange={(e) => setTemplateRef(e.target.value)} data-testid="rx-template">
-            {templates.map((tpl) => (
-              <option key={tpl.ref} value={tpl.ref}>
-                {tpl.name}
-              </option>
+      {favorites.length > 0 && (
+        <div>
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">{t("rx.favoritesTitle")}</p>
+          <div className="flex flex-wrap gap-2" data-testid="rx-favorites">
+            {favorites.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => applyFavorite(f)}
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-white px-3 text-sm font-medium text-ink transition hover:border-brand"
+              >
+                <Star className="h-3.5 w-3.5 text-amber-500" aria-hidden />
+                {f.name}
+              </button>
             ))}
-          </Select>
-        </label>
+          </div>
+        </div>
       )}
 
       <div className="relative">
@@ -192,7 +229,7 @@ export function PrescriptionEditor({
         />
         {searching && <Loader2 className="absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted" aria-hidden />}
         {shown.length > 0 && (
-          <ul className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-line bg-white py-1 shadow-float" role="listbox">
+          <ul className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-2xl border border-line bg-white py-1 shadow-float" role="listbox">
             {shown.map((m) => (
               <li key={m.id}>
                 <button
@@ -212,105 +249,148 @@ export function PrescriptionEditor({
           </ul>
         )}
       </div>
-      <button type="button" onClick={() => add(blank(query))} className="inline-flex items-center gap-1.5 text-sm font-medium text-ink underline">
+      <button type="button" onClick={() => add(blank(query))} className="inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-ink-soft hover:text-ink">
         <Plus className="h-4 w-4" aria-hidden />
         {t("rx.addFree")}
       </button>
 
       {items.length === 0 ? (
-        <p className="rounded-xl bg-surface p-4 text-sm text-muted">{t("rx.empty")}</p>
+        <p className="rounded-2xl bg-surface p-4 text-sm text-muted">{t("rx.empty")}</p>
       ) : (
         <ol className="space-y-3">
-          {items.map((i, index) => (
-            <li key={i.key} className="rounded-xl border border-line p-3" data-testid="rx-item">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-brand">{index + 1}.</span>
-                <Input value={i.name} onChange={(e) => update(i.key, { name: e.target.value })} aria-label={t("rx.medication")} className="font-medium" />
-                <button
-                  type="button"
-                  onClick={() => setItems((list) => list.filter((x) => x.key !== i.key))}
-                  aria-label={t("rx.remove")}
-                  className="rounded-lg p-2 text-muted hover:bg-surface hover:text-red-700"
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden />
-                </button>
-              </div>
-              <div className="mt-2 grid grid-cols-3 gap-2">
-                <Input value={i.dosage} onChange={(e) => update(i.key, { dosage: e.target.value })} placeholder={t("rx.dosage")} aria-label={t("rx.dosage")} name="dosage" />
-                <Input value={i.frequency} onChange={(e) => update(i.key, { frequency: e.target.value })} placeholder={t("rx.frequency")} aria-label={t("rx.frequency")} name="frequency" />
-                <Input value={i.duration} onChange={(e) => update(i.key, { duration: e.target.value })} placeholder={t("rx.duration")} aria-label={t("rx.duration")} name="duration" />
-              </div>
-              <Input
-                value={i.instructions ?? ""}
-                onChange={(e) => update(i.key, { instructions: e.target.value })}
-                placeholder={t("rx.instructions")}
-                aria-label={t("rx.instructions")}
-                className="mt-2"
-              />
-            </li>
-          ))}
+          {items.map((i, index) => {
+            const open = active === i.key;
+            return (
+              <li
+                key={i.key}
+                onFocusCapture={() => setActive(i.key)}
+                className={clsx("rounded-2xl border p-3 transition", open ? "border-brand/40 bg-brand-soft/30" : "border-line")}
+                data-testid="rx-item"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-brand">{index + 1}.</span>
+                  <Input value={i.name} onChange={(e) => update(i.key, { name: e.target.value })} aria-label={t("rx.medication")} className="font-medium" />
+                  <button
+                    type="button"
+                    onClick={() => setItems((list) => list.filter((x) => x.key !== i.key))}
+                    aria-label={t("rx.remove")}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted hover:bg-surface hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden />
+                  </button>
+                </div>
+                <div className="mt-2 grid grid-cols-3 gap-2">
+                  {FIELDS.map((f) => (
+                    <Input key={f} value={i[f]} onChange={(e) => update(i.key, { [f]: e.target.value })} placeholder={t(`rx.${f}`)} aria-label={t(`rx.${f}`)} name={f} />
+                  ))}
+                </div>
+                {open && (
+                  <div className="mt-2 space-y-1.5 animate-fade-in" data-testid="rx-chips">
+                    {FIELDS.map((f) => (
+                      <div key={f} className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
+                        {POSOLOGY[f].map((v) => (
+                          <button
+                            key={v}
+                            type="button"
+                            onClick={() => update(i.key, { [f]: v })}
+                            aria-pressed={i[f] === v}
+                            className={clsx(
+                              "min-h-8 shrink-0 rounded-full border px-2.5 text-xs transition",
+                              i[f] === v ? "border-brand bg-brand text-white" : "border-line bg-white text-ink-soft hover:border-brand",
+                            )}
+                          >
+                            {v}
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                    <Input
+                      value={i.instructions ?? ""}
+                      onChange={(e) => update(i.key, { instructions: e.target.value })}
+                      placeholder={t("rx.instructions")}
+                      aria-label={t("rx.instructions")}
+                      className="mt-1"
+                    />
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ol>
       )}
 
-      <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("rx.notes")} aria-label={t("rx.notes")} rows={2} />
+      <Disclosure summary={t("rx.moreOptions")} defaultOpen={!!notes}>
+        <div className="space-y-3">
+          {templates.length > 1 && (
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-ink">{t("rx.template")}</span>
+              <Select value={templateRef} onChange={(e) => setTemplateRef(e.target.value)} data-testid="rx-template">
+                {templates.map((tpl) => (
+                  <option key={tpl.ref} value={tpl.ref}>
+                    {tpl.name}
+                  </option>
+                ))}
+              </Select>
+            </label>
+          )}
+          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("rx.notes")} aria-label={t("rx.notes")} rows={2} />
+          {items.length > 0 &&
+            (favName === null ? (
+              <button type="button" onClick={() => setFavName("")} className="inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-ink-soft hover:text-ink" data-testid="rx-fav-open">
+                <BookmarkPlus className="h-4 w-4" aria-hidden />
+                {t("rx.saveFavorite")}
+              </button>
+            ) : (
+              <div className="flex gap-2">
+                <Input value={favName} onChange={(e) => setFavName(e.target.value)} placeholder={t("rx.favoriteName")} aria-label={t("rx.favoriteName")} maxLength={80} autoFocus data-testid="rx-fav-name" />
+                <Button type="button" variant="soft" onClick={saveFavorite} disabled={pending || !favName.trim()} data-testid="rx-fav-save">
+                  {t("rx.save")}
+                </Button>
+              </div>
+            ))}
+        </div>
+      </Disclosure>
 
       {items.length > 0 && (
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-sm font-medium text-ink">{t("rx.livePreview")}</p>
-            <button
-              type="button"
-              onClick={() => setExpanded(true)}
-              className="inline-flex items-center gap-1 text-sm font-medium text-ink underline disabled:opacity-40"
-              disabled={!liveSvg}
-            >
-              <Expand className="h-4 w-4" aria-hidden />
-              {t("rx.preview")}
-            </button>
-          </div>
+        <div className="flex items-center gap-3 rounded-2xl bg-surface p-3">
           <button
             type="button"
             onClick={() => liveSvg && setExpanded(true)}
-            className="block w-full overflow-hidden rounded-lg border border-line bg-surface text-start shadow-sm"
+            className="w-20 shrink-0 overflow-hidden rounded-md border border-line bg-white shadow-sm"
             aria-label={t("rx.preview")}
             data-testid="rx-live-preview"
           >
             {liveSvg ? (
-              <Sheet svg={liveSvg} />
+              <Page svg={liveSvg} />
             ) : (
               <span className="flex aspect-[595/842] items-center justify-center text-muted">
-                <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
               </span>
             )}
           </button>
-        </div>
-      )}
-
-      {message && !expanded && <Notice tone={message.tone}>{message.text}</Notice>}
-      {actions}
-      <p className="text-xs text-muted">{t("rx.previewFirst")}</p>
-
-      {expanded && liveSvg && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-black/70 p-2 sm:p-4" role="dialog" aria-modal aria-label={t("rx.preview")}>
-          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 rounded-t-2xl bg-white px-4 py-3">
-            <p className="font-semibold text-ink">{t("rx.preview")}</p>
-            <button type="button" onClick={() => setExpanded(false)} aria-label={t("common.close")} className="rounded-lg p-2 hover:bg-surface">
-              <X className="h-5 w-5" aria-hidden />
+          <div className="min-w-0 text-sm">
+            <p className="font-medium text-ink">{t("rx.livePreview")}</p>
+            <p className="text-xs text-muted">{t("rx.previewFirst")}</p>
+            <button type="button" onClick={() => setExpanded(true)} disabled={!liveSvg} className="mt-1 inline-flex min-h-8 items-center gap-1 font-semibold text-brand-dark disabled:opacity-40">
+              <Expand className="h-4 w-4" aria-hidden />
+              {t("rx.preview")}
             </button>
           </div>
-          <div className="mx-auto w-full max-w-3xl flex-1 overflow-y-auto bg-surface p-3 sm:p-6">
-            <Sheet svg={liveSvg} className="mx-auto max-w-2xl bg-white shadow-float" />
-          </div>
-          <div className="mx-auto w-full max-w-3xl rounded-b-2xl bg-white p-4" data-testid="rx-preview">
-            {message && (
-              <div className="mb-3">
-                <Notice tone={message.tone}>{message.text}</Notice>
-              </div>
-            )}
-            {actions}
-          </div>
         </div>
       )}
+
+      {error && !expanded && <Notice tone="error">{error}</Notice>}
+      {actions}
+
+      <Modal open={expanded && !!liveSvg} onClose={() => setExpanded(false)} title={t("rx.preview")} size="lg" footer={actions} testId="rx-preview">
+        {error && (
+          <div className="mb-3">
+            <Notice tone="error">{error}</Notice>
+          </div>
+        )}
+        {liveSvg && <Page svg={liveSvg} className="mx-auto max-w-2xl bg-white shadow-float" />}
+      </Modal>
+      <ConfirmSheet open={confirming} message={t("rx.sendConfirm")} confirmLabel={t("rx.send")} tone="primary" onConfirm={send} onCancel={() => setConfirming(false)} />
     </div>
   );
 }

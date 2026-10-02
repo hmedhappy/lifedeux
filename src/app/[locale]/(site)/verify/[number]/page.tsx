@@ -2,6 +2,7 @@ import { BadgeCheck, ShieldAlert } from "lucide-react";
 import { Container } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
 import { getT, localized, toLocale } from "@/lib/i18n";
+import { db } from "@/lib/db";
 import { contentHash, loadPrescription } from "@/lib/prescriptions";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +18,8 @@ export default async function VerifyPage({ params }: { params: Promise<{ locale:
   const t = getT(locale);
   const p = /^RX-\d{8}-[0-9A-F]{8}$/.test(number) ? await loadPrescription({ number }) : null;
   const authentic = !!p && p.status === "ISSUED" && !!p.contentHash && contentHash(p) === p.contentHash;
+  const revoked = !!p && p.status === "REVOKED";
+  const replacement = revoked && p.replacedById ? await db.prescription.findUnique({ where: { id: p.replacedById }, select: { number: true } }) : null;
 
   return (
     <Container className="max-w-2xl py-14">
@@ -37,6 +40,13 @@ export default async function VerifyPage({ params }: { params: Promise<{ locale:
         </div>
         <p className="mt-4 text-sm text-ink">{authentic ? t("verify.okText") : t("verify.badText")}</p>
       </div>
+
+      {revoked && p && (
+        <div className="mt-6 rounded-3xl border-2 border-amber-200 bg-amber-50 p-6 text-sm text-amber-950" data-testid="verify-revoked">
+          <p className="font-semibold">{t("verify.revoked", { date: p.revokedAt ? formatDateTime(p.revokedAt, locale) : "—" })}</p>
+          {replacement?.number && <p className="mt-1">{t("verify.replacedBy", { number: replacement.number })}</p>}
+        </div>
+      )}
 
       {authentic && p && (
         <div className="mt-8 space-y-6 rounded-3xl border border-line p-8">

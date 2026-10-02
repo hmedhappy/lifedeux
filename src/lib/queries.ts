@@ -18,11 +18,13 @@ export const DEFAULT_CONSULTATION_FEE_RATIO = 0.7;
 /** Effective online-consultation offer of a doctor, or null when they do not consult online. */
 export function consultationOffer(doctor: {
   offersConsultation: boolean;
+  /** A validated stamp is required: prescriptions cannot be signed without it. */
+  stampImageId: string | null;
   consultationPrice: number | null;
   consultationFee: number | null;
   specialty_?: { consultationPrice: number } | null;
 }): { price: number; fee: number } | null {
-  if (!doctor.offersConsultation) return null;
+  if (!doctor.offersConsultation || !doctor.stampImageId) return null;
   const price = doctor.consultationPrice ?? doctor.specialty_?.consultationPrice;
   if (!price) return null;
   return { price, fee: doctor.consultationFee ?? Math.round(price * DEFAULT_CONSULTATION_FEE_RATIO) };

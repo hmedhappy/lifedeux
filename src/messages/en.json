@@ -547,7 +547,10 @@
     "past": "Completed",
     "noConsultations": "No consultations yet.",
     "slotKind": "Slot type",
-    "accepted": "Consultation {reference} accepted: the payment is collected and the patient notified."
+    "accepted": "Consultation {reference} accepted: the payment is collected and the patient notified.",
+    "stampLink": "Send my stamp",
+    "stampMissingBanner": "Stamp missing: your online consultations stay hidden until it is validated.",
+    "stampPendingBanner": "Stamp received, being validated by the LifeDeux team."
   },
   "payouts": {
     "earned": "Total owed",
@@ -754,7 +757,11 @@
       "form": "Form",
       "formHint": "Tablet, syrup…",
       "deleteConfirm": "Remove {name} from the catalogue?"
-    }
+    },
+    "stampReviewTitle": "Stamp to validate",
+    "stampReviewText": "Check the name, specialty and licence number before validating. The stamp will appear on all their prescriptions.",
+    "stampApprove": "Validate the stamp",
+    "stampReject": "Reject"
   },
   "scan": {
     "title": "Scan & tracking",
@@ -828,7 +835,9 @@
     "contactRequired": "Enter a phone number and a country to organise your stay.",
     "nameNotLatin": "Write the name in Latin letters (A–Z, accents allowed), as on your passport.",
     "ratingRequired": "Choose a rating from 1 to 5 stars.",
-    "rescheduleTooLate": "The time can no longer be changed less than 24 h before."
+    "rescheduleTooLate": "The time can no longer be changed less than 24 h before.",
+    "rxNotLatin": "Prescriptions are printed in Latin letters: write medicines and posology without Arabic characters.",
+    "tooManyFavorites": "30 saved prescriptions at most. Delete one first."
   },
   "email": {
     "invite": {
@@ -1026,7 +1035,8 @@
       "orientSurgery": "{name} suggests a procedure",
       "seeSurgery": "See procedures",
       "orientClinicMine": "You suggested an in-person visit at the practice",
-      "orientSurgeryMine": "You suggested a procedure"
+      "orientSurgeryMine": "You suggested a procedure",
+      "rxRevoked": "Prescription {number} was cancelled by the doctor"
     },
     "quick": {
       "1": "Hello, I am with you.",
@@ -1058,7 +1068,18 @@
     "livePreview": "Live preview",
     "openPdf": "View PDF",
     "sendConfirm": "Sign and send this prescription to the patient? It can no longer be changed.",
-    "manageTemplates": "Manage my prescription templates"
+    "manageTemplates": "Manage my prescription templates",
+    "favoritesTitle": "Saved prescriptions",
+    "favoritesText": "Your usual prescriptions, added in one click during the consultation.",
+    "favoriteAdded": "\"{name}\" added",
+    "favoriteSaved": "Saved prescription \"{name}\" created",
+    "favoriteName": "Name (e.g. Adult sore throat)",
+    "favoriteDeleteConfirm": "Delete the saved prescription \"{name}\"?",
+    "saveFavorite": "Save as a saved prescription",
+    "save": "Save",
+    "moreOptions": "More options (notes, design)",
+    "replace": "Cancel and replace",
+    "replaceConfirm": "Cancel prescription {number}? Its QR code will show it as cancelled and an editable copy opens."
   },
   "verify": {
     "title": "Prescription check",
@@ -1070,7 +1091,9 @@
     "issuedAt": "Issued on",
     "patient": "Patient",
     "fingerprint": "Fingerprint",
-    "items": "Prescribed"
+    "items": "Prescribed",
+    "revoked": "This prescription was cancelled by the doctor on {date}. It is no longer valid.",
+    "replacedBy": "It is replaced by prescription {number}."
   },
   "referral": {
     "title": "Referrals",
@@ -1124,7 +1147,17 @@
     "marginBottom": "Bottom",
     "marginLeft": "Left",
     "marginRight": "Right",
-    "makeDefault": "Use this template by default"
+    "makeDefault": "Use this template by default",
+    "delete": "Delete",
+    "signaturesTitle": "Stamp and signature",
+    "signaturesText": "They only appear on your prescriptions. The stamp is validated by the team before use.",
+    "stampFile": "Stamp photo",
+    "stampHint": "PNG or JPEG, on a white background, well framed.",
+    "signatureFile": "Signature",
+    "upload": "Upload",
+    "stampPending": "being validated",
+    "stampSent": "Stamp sent: it will be used once validated.",
+    "signatureSaved": "Signature saved."
   },
   "documents": {
     "subtitle": "Your prescriptions and stay passes.",

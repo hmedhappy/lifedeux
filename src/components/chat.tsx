@@ -270,17 +270,22 @@ export function Chat({
                 )}
                 {m.kind === "PRESCRIPTION" && m.prescription && (
                   <a
-                    href={m.prescription.pdfUrl}
+                    href={m.prescription.revoked ? undefined : m.prescription.pdfUrl}
                     target="_blank"
                     rel="noopener"
-                    className={clsx("mb-1 flex items-center gap-3 rounded-xl p-3", m.mine ? "bg-white/15" : "bg-brand-soft text-brand-dark")}
+                    aria-disabled={m.prescription.revoked}
+                    className={clsx(
+                      "mb-1 flex items-center gap-3 rounded-xl p-3",
+                      m.mine ? "bg-white/15" : "bg-brand-soft text-brand-dark",
+                      m.prescription.revoked && "opacity-60",
+                    )}
                     data-testid="chat-prescription"
                   >
                     <FileText className="h-8 w-8 shrink-0" aria-hidden />
                     <span>
-                      <span className="block font-semibold">{t("chat.prescription")}</span>
+                      <span className={clsx("block font-semibold", m.prescription.revoked && "line-through")}>{t("chat.prescription")}</span>
                       <span className="block text-xs opacity-80">
-                        {m.prescription.number} · {t("chat.download")}
+                        {m.prescription.number} · {m.prescription.revoked ? t("documents.revoked") : t("chat.download")}
                       </span>
                     </span>
                   </a>
@@ -416,6 +421,15 @@ function SystemLine({ m, orientation }: { m: ChatMessage; orientation?: Orientat
           )}
         </div>
       </div>
+    );
+  }
+  if (code.startsWith("rxRevoked:")) {
+    return (
+      <p className="flex justify-center py-1" data-testid="chat-system">
+        <span className="rounded-full bg-amber-50 px-3 py-1 text-xs text-amber-900 shadow-sm">
+          {t("chat.system.rxRevoked", { number: code.slice("rxRevoked:".length) })}
+        </span>
+      </p>
     );
   }
   const key = code === "joined" ? "chat.system.joined" : code === "noShow" ? "chat.system.noShow" : code === "ended" ? "chat.system.ended" : null;

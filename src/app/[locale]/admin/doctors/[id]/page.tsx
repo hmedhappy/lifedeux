@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { DoctorForm } from "@/components/admin-forms";
 import { ActionForm, SubmitButton } from "@/components/forms";
 import { Card, PageTitle } from "@/components/ui";
-import { resendInviteAction, updateDoctorAction } from "@/actions/admin";
+import { resendInviteAction, reviewStampAction, updateDoctorAction } from "@/actions/admin";
 import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getT, toLocale } from "@/lib/i18n";
@@ -26,6 +26,30 @@ export default async function EditDoctorPage({ params }: { params: Promise<{ loc
         ← {t("admin.doctorsTitle")}
       </Link>
       <PageTitle title={`Dr ${doctor.user.firstName} ${doctor.user.lastName}`} subtitle={doctor.user.email} />
+      {doctor.pendingStampImageId && (
+        <Card>
+          <div className="flex flex-wrap items-center gap-5" data-testid="stamp-review">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/api/doctors/${doctor.id}/pending-stamp`} alt={t("admin.doctor.stamp")} className="h-28 w-28 rounded-2xl border border-line bg-white object-contain p-2" />
+            <div className="min-w-0 flex-1">
+              <h2 className="font-semibold text-ink">{t("admin.stampReviewTitle")}</h2>
+              <p className="mt-1 text-sm text-muted">{t("admin.stampReviewText")}</p>
+              <div className="mt-3 flex gap-2">
+                <form action={reviewStampAction.bind(null, locale, doctor.id, false)}>
+                  <SubmitButton variant="secondary" size="sm">
+                    {t("admin.stampReject")}
+                  </SubmitButton>
+                </form>
+                <form action={reviewStampAction.bind(null, locale, doctor.id, true)}>
+                  <SubmitButton size="sm" testId="stamp-approve">
+                    {t("admin.stampApprove")}
+                  </SubmitButton>
+                </form>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
       <Card>
         <h2 className="font-semibold text-ink">{t("admin.inviteTitle")}</h2>
         <p className="mt-1 text-sm text-muted">

@@ -547,7 +547,10 @@
     "past": "Terminées",
     "noConsultations": "Aucune consultation pour l'instant.",
     "slotKind": "Type de créneau",
-    "accepted": "Consultation {reference} acceptée : le paiement est encaissé et le patient prévenu."
+    "accepted": "Consultation {reference} acceptée : le paiement est encaissé et le patient prévenu.",
+    "stampLink": "Envoyer mon cachet",
+    "stampMissingBanner": "Cachet manquant : vos consultations en ligne restent masquées tant qu'il n'est pas validé.",
+    "stampPendingBanner": "Cachet reçu, en cours de validation par l'équipe LifeDeux."
   },
   "payouts": {
     "earned": "Total dû",
@@ -754,7 +757,11 @@
       "form": "Forme",
       "formHint": "Comprimé, sirop…",
       "deleteConfirm": "Supprimer {name} du référentiel ?"
-    }
+    },
+    "stampReviewTitle": "Cachet à valider",
+    "stampReviewText": "Vérifiez le nom, la spécialité et le numéro d'Ordre avant de valider. Le cachet sera apposé sur toutes ses ordonnances.",
+    "stampApprove": "Valider le cachet",
+    "stampReject": "Refuser"
   },
   "scan": {
     "title": "Scan & suivi",
@@ -828,7 +835,9 @@
     "contactRequired": "Indiquez un téléphone et un pays pour organiser votre séjour.",
     "nameNotLatin": "Écrivez le nom en lettres latines (A–Z, accents acceptés), comme sur votre passeport.",
     "ratingRequired": "Choisissez une note de 1 à 5 étoiles.",
-    "rescheduleTooLate": "Le changement d'horaire n'est plus possible à moins de 24 h."
+    "rescheduleTooLate": "Le changement d'horaire n'est plus possible à moins de 24 h.",
+    "rxNotLatin": "L'ordonnance s'imprime en lettres latines : écrivez les médicaments et la posologie sans caractères arabes.",
+    "tooManyFavorites": "30 ordonnances types maximum. Supprimez-en une d'abord."
   },
   "email": {
     "invite": {
@@ -1026,7 +1035,8 @@
       "orientSurgery": "{name} vous propose une intervention",
       "seeSurgery": "Voir les interventions",
       "orientClinicMine": "Vous avez proposé un rendez-vous au cabinet",
-      "orientSurgeryMine": "Vous avez proposé une intervention"
+      "orientSurgeryMine": "Vous avez proposé une intervention",
+      "rxRevoked": "L'ordonnance {number} a été annulée par le médecin"
     },
     "quick": {
       "1": "Bonjour, je suis avec vous.",
@@ -1058,7 +1068,18 @@
     "livePreview": "Aperçu en direct",
     "openPdf": "Voir le PDF",
     "sendConfirm": "Signer et envoyer cette ordonnance au patient ? Elle ne pourra plus être modifiée.",
-    "manageTemplates": "Gérer mes modèles d'ordonnance"
+    "manageTemplates": "Gérer mes modèles d'ordonnance",
+    "favoritesTitle": "Ordonnances types",
+    "favoritesText": "Vos ordonnances habituelles, ajoutées en un clic pendant la consultation.",
+    "favoriteAdded": "« {name} » ajoutée",
+    "favoriteSaved": "Ordonnance type « {name} » enregistrée",
+    "favoriteName": "Nom (ex. Angine adulte)",
+    "favoriteDeleteConfirm": "Supprimer l'ordonnance type « {name} » ?",
+    "saveFavorite": "Enregistrer comme ordonnance type",
+    "save": "Enregistrer",
+    "moreOptions": "Plus d'options (remarques, modèle)",
+    "replace": "Annuler et remplacer",
+    "replaceConfirm": "Annuler l'ordonnance {number} ? Son QR code l'indiquera comme annulée et une copie modifiable s'ouvre."
   },
   "verify": {
     "title": "Vérification d'ordonnance",
@@ -1070,7 +1091,9 @@
     "issuedAt": "Émise le",
     "patient": "Patient",
     "fingerprint": "Empreinte",
-    "items": "Prescription"
+    "items": "Prescription",
+    "revoked": "Cette ordonnance a été annulée par le médecin le {date}. Elle n'est plus valable.",
+    "replacedBy": "Elle est remplacée par l'ordonnance {number}."
   },
   "referral": {
     "title": "Parrainage",
@@ -1124,7 +1147,17 @@
     "marginBottom": "Bas",
     "marginLeft": "Gauche",
     "marginRight": "Droite",
-    "makeDefault": "Utiliser ce modèle par défaut"
+    "makeDefault": "Utiliser ce modèle par défaut",
+    "delete": "Supprimer",
+    "signaturesTitle": "Cachet et signature",
+    "signaturesText": "Ils n'apparaissent que sur vos ordonnances. Le cachet est validé par l'équipe avant usage.",
+    "stampFile": "Photo du cachet",
+    "stampHint": "PNG ou JPEG, sur fond blanc, bien cadré.",
+    "signatureFile": "Signature",
+    "upload": "Envoyer",
+    "stampPending": "en cours de validation",
+    "stampSent": "Cachet envoyé : il sera utilisé dès sa validation.",
+    "signatureSaved": "Signature enregistrée."
   },
   "documents": {
     "subtitle": "Vos ordonnances et fiches de séjour.",

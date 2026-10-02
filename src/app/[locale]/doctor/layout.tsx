@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { DashboardShell } from "@/components/dashboard-shell";
+import { Notice } from "@/components/ui";
 import { requireDoctor } from "@/lib/auth";
 import { chatOpensBefore } from "@/lib/consultation-rules";
 import { db } from "@/lib/db";
@@ -44,6 +46,16 @@ export default async function DoctorLayout({
           : []),
       ]}
     >
+      {!doctor.stampImageId && (
+        <div className="mb-6">
+          <Notice tone="warning">
+            {t(doctor.pendingStampImageId ? "doctorArea.stampPendingBanner" : "doctorArea.stampMissingBanner")}{" "}
+            <Link href={`${base}/prescription#stamp`} className="font-semibold underline">
+              {t("doctorArea.stampLink")}
+            </Link>
+          </Notice>
+        </div>
+      )}
       {children}
     </DashboardShell>
   );

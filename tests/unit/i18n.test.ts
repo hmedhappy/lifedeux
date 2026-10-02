@@ -48,6 +48,7 @@ const DYNAMIC_KEYS = [
   ...["requested", "accepted", "paid", "consultation", "prescription"].map((s) => `consult.steps.${s}`),
   ...["joined", "noShow", "ended", "orientSurgery", "orientClinic", "orientSurgeryMine", "orientClinicMine"].map((s) => `chat.system.${s}`),
   ...[1, 2, 3, 4, 5].map((n) => `chat.quick.${n}`),
+  ...["stampMissingBanner", "stampPendingBanner"].map((s) => `doctorArea.${s}`),
   "payment.mockHold",
   "payment.mockPay",
 ];

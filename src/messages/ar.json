@@ -547,7 +547,10 @@
     "past": "المنتهية",
     "noConsultations": "لا توجد استشارات بعد.",
     "slotKind": "نوع الموعد",
-    "accepted": "تم قبول الاستشارة {reference}: تم تحصيل الدفع وإبلاغ المريض."
+    "accepted": "تم قبول الاستشارة {reference}: تم تحصيل الدفع وإبلاغ المريض.",
+    "stampLink": "إرسال ختمي",
+    "stampMissingBanner": "الختم غير موجود: تبقى استشاراتك عبر الإنترنت مخفية حتى يتم اعتماده.",
+    "stampPendingBanner": "تم استلام الختم وهو قيد المراجعة من فريق LifeDeux."
   },
   "payouts": {
     "earned": "إجمالي المستحق",
@@ -754,7 +757,11 @@
       "form": "الشكل",
       "formHint": "أقراص، شراب…",
       "deleteConfirm": "حذف {name} من المرجع؟"
-    }
+    },
+    "stampReviewTitle": "ختم بانتظار الاعتماد",
+    "stampReviewText": "تحقق من الاسم والتخصص ورقم الهيئة قبل الاعتماد. سيظهر الختم على جميع وصفاته.",
+    "stampApprove": "اعتماد الختم",
+    "stampReject": "رفض"
   },
   "scan": {
     "title": "المسح والمتابعة",
@@ -828,7 +835,9 @@
     "contactRequired": "أدخل رقم هاتف وبلداً لتنظيم إقامتك.",
     "nameNotLatin": "اكتب الاسم بالحروف اللاتينية (A–Z) كما في جواز سفرك.",
     "ratingRequired": "اختر تقييماً من 1 إلى 5 نجوم.",
-    "rescheduleTooLate": "لم يعد تغيير الموعد ممكناً قبل أقل من 24 ساعة."
+    "rescheduleTooLate": "لم يعد تغيير الموعد ممكناً قبل أقل من 24 ساعة.",
+    "rxNotLatin": "تُطبع الوصفة بالحروف اللاتينية: اكتب الأدوية والجرعات دون حروف عربية.",
+    "tooManyFavorites": "الحد الأقصى 30 وصفة محفوظة. احذف واحدة أولاً."
   },
   "email": {
     "invite": {
@@ -1026,7 +1035,8 @@
       "orientSurgery": "يقترح {name} إجراء عملية",
       "seeSurgery": "عرض العمليات",
       "orientClinicMine": "اقترحت موعداً حضورياً في العيادة",
-      "orientSurgeryMine": "اقترحت إجراء عملية"
+      "orientSurgeryMine": "اقترحت إجراء عملية",
+      "rxRevoked": "ألغى الطبيب الوصفة {number}"
     },
     "quick": {
       "1": "مرحباً، أنا معك.",
@@ -1058,7 +1068,18 @@
     "livePreview": "معاينة مباشرة",
     "openPdf": "عرض PDF",
     "sendConfirm": "توقيع هذه الوصفة وإرسالها إلى المريض؟ لن يمكن تعديلها بعد ذلك.",
-    "manageTemplates": "إدارة نماذج وصفاتي"
+    "manageTemplates": "إدارة نماذج وصفاتي",
+    "favoritesTitle": "وصفات محفوظة",
+    "favoritesText": "وصفاتك المعتادة، تُضاف بنقرة واحدة أثناء الاستشارة.",
+    "favoriteAdded": "تمت إضافة «{name}»",
+    "favoriteSaved": "تم حفظ الوصفة «{name}»",
+    "favoriteName": "الاسم (مثال: التهاب الحلق)",
+    "favoriteDeleteConfirm": "حذف الوصفة المحفوظة «{name}»؟",
+    "saveFavorite": "حفظ كوصفة محفوظة",
+    "save": "حفظ",
+    "moreOptions": "خيارات أخرى (ملاحظات، نموذج)",
+    "replace": "إلغاء واستبدال",
+    "replaceConfirm": "إلغاء الوصفة {number}؟ سيُظهرها رمز QR كملغاة وستُفتح نسخة قابلة للتعديل."
   },
   "verify": {
     "title": "التحقق من الوصفة",
@@ -1070,7 +1091,9 @@
     "issuedAt": "تاريخ الإصدار",
     "patient": "المريض",
     "fingerprint": "البصمة",
-    "items": "الأدوية الموصوفة"
+    "items": "الأدوية الموصوفة",
+    "revoked": "ألغى الطبيب هذه الوصفة في {date}. لم تعد صالحة.",
+    "replacedBy": "تم استبدالها بالوصفة {number}."
   },
   "referral": {
     "title": "الإحالة",
@@ -1124,7 +1147,17 @@
     "marginBottom": "أسفل",
     "marginLeft": "يسار",
     "marginRight": "يمين",
-    "makeDefault": "استخدام هذا النموذج افتراضيًا"
+    "makeDefault": "استخدام هذا النموذج افتراضيًا",
+    "delete": "حذف",
+    "signaturesTitle": "الختم والتوقيع",
+    "signaturesText": "لا يظهران إلا على وصفاتك. يعتمد الفريق الختم قبل استخدامه.",
+    "stampFile": "صورة الختم",
+    "stampHint": "PNG أو JPEG على خلفية بيضاء.",
+    "signatureFile": "التوقيع",
+    "upload": "إرسال",
+    "stampPending": "قيد المراجعة",
+    "stampSent": "تم إرسال الختم: سيُستخدم بعد اعتماده.",
+    "signatureSaved": "تم حفظ التوقيع."
   },
   "documents": {
     "subtitle": "وصفاتك الطبية وبطاقات إقامتك.",

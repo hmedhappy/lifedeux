@@ -1,11 +1,13 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { sendTemplate } from "@/lib/mail";
 import { contentHash, defaultTemplateRef, loadPrescription, prescriptionNumber, resolveTemplate } from "@/lib/prescriptions";
 import { builtinConfig } from "@/lib/rx-sheet";
+import { isLatinText } from "@/lib/latin";
 import { isDoctorRole } from "@/lib/roles";
 
 const itemSchema = z.object({
@@ -26,6 +28,19 @@ const draftSchema = z.object({
 export type PrescriptionDraft = z.infer<typeof draftSchema>;
 type Result = { ok: true; id: string } | { ok: false; error: string };
 
+/** The PDF is printed with Latin-only fonts: every free-text field must be in Latin letters. */
+function allLatin(input: { items: PrescriptionDraft["items"]; notes?: string | null }): boolean {
+  const texts = input.items.flatMap((i) => [i.name, i.dosage, i.frequency, i.duration, i.instructions ?? ""]);
+  return [...texts, input.notes ?? ""].every(isLatinText);
+}
+
+async function currentDoctor() {
+  const user = await getCurrentUser();
+  if (!user || !isDoctorRole(user.role)) return null;
+  const doctor = await db.doctor.findUnique({ where: { userId: user.id } });
+  return doctor ? { user, doctor } : null;
+}
+
 async function doctorConsultation(consultationId: string) {
   const user = await getCurrentUser();
   if (!user || !isDoctorRole(user.role)) return null;
@@ -43,6 +58,7 @@ export async function savePrescriptionDraftAction(consultationId: string, input:
   if (!ctx.consultation.doctor.stampImageId) return { ok: false, error: "errors.stampMissing" };
   const parsed = draftSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "errors.prescriptionInvalid" };
+  if (!allLatin(parsed.data)) return { ok: false, error: "errors.rxNotLatin" };
   const { items, notes } = parsed.data;
   // Only a built-in design or one of this doctor's own templates can be used.
   const ref = parsed.data.templateRef;
@@ -102,11 +118,102 @@ export async function issuePrescriptionAction(prescriptionId: string): Promise<R
       where: { id: prescriptionId },
       data: { status: "ISSUED", number, issuedAt, contentHash: hash, templateRef: frozen },
     }),
+    // A replacement ("Annuler et remplacer") points the cancelled prescription to this one.
+    db.prescription.updateMany({
+      where: { consultationId: draft.consultationId, status: "REVOKED", revokeReason: "replaced", replacedById: null },
+      data: { replacedById: prescriptionId },
+    }),
     db.message.create({
       data: { consultationId: draft.consultationId, senderId: ctx.user.id, kind: "PRESCRIPTION", prescriptionId },
     }),
   ]);
   const patient = await db.user.findUniqueOrThrow({ where: { id: draft.patientId } });
   await sendTemplate(patient, "prescription", { reference: number }, `/account/consultations/${draft.consultationId}`);
+  // Refreshes the consultation screen so the issued list shows the new number.
+  revalidatePath("/[locale]/doctor/consultations/[id]", "page");
   return { ok: true, id: prescriptionId };
+}
+
+/* ------------------------- Cancel and replace ------------------------- */
+
+/**
+ * The doctor cancels an issued prescription (its QR code then shows it as cancelled)
+ * and gets a draft copy to correct and send again.
+ */
+export async function revokeAndReplaceAction(prescriptionId: string): Promise<Result> {
+  const p = await db.prescription.findUnique({ where: { id: prescriptionId }, include: { items: { orderBy: { position: "asc" } } } });
+  if (!p || p.status !== "ISSUED") return { ok: false, error: "errors.invalid" };
+  const ctx = await doctorConsultation(p.consultationId);
+  if (!ctx) return { ok: false, error: "errors.forbidden" };
+  await db.$transaction(async (tx) => {
+    await tx.prescription.update({ where: { id: p.id }, data: { status: "REVOKED", revokedAt: new Date(), revokeReason: "replaced" } });
+    await tx.prescription.deleteMany({ where: { consultationId: p.consultationId, status: "DRAFT" } });
+    await tx.prescription.create({
+      data: {
+        consultationId: p.consultationId,
+        doctorId: p.doctorId,
+        patientId: p.patientId,
+        notes: p.notes,
+        items: {
+          create: p.items.map(({ position, medicationId, name, dosage, frequency, duration, instructions }) => ({
+            position,
+            medicationId,
+            name,
+            dosage,
+            frequency,
+            duration,
+            instructions,
+          })),
+        },
+      },
+    });
+    await tx.message.create({
+      data: { consultationId: p.consultationId, senderId: ctx.user.id, kind: "SYSTEM", text: `rxRevoked:${p.number}` },
+    });
+  });
+  return { ok: true, id: p.id };
+}
+
+/** Form version used by the consultation screen: the page then shows the new draft. */
+export async function revokeAndReplaceFormAction(locale: string, consultationId: string, prescriptionId: string): Promise<void> {
+  await revokeAndReplaceAction(prescriptionId);
+  revalidatePath(`/${locale}/doctor/consultations/${consultationId}`);
+}
+
+/* ------------------------------ Favorites ------------------------------ */
+
+const favoriteSchema = z.object({
+  name: z.string().trim().min(1).max(80),
+  items: z.array(itemSchema.partial({ dosage: true, frequency: true, duration: true })).min(1).max(15),
+  notes: z.string().trim().max(1500).optional().nullable(),
+});
+
+export type FavoriteInput = z.infer<typeof favoriteSchema>;
+
+/** Saves the current lines as a personal "ordonnance type". */
+export async function saveFavoriteAction(input: FavoriteInput): Promise<Result> {
+  const me = await currentDoctor();
+  if (!me) return { ok: false, error: "errors.forbidden" };
+  const parsed = favoriteSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "errors.prescriptionInvalid" };
+  const items = parsed.data.items.map((i) => ({
+    medicationId: i.medicationId ?? null,
+    name: i.name,
+    dosage: i.dosage ?? "",
+    frequency: i.frequency ?? "",
+    duration: i.duration ?? "",
+    instructions: i.instructions ?? "",
+  }));
+  if (!allLatin({ items, notes: parsed.data.notes })) return { ok: false, error: "errors.rxNotLatin" };
+  if ((await db.prescriptionFavorite.count({ where: { doctorId: me.doctor.id } })) >= 30) return { ok: false, error: "errors.tooManyFavorites" };
+  const fav = await db.prescriptionFavorite.create({
+    data: { doctorId: me.doctor.id, name: parsed.data.name, items, notes: parsed.data.notes || null },
+  });
+  return { ok: true, id: fav.id };
+}
+
+export async function deleteFavoriteAction(id: string): Promise<void> {
+  const me = await currentDoctor();
+  if (!me) return;
+  await db.prescriptionFavorite.deleteMany({ where: { id, doctorId: me.doctor.id } });
 }

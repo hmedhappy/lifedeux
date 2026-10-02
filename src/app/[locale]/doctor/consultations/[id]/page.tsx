@@ -6,7 +6,8 @@ import { Chat } from "@/components/chat";
 import { ConsultWorkspace } from "@/components/consult-workspace";
 import { ConfirmSubmit, SubmitButton } from "@/components/forms";
 import { Dropdown } from "@/components/menu";
-import { PrescriptionEditor } from "@/components/prescription-editor";
+import { PrescriptionEditor, type Favorite } from "@/components/prescription-editor";
+import { revokeAndReplaceFormAction } from "@/actions/prescription";
 import { StatusBadge } from "@/components/status";
 import { Badge, Notice } from "@/components/ui";
 import {
@@ -40,7 +41,7 @@ export default async function DoctorConsultationPage({ params }: { params: Promi
   const { consultation: c, chat } = found;
   const patientName = `${c.patient.firstName} ${c.patient.lastName}`;
   const paid = ["PAID", "COMPLETED", "NO_SHOW"].includes(c.status);
-  const [messages, issued, templates, history, operations, moveSlot] = await Promise.all([
+  const [messages, issued, templates, history, operations, moveSlot, favorites, draft] = await Promise.all([
     paid ? loadMessages(c.id, user.id) : Promise.resolve([]),
     db.prescription.findMany({ where: { consultationId: c.id, status: "ISSUED" }, orderBy: { issuedAt: "asc" } }),
     templateOptions(doctor.id),
@@ -52,6 +53,8 @@ export default async function DoctorConsultationPage({ params }: { params: Promi
     }),
     db.doctorOperation.count({ where: { doctorId: doctor.id } }),
     c.rescheduleSlotId ? db.slot.findUnique({ where: { id: c.rescheduleSlotId } }) : null,
+    db.prescriptionFavorite.findMany({ where: { doctorId: doctor.id }, orderBy: { createdAt: "desc" } }),
+    db.prescription.findFirst({ where: { consultationId: c.id, status: "DRAFT" }, include: { items: { orderBy: { position: "asc" } } } }),
   ]);
   const canPrescribe = c.status === "PAID" || c.status === "COMPLETED";
   const years = age(c.patient.birthDate);
@@ -144,6 +147,9 @@ export default async function DoctorConsultationPage({ params }: { params: Promi
         hasStamp={!!doctor.stampImageId}
         templates={templates.map(({ ref, name }) => ({ ref, name }))}
         defaultTemplate={defaultTemplateRef(doctor)}
+        favorites={favorites.map((f) => ({ id: f.id, name: f.name, items: f.items as Favorite["items"], notes: f.notes }))}
+        initial={draft ? { items: draft.items, notes: draft.notes } : null}
+        key={draft?.id ?? "new"}
       />
       <Link href={`/${locale}/doctor/prescription`} className="mt-3 inline-block text-xs font-medium text-muted underline">
         {t("rx.manageTemplates")}
@@ -151,11 +157,18 @@ export default async function DoctorConsultationPage({ params }: { params: Promi
       {issued.length > 0 && (
         <ul className="mt-5 space-y-2 border-t border-line pt-4 text-sm">
           {issued.map((p) => (
-            <li key={p.id} className="flex items-center justify-between gap-3">
-              <a href={`/api/prescriptions/${p.id}/pdf`} target="_blank" rel="noopener" className="font-mono text-ink underline">
-                {p.number}
-              </a>
-              <span className="text-muted">{p.issuedAt ? formatDateTime(p.issuedAt, locale) : ""}</span>
+            <li key={p.id} className="flex flex-wrap items-center justify-between gap-2">
+              <span>
+                <a href={`/api/prescriptions/${p.id}/pdf`} target="_blank" rel="noopener" className="font-mono text-ink underline">
+                  {p.number}
+                </a>
+                <span className="block text-xs text-muted">{p.issuedAt ? formatDateTime(p.issuedAt, locale) : ""}</span>
+              </span>
+              <form action={revokeAndReplaceFormAction.bind(null, locale, c.id, p.id)}>
+                <ConfirmSubmit message={t("rx.replaceConfirm", { number: p.number ?? "" })} variant="ghost" testId="rx-replace">
+                  {t("rx.replace")}
+                </ConfirmSubmit>
+              </form>
             </li>
           ))}
         </ul>

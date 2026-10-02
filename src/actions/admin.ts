@@ -448,3 +448,20 @@ export async function saveSettingsAction(localeRaw: string, _: ActionState, form
   revalidatePath(`/${locale}`, "layout");
   return ok("admin.saved");
 }
+
+/** Validates (or rejects) the stamp a doctor sent from their space. */
+export async function reviewStampAction(localeRaw: string, doctorId: string, approve: boolean): Promise<void> {
+  const locale = toLocale(localeRaw);
+  if (!(await currentAdmin())) redirect(`/${locale}/login`);
+  const doctor = await db.doctor.findUnique({ where: { id: doctorId } });
+  if (doctor?.pendingStampImageId) {
+    await db.$transaction([
+      db.doctor.update({
+        where: { id: doctorId },
+        data: approve ? { stampImageId: doctor.pendingStampImageId, pendingStampImageId: null } : { pendingStampImageId: null },
+      }),
+      db.alert.updateMany({ where: { doctorId, kind: "stampToReview", resolvedAt: null }, data: { resolvedAt: new Date() } }),
+    ]);
+  }
+  revalidatePath(`/${locale}/admin`, "layout");
+}
