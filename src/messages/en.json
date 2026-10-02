@@ -424,7 +424,12 @@
     "transferText": "{price} per person. You will be welcomed and driven by shuttle.",
     "transferIncluded": "Included with your accommodation.",
     "summary": "Summary",
-    "continue": "Continue to payment"
+    "continue": "Continue to payment",
+    "stepTravellers": "Travellers",
+    "stepStay": "Lodging",
+    "stepTransfer": "Transfer and total",
+    "passportLater": "Passport (can be added later)",
+    "passportHint": "Passport numbers can be added until 7 days before the procedure."
   },
   "price": {
     "operation": "Procedure",
@@ -478,7 +483,8 @@
     "transferYes": "AIRPORT PICK-UP: YES",
     "transferNo": "INDEPENDENT ARRIVAL",
     "companions": "Companions",
-    "instructions": "Keep this pass on your phone or printed. At the airport, our team scans the QR code and guides you to the shuttle."
+    "instructions": "Keep this pass on your phone or printed. At the airport, our team scans the QR code and guides you to the shuttle.",
+    "pdfFooter": "Show this QR code at the airport, the lodging and the clinic."
   },
   "doctorArea": {
     "title": "Doctor area",
@@ -786,7 +792,17 @@
     "cancelled": "Booking cancelled: do not take charge.",
     "markStep": "Confirm: {step}",
     "completed": "Stay completed.",
-    "space": "Field space"
+    "space": "Field space",
+    "agent": "Agent:",
+    "mine": "My patients",
+    "flight": "Flight",
+    "lodgingIssue": "Lodging reported unavailable: the patient is choosing another one.",
+    "doctorStep": "Next step is confirmed by the surgeon: \"Procedure done\".",
+    "queued": "No network: the step will be sent as soon as you are back online.",
+    "queuedButton": "Waiting for network…",
+    "queueCount": "{n} {n:step|steps} waiting to be sent",
+    "synced": "{n} {n:step|steps} sent",
+    "stale": "This step was already recorded. The page is up to date."
   },
   "errors": {
     "invalidCredentials": "Wrong email or password.",
@@ -843,7 +859,8 @@
     "rxNotLatin": "Prescriptions are printed in Latin letters: write medicines and posology without Arabic characters.",
     "tooManyFavorites": "30 saved prescriptions at most. Delete one first.",
     "scheduleInvalid": "Invalid hours. Write for example 09:00-12:00, 14:00-17:00.",
-    "vacationBooked": "Not possible: {n} {n:slot is|slots are} already booked on these dates. Move or finish those appointments first."
+    "vacationBooked": "Not possible: {n} {n:slot is|slots are} already booked on these dates. Move or finish those appointments first.",
+    "flightInvalid": "Invalid flight. Example: TU 721, with the arrival date and time."
   },
   "email": {
     "invite": {
@@ -1300,5 +1317,59 @@
     "liveNow": "Consultation in progress",
     "join": "Join",
     "open": "Open"
+  },
+  "incident": {
+    "title": "Report an incident",
+    "kind": "Type",
+    "kinds": {
+      "late": "Delay (flight, patient)",
+      "health": "Health problem",
+      "lodging": "Lodging problem",
+      "transport": "Transport problem",
+      "other": "Other"
+    },
+    "note": "What happened",
+    "photo": "Photo (optional)",
+    "send": "Send to the team",
+    "sent": "Incident sent: the team has been alerted."
+  },
+  "surgery": {
+    "title": "Surgery in Tunisia",
+    "kicker": "All-inclusive medical stay",
+    "subtitle": "Choose the procedure, compare surgeons, estimate the total cost before any request.",
+    "chooseOperation": "1. Which procedure?",
+    "compare": "2. Surgeons for \"{name}\"",
+    "from": "from {price}",
+    "surgeons": "{n} {n:surgeon|surgeons}",
+    "years": "{n} years' experience",
+    "noDate": "Dates on request",
+    "simulator": "Estimate my stay",
+    "pickFirst": "Choose a procedure to estimate the total cost.",
+    "surgeon": "Surgeon",
+    "travellers": "Travellers (including you)",
+    "lodging": "Lodging ({n} nights)",
+    "estimate": "Estimated total",
+    "estimateHint": "Estimate with no commitment. The final price depends on the recovery time the surgeon confirms.",
+    "request": "Request a date",
+    "empty": "No procedures yet",
+    "emptyText": "Procedures offered by our surgeons will appear here."
+  },
+  "trip": {
+    "pdf": "Download (PDF)",
+    "title": "Prepare my trip",
+    "text": "Your flight helps the agent welcome you on time. Everything can still be changed.",
+    "flightNumber": "Flight number",
+    "flightArrival": "Expected arrival",
+    "optional": "Optional",
+    "passports": "Companions' passports",
+    "passportsUntil": "Can be changed until 7 days before the procedure.",
+    "passportsClosed": "Less than 7 days before the procedure: contact us for any correction.",
+    "save": "Save",
+    "saved": "Trip details saved.",
+    "agentTitle": "Your welcome agent",
+    "lodgingIssueTitle": "Your lodging is no longer available",
+    "lodgingIssueText": "We are sorry. Choose another lodging for the same dates, at no extra cost.",
+    "noAlternative": "No other lodging is free right now: our team will contact you.",
+    "chooseThis": "Choose this lodging"
   }
 }

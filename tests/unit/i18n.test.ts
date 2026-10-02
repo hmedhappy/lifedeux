@@ -53,6 +53,8 @@ const DYNAMIC_KEYS = [
   ...["photo", "stamp", "schedule", "price"].map((s) => `today.steps.${s}`),
   ...["next", "liveNow", "join", "open"].map((s) => `today.${s}`),
   ...["saved", "savedPricePending"].map((s) => `doctorProfile.${s}`),
+  ...["late", "health", "lodging", "transport", "other"].map((s) => `incident.kinds.${s}`),
+  "scan.stale",
   "payment.mockHold",
   "payment.mockPay",
 ];

@@ -424,7 +424,12 @@
     "transferText": "{price} par personne. Vous serez accueilli et conduit en navette.",
     "transferIncluded": "Inclus avec votre hébergement.",
     "summary": "Récapitulatif",
-    "continue": "Continuer vers le paiement"
+    "continue": "Continuer vers le paiement",
+    "stepTravellers": "Voyageurs",
+    "stepStay": "Logement",
+    "stepTransfer": "Transfert et total",
+    "passportLater": "Passeport (plus tard possible)",
+    "passportHint": "Les numéros de passeport peuvent être ajoutés jusqu'à 7 jours avant l'intervention."
   },
   "price": {
     "operation": "Intervention",
@@ -478,7 +483,8 @@
     "transferYes": "PRISE EN CHARGE AÉROPORT : OUI",
     "transferNo": "ARRIVÉE AUTONOME",
     "companions": "Accompagnants",
-    "instructions": "Gardez cette fiche sur votre téléphone ou imprimée. À l'aéroport, notre équipe scanne le QR code puis vous guide jusqu'à la navette."
+    "instructions": "Gardez cette fiche sur votre téléphone ou imprimée. À l'aéroport, notre équipe scanne le QR code puis vous guide jusqu'à la navette.",
+    "pdfFooter": "Présentez ce QR code à l'aéroport, au logement et à la clinique."
   },
   "doctorArea": {
     "title": "Espace médecin",
@@ -786,7 +792,17 @@
     "cancelled": "Réservation annulée : ne pas prendre en charge.",
     "markStep": "Valider : {step}",
     "completed": "Séjour terminé.",
-    "space": "Espace terrain"
+    "space": "Espace terrain",
+    "agent": "Agent :",
+    "mine": "Mes patients",
+    "flight": "Vol",
+    "lodgingIssue": "Logement signalé indisponible : le patient choisit un autre logement.",
+    "doctorStep": "Étape suivante validée par le chirurgien : « Intervention réalisée ».",
+    "queued": "Pas de réseau : l'étape sera envoyée dès le retour de la connexion.",
+    "queuedButton": "En attente de réseau…",
+    "queueCount": "{n} {n:étape en attente d'envoi|étapes en attente d'envoi}",
+    "synced": "{n} {n:étape envoyée|étapes envoyées}",
+    "stale": "Cette étape a déjà été enregistrée. La fiche est à jour."
   },
   "errors": {
     "invalidCredentials": "Email ou mot de passe incorrect.",
@@ -843,7 +859,8 @@
     "rxNotLatin": "L'ordonnance s'imprime en lettres latines : écrivez les médicaments et la posologie sans caractères arabes.",
     "tooManyFavorites": "30 ordonnances types maximum. Supprimez-en une d'abord.",
     "scheduleInvalid": "Horaires invalides. Écrivez par exemple 09:00-12:00, 14:00-17:00.",
-    "vacationBooked": "Impossible : {n} {n:créneau est déjà réservé|créneaux sont déjà réservés} sur ces dates. Déplacez ou terminez ces rendez-vous d'abord."
+    "vacationBooked": "Impossible : {n} {n:créneau est déjà réservé|créneaux sont déjà réservés} sur ces dates. Déplacez ou terminez ces rendez-vous d'abord.",
+    "flightInvalid": "Vol invalide. Exemple : TU 721, avec la date et l'heure d'arrivée."
   },
   "email": {
     "invite": {
@@ -1300,5 +1317,59 @@
     "liveNow": "Consultation en cours",
     "join": "Rejoindre",
     "open": "Ouvrir"
+  },
+  "incident": {
+    "title": "Signaler un incident",
+    "kind": "Type",
+    "kinds": {
+      "late": "Retard (vol, patient)",
+      "health": "Problème de santé",
+      "lodging": "Problème de logement",
+      "transport": "Problème de transport",
+      "other": "Autre"
+    },
+    "note": "Ce qui s'est passé",
+    "photo": "Photo (facultatif)",
+    "send": "Envoyer à l'équipe",
+    "sent": "Incident envoyé : l'équipe est prévenue."
+  },
+  "surgery": {
+    "title": "Chirurgie en Tunisie",
+    "kicker": "Séjour médical tout compris",
+    "subtitle": "Choisissez l'intervention, comparez les chirurgiens, estimez le coût total avant toute demande.",
+    "chooseOperation": "1. Quelle intervention ?",
+    "compare": "2. Chirurgiens pour « {name} »",
+    "from": "dès {price}",
+    "surgeons": "{n} {n:chirurgien|chirurgiens}",
+    "years": "{n} ans d'expérience",
+    "noDate": "Dates sur demande",
+    "simulator": "Estimer mon séjour",
+    "pickFirst": "Choisissez une intervention pour estimer le coût total.",
+    "surgeon": "Chirurgien",
+    "travellers": "Voyageurs (vous compris)",
+    "lodging": "Logement ({n} nuits)",
+    "estimate": "Total estimé",
+    "estimateHint": "Estimation sans engagement. Le prix final dépend de la durée de convalescence confirmée par le chirurgien.",
+    "request": "Demander une date",
+    "empty": "Aucune intervention pour le moment",
+    "emptyText": "Les interventions proposées par nos chirurgiens apparaîtront ici."
+  },
+  "trip": {
+    "pdf": "Télécharger (PDF)",
+    "title": "Préparer mon voyage",
+    "text": "Votre vol aide l'agent à vous accueillir à l'heure. Tout reste modifiable.",
+    "flightNumber": "Numéro de vol",
+    "flightArrival": "Arrivée prévue",
+    "optional": "Facultatif",
+    "passports": "Passeports des accompagnants",
+    "passportsUntil": "Modifiable jusqu'à 7 jours avant l'intervention.",
+    "passportsClosed": "Moins de 7 jours avant l'intervention : contactez-nous pour toute correction.",
+    "save": "Enregistrer",
+    "saved": "Informations de voyage enregistrées.",
+    "agentTitle": "Votre agent d'accueil",
+    "lodgingIssueTitle": "Votre logement n'est plus disponible",
+    "lodgingIssueText": "Toutes nos excuses. Choisissez un autre logement pour les mêmes dates, sans supplément.",
+    "noAlternative": "Aucun autre logement libre pour l'instant : notre équipe vous contacte.",
+    "chooseThis": "Choisir ce logement"
   }
 }

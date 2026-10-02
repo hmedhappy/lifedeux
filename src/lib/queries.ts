@@ -154,3 +154,46 @@ export async function listActiveStays(minCapacity = 1) {
     orderBy: [{ pricePerNight: "asc" }],
   });
 }
+
+/**
+ * Surgery catalogue: each active procedure with the surgeons offering it (price,
+ * rating, next free date), cheapest first. docs/RELOOKING.md §8 ("l'opération d'abord").
+ */
+export async function surgeryCatalogue() {
+  const operations = await db.operation.findMany({
+    where: { active: true },
+    include: {
+      specialty: true,
+      doctors: { where: { doctor: activeDoctor }, include: { doctor: { include: { user: true } } } },
+    },
+    orderBy: { basePrice: "asc" },
+  });
+  const doctorIds = [...new Set(operations.flatMap((o) => o.doctors.map((d) => d.doctorId)))];
+  const [ratings, next] = await Promise.all([
+    doctorRatings(doctorIds),
+    db.slot.groupBy({
+      by: ["doctorId"],
+      where: { doctorId: { in: doctorIds }, kind: "OPERATION", status: "FREE", startsAt: { gt: new Date() } },
+      _min: { startsAt: true },
+    }),
+  ]);
+  const nextSlot = new Map(next.map((n) => [n.doctorId, n._min.startsAt]));
+  return operations
+    .filter((o) => o.doctors.length > 0)
+    .map((o) => ({
+      ...o,
+      surgeons: o.doctors
+        .map((d) => ({
+          id: d.doctorId,
+          name: `Dr ${d.doctor.user.firstName} ${d.doctor.user.lastName}`,
+          photoUrl: d.doctor.photoUrl,
+          city: d.doctor.city,
+          clinic: d.doctor.clinicName,
+          years: d.doctor.yearsOfExperience,
+          price: d.price,
+          rating: ratings.get(d.doctorId) ?? null,
+          nextSlot: nextSlot.get(d.doctorId) ?? null,
+        }))
+        .sort((a, b) => a.price - b.price),
+    }));
+}
