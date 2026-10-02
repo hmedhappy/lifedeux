@@ -764,7 +764,9 @@
       "providers": "Moyens de paiement actifs",
       "enabled": "Activé",
       "disabled": "Non configuré",
-      "mockWarning": "Le paiement de test est actif. Désactivez PAYMENT_MOCK en production."
+      "mockWarning": "Le paiement de test est actif. Désactivez PAYMENT_MOCK en production.",
+      "supportWhatsapp": "WhatsApp du support",
+      "supportWhatsappHint": "Format international, ex. +216 98 123 456. Affiché en bouton discret pour les patients."
     },
     "photoUploadHint": "JPEG, PNG ou WebP. Les images sont redimensionnées automatiquement.",
     "consultationsTitle": "Consultations en ligne",
@@ -997,6 +999,42 @@
       "cta": "Ouvrir ma consultation",
       "accepted": "Le médecin a accepté le nouvel horaire.",
       "refused": "Le médecin n'a pas pu accepter le nouvel horaire ; l'horaire initial est conservé."
+    },
+    "reminderDay": {
+      "subject": "Rappel : votre consultation {reference}",
+      "title": "À bientôt, {name}",
+      "body": "Votre consultation avec {doctor} a lieu le {date}. La conversation s'ouvrira quelques minutes avant.",
+      "cta": "Ouvrir ma consultation"
+    },
+    "reminderSoon": {
+      "subject": "Votre consultation commence à {time}",
+      "title": "C'est bientôt, {name}",
+      "body": "La consultation {reference} commence à {time}. La conversation est ouverte.",
+      "cta": "Rejoindre la conversation"
+    },
+    "doctorNudge": {
+      "subject": "Une demande attend votre réponse — {reference}",
+      "title": "Bonjour {name}",
+      "body": "La demande {reference} pour le {date} attend votre réponse depuis 24 h. Acceptez ou refusez-la pour que le patient soit fixé.",
+      "cta": "Répondre"
+    },
+    "trackingStep": {
+      "subject": "Votre séjour — {reference}",
+      "title": "Nouvelle étape, {name}",
+      "body": "Étape enregistrée : {step}.",
+      "cta": "Voir mon séjour"
+    },
+    "agentPlanning": {
+      "subject": "Votre planning du {date}",
+      "title": "Demain, {name}",
+      "body": "Patients du {date} : {list}",
+      "cta": "Ouvrir le scan"
+    },
+    "adminAlert": {
+      "subject": "Alerte urgente LifeDeux",
+      "title": "À traiter, {name}",
+      "body": "{message}",
+      "cta": "Ouvrir « À traiter »"
     }
   },
   "slotKind": {
@@ -1488,5 +1526,9 @@
       "noAnswer": "Médecin sans réponse",
       "other": "Alerte"
     }
+  },
+  "support": {
+    "label": "Aide sur WhatsApp",
+    "prefill": "Bonjour LifeDeux, j'ai une question."
   }
 }

@@ -764,7 +764,9 @@
       "providers": "طرق الدفع المفعّلة",
       "enabled": "مفعّل",
       "disabled": "غير مهيّأ",
-      "mockWarning": "الدفع التجريبي مفعّل. عطّل PAYMENT_MOCK في بيئة الإنتاج."
+      "mockWarning": "الدفع التجريبي مفعّل. عطّل PAYMENT_MOCK في بيئة الإنتاج.",
+      "supportWhatsapp": "واتساب الدعم",
+      "supportWhatsappHint": "بالصيغة الدولية مثل +216 98 123 456. يظهر كزر صغير للمرضى."
     },
     "photoUploadHint": "JPEG أو PNG أو WebP. يتم تصغير الصور تلقائيًا.",
     "consultationsTitle": "الاستشارات عن بعد",
@@ -997,6 +999,42 @@
       "cta": "فتح استشارتي",
       "accepted": "وافق الطبيب على الموعد الجديد.",
       "refused": "تعذّر على الطبيب قبول الموعد الجديد؛ تم الإبقاء على الموعد الأصلي."
+    },
+    "reminderDay": {
+      "subject": "تذكير: استشارتك {reference}",
+      "title": "إلى اللقاء قريباً، {name}",
+      "body": "استشارتك مع {doctor} يوم {date}. تُفتح المحادثة قبل دقائق من الموعد.",
+      "cta": "فتح استشارتي"
+    },
+    "reminderSoon": {
+      "subject": "تبدأ استشارتك الساعة {time}",
+      "title": "اقترب الموعد، {name}",
+      "body": "تبدأ الاستشارة {reference} الساعة {time}. المحادثة مفتوحة.",
+      "cta": "الانضمام إلى المحادثة"
+    },
+    "doctorNudge": {
+      "subject": "طلب بانتظار ردك — {reference}",
+      "title": "مرحباً {name}",
+      "body": "الطلب {reference} ليوم {date} بانتظار ردك منذ 24 ساعة. اقبله أو ارفضه ليعرف المريض.",
+      "cta": "الرد"
+    },
+    "trackingStep": {
+      "subject": "إقامتك — {reference}",
+      "title": "مرحلة جديدة، {name}",
+      "body": "تم تسجيل المرحلة: {step}.",
+      "cta": "عرض إقامتي"
+    },
+    "agentPlanning": {
+      "subject": "جدولك ليوم {date}",
+      "title": "غداً، {name}",
+      "body": "مرضى يوم {date}: {list}",
+      "cta": "فتح الماسح"
+    },
+    "adminAlert": {
+      "subject": "تنبيه عاجل LifeDeux",
+      "title": "للمعالجة، {name}",
+      "body": "{message}",
+      "cta": "فتح «للمعالجة»"
     }
   },
   "slotKind": {
@@ -1488,5 +1526,9 @@
       "noAnswer": "طبيب لا يرد",
       "other": "تنبيه"
     }
+  },
+  "support": {
+    "label": "المساعدة عبر واتساب",
+    "prefill": "مرحباً LifeDeux، لدي سؤال."
   }
 }

@@ -764,7 +764,9 @@
       "providers": "Active payment methods",
       "enabled": "Enabled",
       "disabled": "Not configured",
-      "mockWarning": "Test payment is enabled. Turn PAYMENT_MOCK off in production."
+      "mockWarning": "Test payment is enabled. Turn PAYMENT_MOCK off in production.",
+      "supportWhatsapp": "Support WhatsApp",
+      "supportWhatsappHint": "International format, e.g. +216 98 123 456. Shown as a discreet button to patients."
     },
     "photoUploadHint": "JPEG, PNG or WebP. Images are resized automatically.",
     "consultationsTitle": "Online consultations",
@@ -997,6 +999,42 @@
       "cta": "Open my consultation",
       "accepted": "The doctor accepted the new time.",
       "refused": "The doctor could not accept the new time; the original time is kept."
+    },
+    "reminderDay": {
+      "subject": "Reminder: your consultation {reference}",
+      "title": "See you soon, {name}",
+      "body": "Your consultation with {doctor} is on {date}. The conversation opens a few minutes before.",
+      "cta": "Open my consultation"
+    },
+    "reminderSoon": {
+      "subject": "Your consultation starts at {time}",
+      "title": "It's almost time, {name}",
+      "body": "Consultation {reference} starts at {time}. The conversation is open.",
+      "cta": "Join the conversation"
+    },
+    "doctorNudge": {
+      "subject": "A request is waiting for your answer — {reference}",
+      "title": "Hello {name}",
+      "body": "Request {reference} for {date} has been waiting for your answer for 24 h. Accept or decline it so the patient knows.",
+      "cta": "Answer"
+    },
+    "trackingStep": {
+      "subject": "Your stay — {reference}",
+      "title": "New step, {name}",
+      "body": "Step recorded: {step}.",
+      "cta": "See my stay"
+    },
+    "agentPlanning": {
+      "subject": "Your schedule for {date}",
+      "title": "Tomorrow, {name}",
+      "body": "Patients on {date}: {list}",
+      "cta": "Open the scanner"
+    },
+    "adminAlert": {
+      "subject": "Urgent LifeDeux alert",
+      "title": "To handle, {name}",
+      "body": "{message}",
+      "cta": "Open \"To do\""
     }
   },
   "slotKind": {
@@ -1488,5 +1526,9 @@
       "noAnswer": "Doctor not answering",
       "other": "Alert"
     }
+  },
+  "support": {
+    "label": "Help on WhatsApp",
+    "prefill": "Hello LifeDeux, I have a question."
   }
 }

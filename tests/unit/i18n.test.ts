@@ -38,7 +38,7 @@ const DYNAMIC_KEYS = [
   ...[1, 2, 3, 4, 5].flatMap((n) => [`home.steps.${n}.title`, `home.steps.${n}.text`]),
   ...[1, 2, 3, 4].flatMap((n) => [`home.consultSteps.${n}.title`, `home.consultSteps.${n}.text`]),
   ...["stripe", "konnect", "mock"].flatMap((s) => [`pay.providers.${s}.title`, `pay.providers.${s}.text`]),
-  ...["invite", "reset", "requestReceived", "newRequest", "confirmed", "refused", "paid", "expired", "consultConfirmed", "consultPaid", "consultCancelled", "rescheduleRequested", "rescheduleAnswered", "loginCode", "prescription"].flatMap((s) =>
+  ...["invite", "reset", "requestReceived", "newRequest", "confirmed", "refused", "paid", "expired", "consultConfirmed", "consultPaid", "consultCancelled", "rescheduleRequested", "rescheduleAnswered", "loginCode", "prescription", "reminderDay", "reminderSoon", "doctorNudge", "trackingStep", "agentPlanning", "adminAlert"].flatMap((s) =>
     ["subject", "title", "body", "cta"].map((f) => `email.${s}.${f}`),
   ),
   ...["first", "followUp", "results", "renewal", "pain", "question"].map((s) => `booking.reasons.${s}`),

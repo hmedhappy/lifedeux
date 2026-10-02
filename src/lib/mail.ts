@@ -1,7 +1,9 @@
 import "server-only";
 import nodemailer, { type Transporter } from "nodemailer";
 import { getT, toLocale } from "./i18n";
+import { db } from "./db";
 import { appUrl } from "./settings";
+import { sendWhatsApp, whatsappEnabled, whatsappNumber } from "./whatsapp";
 
 type Mail = { to: string; subject: string; html: string };
 
@@ -43,7 +45,12 @@ function layout(title: string, body: string, cta?: { label: string; href: string
   <p style="color:#717171;font-size:12px">LifeDeux</p></div>`;
 }
 
-type Recipient = { email: string; firstName: string; locale: string };
+type Recipient = { id?: string; email: string; firstName: string; locale: string; phone?: string | null };
+
+/** Account emails stay email-only; everything else also goes to WhatsApp when it is set up. */
+const EMAIL_ONLY = new Set(["invite", "reset", "loginCode"]);
+
+const strip = (html: string) => html.replace(/<[^>]+>/g, "");
 
 /** Subjects stay neutral on purpose: no medical wording in inboxes. */
 export async function sendTemplate(
@@ -63,7 +70,13 @@ export async function sendTemplate(
     | "consultCancelled"
     | "rescheduleRequested"
     | "rescheduleAnswered"
-    | "prescription",
+    | "prescription"
+    | "reminderDay"
+    | "reminderSoon"
+    | "doctorNudge"
+    | "trackingStep"
+    | "agentPlanning"
+    | "adminAlert",
   vars: Record<string, string>,
   path?: string,
 ): Promise<void> {
@@ -71,13 +84,17 @@ export async function sendTemplate(
   const t = getT(locale);
   const data = { name: to.firstName, ...vars };
   const href = path ? `${appUrl()}/${locale}${path}` : undefined;
+  const body = t(`email.${template}.body`, data);
   await sendMail({
     to: to.email,
     subject: t(`email.${template}.subject`, data),
-    html: layout(
-      t(`email.${template}.title`, data),
-      t(`email.${template}.body`, data),
-      href ? { label: t(`email.${template}.cta`, data), href } : undefined,
-    ),
+    html: layout(t(`email.${template}.title`, data), body, href ? { label: t(`email.${template}.cta`, data), href } : undefined),
   });
+  const logs = [{ userId: to.id ?? null, channel: "email", template, target: to.email, status: process.env.SMTP_HOST ? "sent" : "logged" }];
+  const phone = EMAIL_ONLY.has(template) || !whatsappEnabled() ? null : whatsappNumber(to.phone);
+  if (phone) {
+    const ok = await sendWhatsApp(phone, `${strip(body)}${href ? ` ${href}` : ""}`, locale);
+    logs.push({ userId: to.id ?? null, channel: "whatsapp", template, target: phone, status: ok ? "sent" : "failed" });
+  }
+  await db.notificationLog.createMany({ data: logs }).catch(() => undefined);
 }

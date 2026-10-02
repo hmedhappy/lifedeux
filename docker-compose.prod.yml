@@ -31,7 +31,7 @@ services:
     ports:
       - "127.0.0.1:${APP_PORT:-3010}:3000"
 
-  # Releases unpaid slots every hour (calls the protected /api/cron/expire endpoint).
+  # Every 5 minutes: unpaid slots, reminders, doctor nudges, alerts (protected /api/cron/expire endpoint).
   cron:
     image: curlimages/curl:8.10.1
     restart: unless-stopped
@@ -40,7 +40,7 @@ services:
       - app
     entrypoint: ["/bin/sh", "-c"]
     command:
-      - 'while true; do sleep 3600; curl -fsS -H "Authorization: Bearer $$CRON_SECRET" http://app:3000/api/cron/expire || true; done'
+      - 'while true; do sleep 300; curl -fsS -H "Authorization: Bearer $$CRON_SECRET" http://app:3000/api/cron/expire || true; done'
 
   # Automatic HTTPS (Let's Encrypt). Enabled with USE_CADDY=1; skip it if nginx already owns ports 80/443.
   caddy:

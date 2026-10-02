@@ -423,6 +423,7 @@ export async function saveSettingsAction(localeRaw: string, _: ActionState, form
       paymentDeadlineHours: z.coerce.number().int().min(1).max(720),
       maxCompanions: z.coerce.number().int().min(0).max(10),
       supportPhone: text(40),
+      supportWhatsapp: z.string().trim().regex(/^\+?[\d\s]{8,20}$/),
       supportEmail: z.string().trim().email(),
     })
     .safeParse(Object.fromEntries(formData));

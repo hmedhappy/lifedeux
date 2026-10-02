@@ -34,6 +34,9 @@ export default async function AdminSettingsPage({ params }: { params: Promise<{ 
           <Field label={t("admin.settings.supportPhone")}>
             <Input name="supportPhone" defaultValue={settings.supportPhone} required />
           </Field>
+          <Field label={t("admin.settings.supportWhatsapp")} hint={t("admin.settings.supportWhatsappHint")}>
+            <Input name="supportWhatsapp" defaultValue={settings.supportWhatsapp} inputMode="tel" required />
+          </Field>
           <Field label={t("admin.settings.supportEmail")}>
             <Input type="email" name="supportEmail" defaultValue={settings.supportEmail} required />
           </Field>

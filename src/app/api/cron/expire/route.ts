@@ -1,6 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
-import { expireOverdueBookings } from "@/lib/bookings";
-import { syncAllSchedules } from "@/lib/schedule";
+import { runScheduledJobs } from "@/lib/jobs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,11 +13,11 @@ function authorized(request: Request): boolean {
   return expected.length === given.length && timingSafeEqual(expected, given);
 }
 
-/** Called by a scheduler (cron) to release unpaid slots and roll weekly schedules forward. */
+/**
+ * Called every 5 minutes by the cron container: releases unpaid slots, sends reminders
+ * and doctor nudges, forwards urgent alerts, the agents' planning, and rolls schedules.
+ */
 export async function GET(request: Request) {
   if (!authorized(request)) return new Response("Unauthorized", { status: 401 });
-  const expired = await expireOverdueBookings();
-  // Keeps 4 weeks of slots published for doctors who use a weekly schedule.
-  const slots = await syncAllSchedules();
-  return Response.json({ expired, slots });
+  return Response.json(await runScheduledJobs());
 }

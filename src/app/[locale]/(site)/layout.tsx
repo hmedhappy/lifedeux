@@ -4,6 +4,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { chatOpensBefore } from "@/lib/consultation-rules";
 import { db } from "@/lib/db";
 import { getT, toLocale } from "@/lib/i18n";
+import { getSettings } from "@/lib/settings";
+import { SupportButton } from "@/components/support-button";
 
 export default async function SiteLayout({
   children,
@@ -43,6 +45,7 @@ export default async function SiteLayout({
       <Header locale={locale} />
       <main>{children}</main>
       <Footer locale={locale} />
+      {(!user || user.role === "PATIENT") && <SupportButton phone={(await getSettings()).supportWhatsapp} />}
       {tabs && <TabBar items={tabs} />}
     </div>
   );
