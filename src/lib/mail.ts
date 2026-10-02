@@ -60,6 +60,9 @@ export async function sendTemplate(
     | "expired"
     | "consultConfirmed"
     | "consultPaid"
+    | "consultCancelled"
+    | "rescheduleRequested"
+    | "rescheduleAnswered"
     | "prescription",
   vars: Record<string, string>,
   path?: string,

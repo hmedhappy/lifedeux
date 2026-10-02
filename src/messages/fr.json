@@ -139,7 +139,7 @@
     "proText": "Rejoignez LifeDeux sur invitation d'un confrère super-médecin, ou écrivez-nous à {email}."
   },
   "doctors": {
-    "title": "Chirurgiens",
+    "title": "Médecins",
     "subtitle": "Comparez les profils et les disponibilités, puis réservez en quelques clics.",
     "allOperations": "Toutes les interventions",
     "empty": "Aucun chirurgien disponible",
@@ -155,7 +155,8 @@
     "searchPlaceholder": "Nom, ville, clinique…",
     "online": "En ligne",
     "surgery": "Chirurgie",
-    "consultFrom": "Consultation"
+    "consultFrom": "Consultation",
+    "suggested": "Spécialités suggérées"
   },
   "doctor": {
     "experience": "Expérience",
@@ -196,7 +197,22 @@
     "service": {
       "consultation": "Consultation en ligne",
       "operation": "Intervention"
-    }
+    },
+    "chooseDay": "Choisir un jour",
+    "chooseSlotCta": "Choisir un créneau",
+    "chooseSlotSurgery": "Demander une date",
+    "details": "Détails",
+    "moreDates": "Plus de dates",
+    "nextSlot": "Prochain créneau : {date}",
+    "noReviews": "Pas encore d'avis.",
+    "reasonPlaceholder": "Décrivez en quelques mots (facultatif)",
+    "reviewsCount": "{n} {n:avis|avis}",
+    "reviewsTitle": "Avis des patients",
+    "surgeryFrom": "Chirurgie dès {price}",
+    "tunisTime": "heure de Tunis",
+    "verified": "Vérifié",
+    "verifiedReview": "Consultation vérifiée",
+    "yourTime": "Soit {time} chez vous"
   },
   "stays": {
     "title": "Hébergements",
@@ -232,7 +248,21 @@
     "resetSent": "Si un compte existe avec cet email, un lien vient de vous être envoyé (valable 1 heure).",
     "resetTitle": "Nouveau mot de passe",
     "resetSubtitle": "Choisissez un nouveau mot de passe pour {email}.",
-    "resetButton": "Enregistrer le mot de passe"
+    "resetButton": "Enregistrer le mot de passe",
+    "loginSubtitleCode": "Recevez un code par email : pas de mot de passe à retenir.",
+    "googleError": "La connexion avec Google n'a pas abouti. Réessayez ou utilisez votre email.",
+    "withPassword": "Se connecter avec un mot de passe",
+    "google": "Continuer avec Google",
+    "or": "ou",
+    "sendCode": "Recevoir un code",
+    "codeSent": "Code envoyé à {email}. Il est valable 10 minutes.",
+    "code": "Code à 6 chiffres",
+    "verify": "Valider",
+    "changeEmail": "Changer d'email",
+    "resend": "Renvoyer le code",
+    "newAccount": "Première visite : dites-nous comment vous appeler.",
+    "consentGeneral": "J'accepte les conditions d'utilisation et le traitement de mes données de santé pour ma prise en charge.",
+    "createAndContinue": "Créer mon compte et continuer"
   },
   "fields": {
     "name": "Nom",
@@ -245,17 +275,32 @@
     "password": "Mot de passe",
     "passwordHint": "8 caractères minimum.",
     "passwordConfirm": "Confirmer le mot de passe",
-    "passport": "N° de passeport"
+    "passport": "N° de passeport",
+    "birthDate": "Date de naissance",
+    "birthDateHint": "Elle figure sur vos ordonnances.",
+    "countryOptional": "Pays (facultatif)",
+    "phoneOptional": "Téléphone (facultatif)",
+    "latinHint": "En lettres latines, comme sur votre passeport."
   },
   "account": {
-    "title": "Mes réservations",
+    "title": "Mes rendez-vous",
     "hello": "Bonjour {name}",
     "newBooking": "Nouvelle réservation",
     "empty": "Aucune réservation",
     "emptyText": "Choisissez un chirurgien et un créneau pour commencer.",
     "findDoctor": "Trouver un chirurgien",
     "consultations": "Mes consultations en ligne",
-    "operations": "Mes interventions"
+    "operations": "Mes interventions",
+    "upcoming": "À venir",
+    "noUpcoming": "Aucun rendez-vous à venir.",
+    "past": "Passés ({n})",
+    "next": {
+      "joinChat": "Rejoindre la conversation",
+      "pay": "Payer pour confirmer",
+      "waitingDoctor": "En attente du médecin",
+      "upcoming": "Confirmé",
+      "prescription": "{n} {n:ordonnance|ordonnances}"
+    }
   },
   "status": {
     "REQUESTED": "En attente de confirmation",
@@ -265,7 +310,8 @@
     "PAID": "Payé",
     "IN_PROGRESS": "Séjour en cours",
     "COMPLETED": "Terminé",
-    "CANCELLED": "Annulé"
+    "CANCELLED": "Annulé",
+    "NO_SHOW": "Absent"
   },
   "tracking": {
     "ARRIVED_AIRPORT": "Arrivé à l'aéroport",
@@ -284,7 +330,9 @@
     "PENDING": "En attente",
     "SUCCEEDED": "Réussi",
     "FAILED": "Échoué",
-    "REFUNDED": "Remboursé"
+    "REFUNDED": "Remboursé",
+    "AUTHORIZED": "Empreinte",
+    "CANCELED": "Libérée"
   },
   "roles": {
     "PATIENT": "Patient",
@@ -339,7 +387,22 @@
     "travellers": "Voyageurs",
     "transfer": "Transfert aéroport",
     "stay": "Hébergement",
-    "support": "Besoin d'aide ? {phone} · {email}"
+    "support": "Besoin d'aide ? {phone} · {email}",
+    "addPhotos": "Ajouter des photos",
+    "photosHint": "Facultatif, 3 photos maximum. Seul le médecin les voit.",
+    "consentConsultation": "J'accepte que le médecin consulte les informations et photos envoyées pour ma consultation.",
+    "consentSurgery": "J'accepte que mes informations soient transmises au chirurgien et à l'équipe LifeDeux pour organiser mon séjour.",
+    "policyConsultation": "Rien n'est débité avant l'accord du médecin. Annulation gratuite jusqu'à 24 h avant.",
+    "reasons": {
+      "first": "Premier avis",
+      "followUp": "Suivi",
+      "results": "Résultats d'analyses",
+      "renewal": "Renouvellement d'ordonnance",
+      "pain": "Douleur",
+      "question": "Question"
+    },
+    "signInTitle": "Dernière étape",
+    "signInIntro": "Indiquez votre email pour envoyer la demande et suivre votre rendez-vous."
   },
   "options": {
     "title": "Personnalisez votre séjour",
@@ -394,7 +457,8 @@
     "mockTitle": "Paiement de test",
     "mockInfo": "Mode démonstration : aucun argent n'est débité.",
     "mockPay": "Simuler un paiement réussi",
-    "mockFail": "Simuler un échec"
+    "mockFail": "Simuler un échec",
+    "mockHold": "Autoriser (empreinte)"
   },
   "ticket": {
     "title": "Fiche de réservation",
@@ -758,7 +822,11 @@
     "noService": "Activez la consultation en ligne ou au moins une intervention.",
     "medicationExists": "Ce médicament existe déjà.",
     "tooManyTemplates": "Vous avez atteint le nombre maximal de modèles (10).",
-    "letterheadRequired": "Ajoutez l'image de votre papier à en-tête."
+    "letterheadRequired": "Ajoutez l'image de votre papier à en-tête.",
+    "contactRequired": "Indiquez un téléphone et un pays pour organiser votre séjour.",
+    "nameNotLatin": "Écrivez le nom en lettres latines (A–Z, accents acceptés), comme sur votre passeport.",
+    "ratingRequired": "Choisissez une note de 1 à 5 étoiles.",
+    "rescheduleTooLate": "Le changement d'horaire n'est plus possible à moins de 24 h."
   },
   "email": {
     "invite": {
@@ -826,6 +894,32 @@
       "title": "Bonjour {name}",
       "body": "Votre médecin vous a envoyé une ordonnance certifiée ({reference}). Téléchargez-la depuis la conversation et présentez-la en pharmacie.",
       "cta": "Voir mon ordonnance"
+    },
+    "loginCode": {
+      "subject": "Votre code LifeDeux : {code}",
+      "title": "Bonjour {name}",
+      "body": "Votre code de connexion est {code}. Il est valable 10 minutes. Si vous n'avez rien demandé, ignorez cet email.",
+      "cta": "Ouvrir LifeDeux"
+    },
+    "consultCancelled": {
+      "subject": "Annulation confirmée — {reference}",
+      "title": "C'est annulé, {name}",
+      "body": "Votre consultation {reference} est annulée. Le remboursement intégral est en cours ; il apparaît sous quelques jours selon votre banque.",
+      "cta": "Voir le détail"
+    },
+    "rescheduleRequested": {
+      "subject": "Demande de changement d'horaire — {reference}",
+      "title": "Bonjour {name}",
+      "body": "Votre patient souhaite déplacer la consultation {reference} du {from} au {date}. Acceptez ou refusez depuis votre espace.",
+      "cta": "Répondre"
+    },
+    "rescheduleAnswered": {
+      "subject": "Changement d'horaire — {reference}",
+      "title": "Bonjour {name}",
+      "body": "{outcome} Votre consultation {reference} a lieu le {date}.",
+      "cta": "Ouvrir ma consultation",
+      "accepted": "Le médecin a accepté le nouvel horaire.",
+      "refused": "Le médecin n'a pas pu accepter le nouvel horaire ; l'horaire initial est conservé."
     }
   },
   "slotKind": {
@@ -868,7 +962,36 @@
     "howChat": "Échange par chat texte et photo. Appel audio et vidéo bientôt disponibles.",
     "howOpens": "La conversation s'ouvre {minutes} minutes avant l'heure prévue.",
     "end": "Terminer la consultation",
-    "endConfirm": "Terminer la consultation ? La conversation passera en lecture seule."
+    "endConfirm": "Terminer la consultation ? La conversation passera en lecture seule.",
+    "steps": {
+      "requested": "Demande envoyée",
+      "accepted": "Accord du médecin",
+      "paid": "Paiement",
+      "consultation": "Consultation",
+      "prescription": "Ordonnance"
+    },
+    "holdText": "Garantissez votre créneau : votre carte est réservée, mais rien n'est débité tant que {doctor} n'a pas accepté.",
+    "holdButton": "Garantir mon créneau · {amount}",
+    "holdDone": "Créneau garanti. {amount} seront débités seulement quand {doctor} acceptera ; sinon l'empreinte est libérée.",
+    "moreOptions": "Changer ou annuler",
+    "reschedule": "Changer d'horaire",
+    "rescheduleHint": "Choisissez un autre créneau. Le médecin doit l'accepter ; d'ici là, votre horaire actuel est conservé.",
+    "rescheduleSend": "Proposer ce créneau",
+    "rescheduleSent": "Demande envoyée au médecin.",
+    "reschedulePending": "Nouvel horaire proposé : {date}. En attente de l'accord du médecin.",
+    "rescheduleWithdraw": "Retirer la demande",
+    "cancelPolicy": "Annulation gratuite et remboursement intégral jusqu'à 24 h avant la consultation.",
+    "cancelLocked": "À moins de 24 h, la consultation ne peut plus être annulée. En cas d'empêchement, écrivez au médecin.",
+    "cancelPaidConfirm": "Annuler cette consultation ? Vous serez remboursé(e) intégralement.",
+    "cancelOutcome": {
+      "cancelled": "Consultation annulée.",
+      "refunded": "Consultation annulée. Le remboursement intégral est en cours.",
+      "refundPending": "Consultation annulée. Notre équipe effectue le remboursement et vous tient informé(e).",
+      "tooLate": "À moins de 24 h, l'annulation n'est plus possible.",
+      "invalid": "Cette consultation ne peut plus être annulée."
+    },
+    "rebookTitle": "Besoin d'un suivi ?",
+    "rebookText": "Reprenez rendez-vous avec le même médecin en quelques secondes."
   },
   "chat": {
     "title": "Conversation",
@@ -978,5 +1101,37 @@
     "marginLeft": "Gauche",
     "marginRight": "Droite",
     "makeDefault": "Utiliser ce modèle par défaut"
+  },
+  "documents": {
+    "subtitle": "Vos ordonnances et fiches de séjour.",
+    "empty": "Aucun document pour l'instant",
+    "emptyText": "Les ordonnances de vos consultations apparaîtront ici.",
+    "prescriptions": "Ordonnances",
+    "tickets": "Fiches de séjour",
+    "items": "{n} {n:médicament|médicaments}",
+    "revoked": "Annulée"
+  },
+  "messages": {
+    "subtitle": "Vos échanges avec les médecins.",
+    "empty": "Aucune conversation",
+    "emptyText": "La conversation s'ouvre une fois la consultation payée."
+  },
+  "profile": {
+    "saved": "Profil enregistré.",
+    "complete": "Complétez votre nom en lettres latines : il figure sur vos ordonnances."
+  },
+  "slots": {
+    "prevMonth": "Mois précédent",
+    "nextMonth": "Mois suivant"
+  },
+  "review": {
+    "title": "Votre avis",
+    "intro": "Comment s'est passée la consultation ? Votre avis aide les autres patients.",
+    "rating": "Note",
+    "comment": "Commentaire",
+    "placeholder": "Un mot sur votre expérience (facultatif)",
+    "send": "Publier mon avis",
+    "thanks": "Merci pour votre avis !",
+    "yours": "Merci, votre avis est publié avec votre prénom et l'initiale de votre nom."
   }
 }

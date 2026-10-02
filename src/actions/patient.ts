@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { fail, ok, type ActionState } from "@/lib/action-state";
 import { isLatinName } from "@/lib/latin";
-import { isAccommodationAvailable, markPaymentFailed, markPaymentSucceeded } from "@/lib/bookings";
+import { isAccommodationAvailable, markPaymentAuthorized, markPaymentFailed, markPaymentSucceeded } from "@/lib/bookings";
 import { MIN_LEAD_HOURS } from "@/lib/constants";
 import { formatDateTime } from "@/lib/format";
 import { getT, toLocale } from "@/lib/i18n";
@@ -292,7 +292,8 @@ export async function mockCheckoutAction(localeRaw: string, paymentId: string, f
   });
   if (!payment) redirect(`/${locale}/account`);
   const succeed = formData.get("result") === "success";
-  if (succeed) await markPaymentSucceeded({ id: payment.id });
+  if (succeed && payment.hold) await markPaymentAuthorized({ id: payment.id });
+  else if (succeed) await markPaymentSucceeded({ id: payment.id });
   else await markPaymentFailed({ id: payment.id });
   const target = payment.consultationId
     ? `/account/consultations/${payment.consultationId}`

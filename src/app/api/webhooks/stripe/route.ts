@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { db } from "@/lib/db";
-import { markPaymentFailed, markPaymentSucceeded } from "@/lib/bookings";
+import { markPaymentAuthorized, markPaymentFailed, markPaymentSucceeded } from "@/lib/bookings";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,13 +27,18 @@ export async function POST(request: Request) {
     case "checkout.session.completed":
     case "checkout.session.async_payment_succeeded": {
       const session = event.data.object;
-      if (session.payment_status !== "paid") break;
       const payment = await db.payment.findUnique({ where: { providerRef: session.id } });
       if (!payment) break;
       if (session.amount_total !== payment.amount || session.currency?.toUpperCase() !== payment.currency.toUpperCase()) {
         console.error(`[stripe] amount mismatch for payment ${payment.id}`);
         break;
       }
+      // A card hold (manual capture) completes the checkout while still "unpaid".
+      if (payment.hold && session.payment_status === "unpaid" && session.status === "complete") {
+        await markPaymentAuthorized({ providerRef: session.id });
+        break;
+      }
+      if (session.payment_status !== "paid") break;
       await markPaymentSucceeded({ providerRef: session.id });
       break;
     }

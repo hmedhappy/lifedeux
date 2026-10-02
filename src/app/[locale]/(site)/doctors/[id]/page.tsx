@@ -4,15 +4,15 @@ import clsx from "clsx";
 import { BadgeCheck, Clock3, Languages, MapPin, MessageCircle, Scissors, Star } from "lucide-react";
 import { BookingBar } from "@/components/booking-bar";
 import { BookingPanel } from "@/components/booking-panel";
-import type { SlotOption } from "@/components/slot-strip";
 import { SpecialtyIcon } from "@/components/specialty-icon";
 import { Avatar, Badge, Container, Disclosure } from "@/components/ui";
 import { requestBookingAction } from "@/actions/patient";
 import { requestConsultationAction } from "@/actions/consultation";
 import { getCurrentUser } from "@/lib/auth";
-import { formatDate, formatDateTime, formatMoney, formatTime, tunisDayKey } from "@/lib/format";
+import { formatDate, formatMoney } from "@/lib/format";
+import { toSlotOptions } from "@/lib/slot-options";
 import { googleEnabled } from "@/lib/google-auth";
-import { getT, localized, toLocale, type Locale } from "@/lib/i18n";
+import { getT, localized, toLocale } from "@/lib/i18n";
 import { getPublicDoctor } from "@/lib/queries";
 import { getSettings } from "@/lib/settings";
 import { specialtyTint } from "@/lib/specialty-tint";
@@ -23,18 +23,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { id } = await params;
   const doctor = await getPublicDoctor(id);
   return { title: doctor ? `Dr ${doctor.user.firstName} ${doctor.user.lastName}` : undefined };
-}
-
-function toOptions(slots: { id: string; startsAt: Date }[], locale: Locale): SlotOption[] {
-  return slots.map((s) => ({
-    id: s.id,
-    dayKey: tunisDayKey(s.startsAt),
-    dayLabel: formatDate(s.startsAt, locale, { day: "numeric", month: "short", year: undefined }),
-    weekday: formatDate(s.startsAt, locale, { weekday: "short", day: undefined, month: undefined, year: undefined }),
-    time: formatTime(s.startsAt, locale),
-    full: formatDateTime(s.startsAt, locale),
-    iso: s.startsAt.toISOString(),
-  }));
 }
 
 function Stars({ value }: { value: number }) {
@@ -68,7 +56,7 @@ export default async function DoctorPage({
   const money = (v: number) => formatMoney(v, settings.currency, locale);
   const minPrice = offers.length ? Math.min(...offers.map((o) => o.price)) : 0;
   const specialtyName = doctor.specialty_ ? localized(doctor.specialty_, "name", locale) : doctor.specialty;
-  const slots = toOptions(service === "consultation" ? doctor.consultationSlots : doctor.operationSlots, locale);
+  const slots = toSlotOptions(service === "consultation" ? doctor.consultationSlots : doctor.operationSlots, locale);
   const price = service === "consultation" ? money(doctor.consultation!.price) : money(minPrice);
   const next = `/${locale}/doctors/${doctor.id}${service ? `?service=${service}` : ""}`;
   const action = service === "consultation" ? requestConsultationAction.bind(null, locale, doctor.id) : requestBookingAction.bind(null, locale, doctor.id);

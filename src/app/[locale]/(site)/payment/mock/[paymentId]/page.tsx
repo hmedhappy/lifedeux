@@ -28,14 +28,14 @@ export default async function MockCheckoutPage({ params }: { params: Promise<{ l
   const action = mockCheckoutAction.bind(null, locale, payment.id);
   return (
     <Container className="flex justify-center py-16">
-      <div className="w-full max-w-md space-y-6 rounded-2xl border border-line p-8">
+      <div className="w-full max-w-md space-y-6 rounded-3xl border border-line bg-white p-8 shadow-card">
         <h1 className="text-lg font-semibold text-ink">{t("payment.mockTitle")}</h1>
         <Notice tone="warning">{t("payment.mockInfo")}</Notice>
         <p className="text-3xl font-semibold text-ink">{formatMoney(payment.amount, payment.currency, locale)}</p>
         <p className="text-sm text-muted">{payment.booking?.reference ?? payment.consultation?.reference}</p>
         <form action={action} className="space-y-3">
           <SubmitButton size="lg" className="w-full" name="result" value="success">
-            {t("payment.mockPay")}
+            {t(payment.hold ? "payment.mockHold" : "payment.mockPay")}
           </SubmitButton>
         </form>
         <form action={action}>

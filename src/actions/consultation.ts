@@ -4,12 +4,21 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { fail, type ActionState } from "@/lib/action-state";
-import { CONSULT_MIN_LEAD_HOURS, CONSULT_PAYMENT_CUTOFF_MINUTES } from "@/lib/consultation-rules";
+import { fail, ok, type ActionState } from "@/lib/action-state";
+import { CONSULT_MIN_LEAD_HOURS } from "@/lib/consultation-rules";
+import {
+  acceptConsultation,
+  answerReschedule,
+  cancelConsultationByPatient,
+  refuseConsultation,
+  requestReschedule,
+  submitReview,
+  withdrawReschedule,
+} from "@/lib/consultation-flow";
 import { formatDateTime } from "@/lib/format";
 import { getT, toLocale } from "@/lib/i18n";
 import { sendTemplate } from "@/lib/mail";
-import { getProvider } from "@/lib/payments";
+import { getProvider, providersFor } from "@/lib/payments";
 import { consultationOffer } from "@/lib/queries";
 import { isDoctorRole } from "@/lib/roles";
 import { appUrl, getSettings } from "@/lib/settings";
@@ -102,6 +111,10 @@ export async function requestConsultationAction(
       "/doctor",
     ),
   ]);
+  // Instant booking with no way to hold a card: accept now, the patient pays right after.
+  if (doctor.instantBooking && providersFor(patient.country, { hold: true }).length === 0) {
+    await acceptConsultation(consultation.id);
+  }
   redirect(`/${locale}/account/consultations/${consultation.id}?requested=1`);
 }
 
@@ -109,30 +122,12 @@ export async function confirmConsultationAction(localeRaw: string, id: string): 
   const locale = toLocale(localeRaw);
   const me = await currentDoctor();
   if (!me) redirect(`/${locale}/login`);
-  const c = await db.consultation.findFirst({
-    where: { id, doctorId: me.doctor.id, status: "REQUESTED" },
-    include: { slot: true, patient: true },
-  });
+  const c = await db.consultation.findFirst({ where: { id, doctorId: me.doctor.id, status: "REQUESTED" } });
   if (!c) redirect(`/${locale}/doctor`);
-  const settings = await getSettings();
-  const now = Date.now();
-  const cutoff = c.slot.startsAt.getTime() - CONSULT_PAYMENT_CUTOFF_MINUTES * 60_000;
-  const deadline = new Date(Math.min(now + settings.paymentDeadlineHours * 3_600_000, cutoff));
-  if (deadline.getTime() <= now) redirect(`/${locale}/doctor?done=tooLate&ref=${c.reference}`);
-
-  await db.consultation.updateMany({
-    where: { id: c.id, status: "REQUESTED" },
-    data: { status: "CONFIRMED", confirmedAt: new Date(), paymentDeadline: deadline },
-  });
-  const patientLocale = toLocale(c.patient.locale);
-  await sendTemplate(
-    c.patient,
-    "consultConfirmed",
-    { reference: c.reference, date: formatDateTime(c.slot.startsAt, patientLocale), deadline: formatDateTime(deadline, patientLocale) },
-    `/account/consultations/${c.id}`,
-  );
+  const outcome = await acceptConsultation(c.id);
   revalidatePath(`/${locale}/doctor`);
-  redirect(`/${locale}/doctor?done=confirmed&ref=${c.reference}`);
+  if (outcome === "tooLate") redirect(`/${locale}/doctor?done=tooLate&ref=${c.reference}`);
+  redirect(`/${locale}/doctor?done=${outcome === "paid" ? "accepted" : "confirmed"}&ref=${c.reference}`);
 }
 
 export async function refuseConsultationAction(
@@ -146,17 +141,8 @@ export async function refuseConsultationAction(
   if (!me) return fail("errors.forbidden");
   const reason = String(formData.get("reason") ?? "").trim().slice(0, 500);
   if (!reason) return fail("errors.reasonRequired");
-  const c = await db.consultation.findFirst({
-    where: { id, doctorId: me.doctor.id, status: { in: ["REQUESTED", "CONFIRMED"] }, paidAt: null },
-    include: { patient: true },
-  });
-  if (!c) return fail("errors.invalid");
-  await db.$transaction([
-    db.consultation.update({ where: { id: c.id }, data: { status: "REFUSED", refusalReason: reason } }),
-    db.slot.updateMany({ where: { id: c.slotId, status: "HELD" }, data: { status: "FREE" } }),
-    db.payment.updateMany({ where: { consultationId: c.id, status: "PENDING" }, data: { status: "FAILED" } }),
-  ]);
-  await sendTemplate(c.patient, "refused", { reference: c.reference, reason }, `/account/consultations/${c.id}`);
+  const c = await db.consultation.findFirst({ where: { id, doctorId: me.doctor.id }, select: { reference: true } });
+  if (!c || !(await refuseConsultation(id, me.doctor.id, reason))) return fail("errors.invalid");
   revalidatePath(`/${locale}/doctor`);
   redirect(`/${locale}/doctor?done=refused&ref=${c.reference}`);
 }
@@ -165,14 +151,51 @@ export async function cancelConsultationAction(localeRaw: string, id: string): P
   const locale = toLocale(localeRaw);
   const patient = await currentPatient();
   if (!patient) redirect(`/${locale}/login`);
-  await db.$transaction(async (tx) => {
-    const c = await tx.consultation.findFirst({ where: { id, patientId: patient.id, status: { in: ["REQUESTED", "CONFIRMED"] } } });
-    if (!c) return;
-    await tx.consultation.update({ where: { id: c.id }, data: { status: "CANCELLED", cancelledAt: new Date() } });
-    await tx.slot.updateMany({ where: { id: c.slotId, status: "HELD" }, data: { status: "FREE" } });
-    await tx.payment.updateMany({ where: { consultationId: c.id, status: "PENDING" }, data: { status: "FAILED" } });
-  });
-  redirect(`/${locale}/account/consultations/${id}`);
+  const outcome = await cancelConsultationByPatient(id, patient.id);
+  redirect(`/${locale}/account/consultations/${id}?cancel=${outcome}`);
+}
+
+export async function requestRescheduleAction(localeRaw: string, id: string, _: ActionState, formData: FormData): Promise<ActionState> {
+  const locale = toLocale(localeRaw);
+  const patient = await currentPatient();
+  if (!patient) return fail("errors.loginRequired");
+  const slotId = String(formData.get("slotId") ?? "");
+  if (!slotId) return fail("errors.chooseSlot");
+  const outcome = await requestReschedule(id, patient.id, slotId);
+  if (outcome === "slotTaken") return fail("errors.slotTaken");
+  if (outcome === "tooLate") return fail("errors.rescheduleTooLate");
+  if (outcome !== "requested") return fail("errors.invalid");
+  revalidatePath(`/${locale}/account/consultations/${id}`);
+  return ok("consult.rescheduleSent");
+}
+
+export async function withdrawRescheduleAction(localeRaw: string, id: string): Promise<void> {
+  const locale = toLocale(localeRaw);
+  const patient = await currentPatient();
+  if (!patient) redirect(`/${locale}/login`);
+  await withdrawReschedule(id, patient.id);
+  revalidatePath(`/${locale}/account/consultations/${id}`);
+}
+
+export async function answerRescheduleAction(localeRaw: string, id: string, accept: boolean): Promise<void> {
+  const locale = toLocale(localeRaw);
+  const me = await currentDoctor();
+  if (!me) redirect(`/${locale}/login`);
+  await answerReschedule(id, me.doctor.id, accept);
+  revalidatePath(`/${locale}/doctor`);
+  revalidatePath(`/${locale}/doctor/consultations/${id}`);
+}
+
+export async function submitReviewAction(localeRaw: string, id: string, _: ActionState, formData: FormData): Promise<ActionState> {
+  const locale = toLocale(localeRaw);
+  const patient = await currentPatient();
+  if (!patient) return fail("errors.loginRequired");
+  const rating = Number(formData.get("rating"));
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) return fail("errors.ratingRequired");
+  const text = String(formData.get("text") ?? "").trim().slice(0, 1000) || null;
+  if (!(await submitReview(id, patient.id, rating, text))) return fail("errors.invalid");
+  revalidatePath(`/${locale}/account/consultations/${id}`);
+  return ok("review.thanks");
 }
 
 export async function startConsultationPaymentAction(
@@ -187,11 +210,14 @@ export async function startConsultationPaymentAction(
   const provider = getProvider(String(formData.get("provider") ?? ""));
   if (!provider) return fail("errors.providerUnavailable");
   const c = await db.consultation.findFirst({ where: { id, patientId: patient.id } });
-  if (!c || c.status !== "CONFIRMED") return fail("errors.invalid");
+  if (!c || (c.status !== "CONFIRMED" && c.status !== "REQUESTED")) return fail("errors.invalid");
+  // Before the doctor answers, the card is only held; it is charged on acceptance.
+  const hold = c.status === "REQUESTED";
+  if (hold && !provider.supportsHold) return fail("errors.providerUnavailable");
   if (c.paymentDeadline && c.paymentDeadline < new Date()) return fail("errors.deadlinePassed");
 
   const payment = await db.payment.create({
-    data: { consultationId: c.id, provider: provider.id, amount: c.price, currency: c.currency },
+    data: { consultationId: c.id, provider: provider.id, amount: c.price, currency: c.currency, hold },
   });
   const base = `${appUrl()}/${locale}/account/consultations/${c.id}`;
   let checkoutUrl: string;
@@ -208,6 +234,7 @@ export async function startConsultationPaymentAction(
       cancelUrl: `${base}?payment=cancelled`,
       webhookUrl: `${appUrl()}/api/webhooks/${provider.id}`,
       locale,
+      hold,
     });
     await db.payment.update({ where: { id: payment.id }, data: { providerRef: session.providerRef, checkoutUrl: session.checkoutUrl } });
     checkoutUrl = session.checkoutUrl;

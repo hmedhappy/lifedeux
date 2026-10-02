@@ -5,6 +5,8 @@ import { sendTemplate } from "./mail";
 import { randomToken } from "./tokens";
 import { formatDateTime } from "./format";
 import { toLocale } from "./i18n";
+import { acceptConsultation, expireStaleConsultations } from "./consultation-flow";
+import { raiseAlert, refundPayment, releaseConsultationPayments, releasePayment } from "./payment-ops";
 
 /** Bookings whose accommodation dates are reserved (paid, or waiting for payment). */
 const LODGING_BLOCKING: Prisma.BookingWhereInput = {
@@ -65,9 +67,13 @@ export async function expireOverdueBookings(now = new Date()): Promise<number> {
       await tx.slot.updateMany({ where: { id: c.slotId, status: "HELD" }, data: { status: "FREE" } });
       return true;
     });
-    if (updated) await sendTemplate(c.patient, "expired", { reference: c.reference });
+    if (updated) {
+      await releaseConsultationPayments(c.id);
+      await sendTemplate(c.patient, "expired", { reference: c.reference });
+    }
   }
-  return overdue.length + overdueConsultations.length;
+  const stale = await expireStaleConsultations(now);
+  return overdue.length + overdueConsultations.length + stale;
 }
 
 export type PaymentOutcome = "paid" | "already" | "unpayable" | "not_found";
@@ -130,7 +136,7 @@ export async function markPaymentSucceeded(where: { id: string } | { providerRef
       `/account/bookings/${booking.id}/ticket`,
     );
   } else if (outcome === "unpayable") {
-    console.warn(`[payments] payment ${payment.id} succeeded but booking ${bookingId} cannot be paid — refund needed`);
+    await refundUnpayable(payment.id, { bookingId });
   }
   return outcome;
 }
@@ -164,9 +170,48 @@ async function markConsultationPaid(paymentId: string, consultationId: string, a
       `/account/consultations/${c.id}`,
     );
   } else if (outcome === "unpayable") {
-    console.warn(`[payments] payment ${paymentId} succeeded but consultation ${consultationId} cannot be paid — refund needed`);
+    await refundUnpayable(paymentId, { consultationId });
   }
   return outcome;
+}
+
+/**
+ * Money arrived for something that can no longer be paid (slot taken, cancelled, wrong
+ * amount): refund it automatically and tell the admin (docs/RELOOKING.md §4).
+ */
+async function refundUnpayable(paymentId: string, target: { bookingId?: string; consultationId?: string }) {
+  const payment = await db.payment.findUniqueOrThrow({ where: { id: paymentId } });
+  const refunded = await refundPayment(payment);
+  await raiseAlert({
+    kind: refunded ? "autoRefund" : "refundFailed",
+    severity: refunded ? "normal" : "urgent",
+    message: refunded ? `Payment ${payment.id} refunded automatically` : `Payment ${payment.id} must be refunded by hand`,
+    ...target,
+  });
+}
+
+/**
+ * A card hold went through for a consultation request. With instant booking the request
+ * is accepted (and charged) at once; otherwise the doctor's answer does it.
+ */
+export async function markPaymentAuthorized(where: { id: string } | { providerRef: string }): Promise<"authorized" | "already" | "invalid"> {
+  const payment = await db.payment.findUnique({ where, include: { consultation: { include: { doctor: true } } } });
+  if (!payment?.hold || !payment.consultation) return "invalid";
+  if (payment.status === "AUTHORIZED" || payment.status === "SUCCEEDED") return "already";
+  if (payment.status !== "PENDING") return "invalid";
+  const c = payment.consultation;
+  await db.payment.update({ where: { id: payment.id }, data: { status: "AUTHORIZED" } });
+  if (c.status !== "REQUESTED" || payment.amount !== c.price) {
+    // The request ended meanwhile (refused, cancelled, expired): drop the hold.
+    await releaseConsultationPayments(c.id);
+    return "invalid";
+  }
+  const others = await db.payment.findMany({
+    where: { consultationId: c.id, id: { not: payment.id }, status: { in: ["PENDING", "AUTHORIZED"] } },
+  });
+  for (const other of others) await releasePayment(other);
+  if (c.doctor.instantBooking) await acceptConsultation(c.id);
+  return "authorized";
 }
 
 export async function markPaymentFailed(where: { id: string } | { providerRef: string }): Promise<void> {

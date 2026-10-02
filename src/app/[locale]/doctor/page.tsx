@@ -45,7 +45,7 @@ export default async function DoctorRequestsPage({
     <div className="space-y-12">
       <section>
         <PageTitle title={t("doctorArea.requestsTitle")} subtitle={t("doctorArea.requestsSubtitle")} />
-        {(done === "confirmed" || done === "refused") && ref && (
+        {(done === "confirmed" || done === "refused" || done === "accepted") && ref && (
           <div className="mb-6">
             <Notice tone="success">{t(`doctorArea.${done}`, { reference: ref })}</Notice>
           </div>

@@ -4,6 +4,14 @@ export const CONSULT_MIN_LEAD_HOURS = 2;
 /** Payment must be received at least this long before the consultation. */
 export const CONSULT_PAYMENT_CUTOFF_MINUTES = 30;
 
+/** A paid consultation can be cancelled (full refund) or moved until this long before it. */
+export const CONSULT_FREE_CANCEL_HOURS = 24;
+
+/** True while the patient may still cancel with a refund, or ask for another slot. */
+export function canChangeFreely(startsAt: Date, now = new Date()): boolean {
+  return startsAt.getTime() - now.getTime() > CONSULT_FREE_CANCEL_HOURS * 3_600_000;
+}
+
 /** The chat opens a little before the slot so both sides can settle in. */
 export const CHAT_OPENS_MINUTES_BEFORE = 10;
 

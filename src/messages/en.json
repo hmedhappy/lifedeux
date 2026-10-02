@@ -139,7 +139,7 @@
     "proText": "Join LifeDeux on the invitation of a super-doctor colleague, or write to us at {email}."
   },
   "doctors": {
-    "title": "Surgeons",
+    "title": "Doctors",
     "subtitle": "Compare profiles and availability, then book in a few clicks.",
     "allOperations": "All procedures",
     "empty": "No surgeon available",
@@ -155,7 +155,8 @@
     "searchPlaceholder": "Name, city, clinic…",
     "online": "Online",
     "surgery": "Surgery",
-    "consultFrom": "Consultation"
+    "consultFrom": "Consultation",
+    "suggested": "Suggested specialties"
   },
   "doctor": {
     "experience": "Experience",
@@ -196,7 +197,22 @@
     "service": {
       "consultation": "Online consultation",
       "operation": "Procedure"
-    }
+    },
+    "chooseDay": "Choose a day",
+    "chooseSlotCta": "Choose a time",
+    "chooseSlotSurgery": "Request a date",
+    "details": "Details",
+    "moreDates": "More dates",
+    "nextSlot": "Next slot: {date}",
+    "noReviews": "No reviews yet.",
+    "reasonPlaceholder": "Describe in a few words (optional)",
+    "reviewsCount": "{n} {n:review|reviews}",
+    "reviewsTitle": "Patient reviews",
+    "surgeryFrom": "Surgery from {price}",
+    "tunisTime": "Tunis time",
+    "verified": "Verified",
+    "verifiedReview": "Verified consultation",
+    "yourTime": "That is {time} where you are"
   },
   "stays": {
     "title": "Stays",
@@ -232,7 +248,21 @@
     "resetSent": "If an account exists with this email, a link has just been sent (valid for 1 hour).",
     "resetTitle": "New password",
     "resetSubtitle": "Choose a new password for {email}.",
-    "resetButton": "Save password"
+    "resetButton": "Save password",
+    "loginSubtitleCode": "Get a code by email: no password to remember.",
+    "googleError": "Signing in with Google did not work. Try again or use your email.",
+    "withPassword": "Sign in with a password",
+    "google": "Continue with Google",
+    "or": "or",
+    "sendCode": "Get a code",
+    "codeSent": "Code sent to {email}. It is valid for 10 minutes.",
+    "code": "6-digit code",
+    "verify": "Confirm",
+    "changeEmail": "Change email",
+    "resend": "Send the code again",
+    "newAccount": "First visit: tell us your name.",
+    "consentGeneral": "I accept the terms of use and the processing of my health data for my care.",
+    "createAndContinue": "Create my account and continue"
   },
   "fields": {
     "name": "Name",
@@ -245,17 +275,32 @@
     "password": "Password",
     "passwordHint": "At least 8 characters.",
     "passwordConfirm": "Confirm password",
-    "passport": "Passport number"
+    "passport": "Passport number",
+    "birthDate": "Date of birth",
+    "birthDateHint": "It appears on your prescriptions.",
+    "countryOptional": "Country (optional)",
+    "phoneOptional": "Phone (optional)",
+    "latinHint": "In Latin letters, as on your passport."
   },
   "account": {
-    "title": "My bookings",
+    "title": "My appointments",
     "hello": "Hello {name}",
     "newBooking": "New booking",
     "empty": "No bookings yet",
     "emptyText": "Choose a surgeon and a slot to get started.",
     "findDoctor": "Find a surgeon",
     "consultations": "My online consultations",
-    "operations": "My procedures"
+    "operations": "My procedures",
+    "upcoming": "Upcoming",
+    "noUpcoming": "No upcoming appointment.",
+    "past": "Past ({n})",
+    "next": {
+      "joinChat": "Join the conversation",
+      "pay": "Pay to confirm",
+      "waitingDoctor": "Waiting for the doctor",
+      "upcoming": "Confirmed",
+      "prescription": "{n} {n:prescription|prescriptions}"
+    }
   },
   "status": {
     "REQUESTED": "Awaiting confirmation",
@@ -265,7 +310,8 @@
     "PAID": "Paid",
     "IN_PROGRESS": "Stay in progress",
     "COMPLETED": "Completed",
-    "CANCELLED": "Cancelled"
+    "CANCELLED": "Cancelled",
+    "NO_SHOW": "No-show"
   },
   "tracking": {
     "ARRIVED_AIRPORT": "Arrived at the airport",
@@ -284,7 +330,9 @@
     "PENDING": "Pending",
     "SUCCEEDED": "Succeeded",
     "FAILED": "Failed",
-    "REFUNDED": "Refunded"
+    "REFUNDED": "Refunded",
+    "AUTHORIZED": "Card hold",
+    "CANCELED": "Released"
   },
   "roles": {
     "PATIENT": "Patient",
@@ -339,7 +387,22 @@
     "travellers": "Travellers",
     "transfer": "Airport transfer",
     "stay": "Stay",
-    "support": "Need help? {phone} · {email}"
+    "support": "Need help? {phone} · {email}",
+    "addPhotos": "Add photos",
+    "photosHint": "Optional, up to 3 photos. Only the doctor sees them.",
+    "consentConsultation": "I agree that the doctor may view the information and photos sent for my consultation.",
+    "consentSurgery": "I agree that my information is shared with the surgeon and the LifeDeux team to organise my stay.",
+    "policyConsultation": "Nothing is charged before the doctor agrees. Free cancellation up to 24 h before.",
+    "reasons": {
+      "first": "First opinion",
+      "followUp": "Follow-up",
+      "results": "Test results",
+      "renewal": "Prescription renewal",
+      "pain": "Pain",
+      "question": "Question"
+    },
+    "signInTitle": "Last step",
+    "signInIntro": "Enter your email to send the request and follow your appointment."
   },
   "options": {
     "title": "Customise your stay",
@@ -394,7 +457,8 @@
     "mockTitle": "Test payment",
     "mockInfo": "Demo mode: no money is charged.",
     "mockPay": "Simulate a successful payment",
-    "mockFail": "Simulate a failure"
+    "mockFail": "Simulate a failure",
+    "mockHold": "Authorise (card hold)"
   },
   "ticket": {
     "title": "Booking pass",
@@ -758,7 +822,11 @@
     "noService": "Enable online consultations or at least one procedure.",
     "medicationExists": "This medication already exists.",
     "tooManyTemplates": "You have reached the maximum number of templates (10).",
-    "letterheadRequired": "Add the image of your letterhead."
+    "letterheadRequired": "Add the image of your letterhead.",
+    "contactRequired": "Enter a phone number and a country to organise your stay.",
+    "nameNotLatin": "Write the name in Latin letters (A–Z, accents allowed), as on your passport.",
+    "ratingRequired": "Choose a rating from 1 to 5 stars.",
+    "rescheduleTooLate": "The time can no longer be changed less than 24 h before."
   },
   "email": {
     "invite": {
@@ -826,6 +894,32 @@
       "title": "Hello {name}",
       "body": "Your doctor sent you a certified prescription ({reference}). Download it from the conversation and show it at the pharmacy.",
       "cta": "View my prescription"
+    },
+    "loginCode": {
+      "subject": "Your LifeDeux code: {code}",
+      "title": "Hello {name}",
+      "body": "Your sign-in code is {code}. It is valid for 10 minutes. If you did not ask for it, ignore this email.",
+      "cta": "Open LifeDeux"
+    },
+    "consultCancelled": {
+      "subject": "Cancellation confirmed — {reference}",
+      "title": "It is cancelled, {name}",
+      "body": "Your consultation {reference} is cancelled. The full refund is on its way; it shows within a few days depending on your bank.",
+      "cta": "See the details"
+    },
+    "rescheduleRequested": {
+      "subject": "Time change request — {reference}",
+      "title": "Hello {name}",
+      "body": "Your patient would like to move consultation {reference} from {from} to {date}. Accept or decline from your space.",
+      "cta": "Reply"
+    },
+    "rescheduleAnswered": {
+      "subject": "Time change — {reference}",
+      "title": "Hello {name}",
+      "body": "{outcome} Your consultation {reference} takes place on {date}.",
+      "cta": "Open my consultation",
+      "accepted": "The doctor accepted the new time.",
+      "refused": "The doctor could not accept the new time; the original time is kept."
     }
   },
   "slotKind": {
@@ -868,7 +962,36 @@
     "howChat": "Text and photo chat. Audio and video calls coming soon.",
     "howOpens": "The conversation opens {minutes} minutes before the scheduled time.",
     "end": "End the consultation",
-    "endConfirm": "End the consultation? The conversation will become read-only."
+    "endConfirm": "End the consultation? The conversation will become read-only.",
+    "steps": {
+      "requested": "Request sent",
+      "accepted": "Doctor's approval",
+      "paid": "Payment",
+      "consultation": "Consultation",
+      "prescription": "Prescription"
+    },
+    "holdText": "Secure your slot: your card is held, but nothing is charged until {doctor} accepts.",
+    "holdButton": "Secure my slot · {amount}",
+    "holdDone": "Slot secured. {amount} is charged only when {doctor} accepts; otherwise the hold is released.",
+    "moreOptions": "Change or cancel",
+    "reschedule": "Change the time",
+    "rescheduleHint": "Choose another slot. The doctor must accept it; until then your current time is kept.",
+    "rescheduleSend": "Propose this slot",
+    "rescheduleSent": "Request sent to the doctor.",
+    "reschedulePending": "New time proposed: {date}. Waiting for the doctor's approval.",
+    "rescheduleWithdraw": "Withdraw the request",
+    "cancelPolicy": "Free cancellation and full refund up to 24 h before the consultation.",
+    "cancelLocked": "Less than 24 h before, the consultation can no longer be cancelled. If something comes up, write to the doctor.",
+    "cancelPaidConfirm": "Cancel this consultation? You will get a full refund.",
+    "cancelOutcome": {
+      "cancelled": "Consultation cancelled.",
+      "refunded": "Consultation cancelled. The full refund is on its way.",
+      "refundPending": "Consultation cancelled. Our team is processing the refund and will keep you posted.",
+      "tooLate": "Less than 24 h before, cancelling is no longer possible.",
+      "invalid": "This consultation can no longer be cancelled."
+    },
+    "rebookTitle": "Need a follow-up?",
+    "rebookText": "Book again with the same doctor in a few seconds."
   },
   "chat": {
     "title": "Conversation",
@@ -978,5 +1101,37 @@
     "marginLeft": "Left",
     "marginRight": "Right",
     "makeDefault": "Use this template by default"
+  },
+  "documents": {
+    "subtitle": "Your prescriptions and stay passes.",
+    "empty": "No documents yet",
+    "emptyText": "Prescriptions from your consultations will appear here.",
+    "prescriptions": "Prescriptions",
+    "tickets": "Stay passes",
+    "items": "{n} {n:medicine|medicines}",
+    "revoked": "Cancelled"
+  },
+  "messages": {
+    "subtitle": "Your conversations with doctors.",
+    "empty": "No conversations",
+    "emptyText": "The conversation opens once the consultation is paid."
+  },
+  "profile": {
+    "saved": "Profile saved.",
+    "complete": "Complete your name in Latin letters: it appears on your prescriptions."
+  },
+  "slots": {
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month"
+  },
+  "review": {
+    "title": "Your review",
+    "intro": "How did the consultation go? Your review helps other patients.",
+    "rating": "Rating",
+    "comment": "Comment",
+    "placeholder": "A word about your experience (optional)",
+    "send": "Post my review",
+    "thanks": "Thank you for your review!",
+    "yours": "Thank you, your review is shown with your first name and last initial."
   }
 }

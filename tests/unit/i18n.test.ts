@@ -19,10 +19,10 @@ function sourceFiles(dir: string): string[] {
 
 /** Keys built at runtime from enums or fixed lists. */
 const DYNAMIC_KEYS = [
-  ...["REQUESTED", "CONFIRMED", "REFUSED", "EXPIRED", "PAID", "IN_PROGRESS", "COMPLETED", "CANCELLED"].map((s) => `status.${s}`),
+  ...["REQUESTED", "CONFIRMED", "REFUSED", "EXPIRED", "PAID", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW"].map((s) => `status.${s}`),
   ...["ARRIVED_AIRPORT", "AT_ACCOMMODATION", "AT_CLINIC", "OPERATED", "RECOVERING", "DEPARTED"].map((s) => `tracking.${s}`),
   ...["FREE", "HELD", "BOOKED"].map((s) => `slotStatus.${s}`),
-  ...["PENDING", "SUCCEEDED", "FAILED", "REFUNDED"].map((s) => `paymentStatus.${s}`),
+  ...["PENDING", "AUTHORIZED", "SUCCEEDED", "FAILED", "REFUNDED", "CANCELED"].map((s) => `paymentStatus.${s}`),
   ...["PATIENT", "DOCTOR", "SUPER_DOCTOR", "ADMIN", "AGENT"].map((s) => `roles.${s}`),
   ...["CONSULTATION", "OPERATION"].map((s) => `slotKind.${s}`),
   ...["consultation", "operation"].map((s) => `doctor.service.${s}`),
@@ -38,9 +38,16 @@ const DYNAMIC_KEYS = [
   ...[1, 2, 3, 4, 5].flatMap((n) => [`home.steps.${n}.title`, `home.steps.${n}.text`]),
   ...[1, 2, 3, 4].flatMap((n) => [`home.consultSteps.${n}.title`, `home.consultSteps.${n}.text`]),
   ...["stripe", "konnect", "mock"].flatMap((s) => [`pay.providers.${s}.title`, `pay.providers.${s}.text`]),
-  ...["invite", "reset", "requestReceived", "newRequest", "confirmed", "refused", "paid", "expired", "consultConfirmed", "consultPaid", "prescription"].flatMap((s) =>
+  ...["invite", "reset", "requestReceived", "newRequest", "confirmed", "refused", "paid", "expired", "consultConfirmed", "consultPaid", "consultCancelled", "rescheduleRequested", "rescheduleAnswered", "loginCode", "prescription"].flatMap((s) =>
     ["subject", "title", "body", "cta"].map((f) => `email.${s}.${f}`),
   ),
+  ...["first", "followUp", "results", "renewal", "pain", "question"].map((s) => `booking.reasons.${s}`),
+  ...["accepted", "refused"].map((s) => `email.rescheduleAnswered.${s}`),
+  ...["consultation", "surgery"].map((s) => `booking.consent${s[0].toUpperCase()}${s.slice(1)}`),
+  ...["cancelled", "refunded", "refundPending", "tooLate", "invalid"].map((s) => `consult.cancelOutcome.${s}`),
+  ...["requested", "accepted", "paid", "consultation", "prescription"].map((s) => `consult.steps.${s}`),
+  "payment.mockHold",
+  "payment.mockPay",
 ];
 
 describe("translations", () => {
