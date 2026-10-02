@@ -11,11 +11,12 @@ import { INVITE_TTL_DAYS } from "@/lib/constants";
 import { parseMoneyToCents } from "@/lib/format";
 import { toLocale } from "@/lib/i18n";
 import { sendTemplate } from "@/lib/mail";
-import { stripeClient } from "@/lib/payments/stripe";
 import { appUrl } from "@/lib/settings";
 import { randomToken, referralCode } from "@/lib/tokens";
 import { IMAGE_PATH_PREFIX, isPhotoRef, saveUploadedImages } from "@/lib/images";
 import { isLatinName } from "@/lib/latin";
+import { audit } from "@/lib/audit";
+import { doctorBalances } from "@/lib/bookings";
 
 async function currentAdmin() {
   const user = await getCurrentUser();
@@ -382,29 +383,6 @@ export async function adminCancelBookingAction(localeRaw: string, bookingId: str
   revalidatePath(`/${locale}/admin/bookings/${bookingId}`);
 }
 
-/** Refunds through Stripe when possible, otherwise records a refund made outside the platform. */
-export async function refundPaymentAction(localeRaw: string, paymentId: string): Promise<ActionState> {
-  const locale = toLocale(localeRaw);
-  if (!(await currentAdmin())) return fail("errors.forbidden");
-  const payment = await db.payment.findUnique({ where: { id: paymentId } });
-  if (!payment || payment.status !== "SUCCEEDED") return fail("errors.invalid");
-
-  if (payment.provider === "stripe" && payment.providerRef && process.env.STRIPE_SECRET_KEY) {
-    try {
-      const session = await stripeClient().checkout.sessions.retrieve(payment.providerRef);
-      const intent = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
-      if (!intent) return fail("errors.refundFailed");
-      await stripeClient().refunds.create({ payment_intent: intent }, { idempotencyKey: `refund-${payment.id}` });
-    } catch (error) {
-      console.error("[stripe] refund failed", error);
-      return fail("errors.refundFailed");
-    }
-  }
-  await db.payment.update({ where: { id: payment.id }, data: { status: "REFUNDED" } });
-  revalidatePath(`/${locale}/admin/bookings/${payment.bookingId}`);
-  return ok(payment.provider === "stripe" ? "admin.refunded" : "admin.refundRecorded");
-}
-
 /* ----------------------------- Payouts ----------------------------- */
 
 export async function recordPayoutAction(localeRaw: string, _: ActionState, formData: FormData): Promise<ActionState> {
@@ -417,11 +395,16 @@ export async function recordPayoutAction(localeRaw: string, _: ActionState, form
   const note = String(formData.get("note") ?? "").trim().slice(0, 300) || null;
   if (!amount || amount <= 0 || !/^\d{4}-\d{2}-\d{2}$/.test(paidAt)) return fail("errors.missingFields");
   if (!(await db.doctor.findUnique({ where: { id: doctorId } }))) return fail("errors.invalid");
+  const method = formData.get("method") === "TRANSFER" ? "TRANSFER" : "CASH";
+  const balance = (await doctorBalances()).get(doctorId);
+  const due = balance ? balance.earned - balance.paid : 0;
   await db.doctorPayout.create({
-    data: { doctorId, amount, paidAt: new Date(`${paidAt}T12:00:00+01:00`), note, recordedById: admin.id },
+    data: { doctorId, amount, method, paidAt: new Date(`${paidAt}T12:00:00+01:00`), note, recordedById: admin.id },
   });
+  await audit(admin.id, "payout.record", doctorId, { amount, method, due });
   revalidatePath(`/${locale}/admin/payouts`);
-  return ok("admin.payoutRecorded");
+  // Paying more than the balance is allowed (advance), with a warning (docs/RELOOKING.md §9).
+  return ok(amount > due ? "admin.payoutOverBalance" : "admin.payoutRecorded");
 }
 
 /* ----------------------------- Settings ---------------------------- */

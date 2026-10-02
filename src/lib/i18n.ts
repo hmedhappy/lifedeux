@@ -69,6 +69,8 @@ export function localized<T extends Record<string, unknown>>(
   locale: Locale,
 ): string {
   const suffix = locale.charAt(0).toUpperCase() + locale.slice(1);
-  const value = record[`${base}${suffix}`] ?? record[`${base}Fr`];
+  // EN and AR are optional for admin-entered content: an empty translation falls back to French.
+  const own = record[`${base}${suffix}`];
+  const value = typeof own === "string" && own.trim() ? own : record[`${base}Fr`];
   return typeof value === "string" ? value : "";
 }

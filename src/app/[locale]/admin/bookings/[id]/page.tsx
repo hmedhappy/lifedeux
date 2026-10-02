@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ActionForm, ConfirmSubmit, SubmitButton } from "@/components/forms";
+import { ConfirmSubmit, SubmitButton } from "@/components/forms";
 import { StatusBadge, TrackingTimeline } from "@/components/status";
-import { Badge, Card, LinkButton } from "@/components/ui";
-import { adminCancelBookingAction, refundPaymentAction } from "@/actions/admin";
+import { Badge, Card, LinkButton, Select } from "@/components/ui";
+import { adminCancelBookingAction, assignAgentAction, markLodgingUnavailableAction } from "@/actions/admin";
+import { RefundForm } from "@/components/refund-form";
 import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
@@ -26,8 +27,10 @@ export default async function AdminBookingPage({ params }: { params: Promise<{ l
       payments: { orderBy: { createdAt: "desc" } },
       trackingEvents: { include: { user: true }, orderBy: { createdAt: "asc" } },
       accessLogs: { include: { user: true }, orderBy: { createdAt: "desc" }, take: 20 },
+      incidents: { include: { agent: true }, orderBy: { createdAt: "desc" } },
     },
   });
+  const agents = await db.user.findMany({ where: { role: "AGENT", active: true }, orderBy: { firstName: "asc" } });
   if (!b) notFound();
   const money = (v: number) => formatMoney(v, b.currency, locale);
   const times = Object.fromEntries(
@@ -115,19 +118,50 @@ export default async function AdminBookingPage({ params }: { params: Promise<{ l
                   <Badge tone={p.status === "SUCCEEDED" ? "green" : p.status === "PENDING" ? "amber" : "gray"}>
                     {t(`paymentStatus.${p.status}`)}
                   </Badge>
-                  {p.status === "SUCCEEDED" && (b.status === "CANCELLED" || b.status === "EXPIRED" || b.status === "REFUSED") && (
-                    <ActionForm action={refundPaymentAction.bind(null, locale, p.id)}>
-                      <SubmitButton size="sm" variant="danger">
-                        {t("admin.refund")}
-                      </SubmitButton>
-                    </ActionForm>
-                  )}
+                  {p.status === "SUCCEEDED" && <RefundForm locale={locale} payment={p} t={t} />}
                 </span>
               </li>
             ))}
           </ul>
         )}
       </Card>
+
+      {["PAID", "IN_PROGRESS"].includes(b.status) && (
+        <Card>
+          <h2 className="font-semibold text-ink">{t("admin.fieldTitle")}</h2>
+          <form action={assignAgentAction.bind(null, locale, b.id)} className="mt-4 flex flex-wrap items-center gap-2">
+            <Select name="agentId" defaultValue={b.agentId ?? ""} className="w-64" aria-label={t("admin.agent")} data-testid="agent-select">
+              <option value="">{t("admin.noAgent")}</option>
+              {agents.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.firstName} {a.lastName}
+                </option>
+              ))}
+            </Select>
+            <SubmitButton size="sm" variant="secondary" testId="agent-save">
+              {t("admin.assign")}
+            </SubmitButton>
+          </form>
+          {b.accommodationId &&
+            (b.accommodationIssueAt ? (
+              <p className="mt-4 text-sm text-amber-800">{t("admin.lodgingFlagged")}</p>
+            ) : (
+              <form action={markLodgingUnavailableAction.bind(null, locale, b.id)} className="mt-4">
+                <ConfirmSubmit message={t("admin.lodgingConfirm")}>{t("admin.lodgingUnavailable")}</ConfirmSubmit>
+              </form>
+            ))}
+          {b.incidents.length > 0 && (
+            <ul className="mt-4 space-y-1 border-t border-line pt-3 text-sm">
+              {b.incidents.map((i) => (
+                <li key={i.id} className="text-ink-soft">
+                  {formatDateTime(i.createdAt, locale)} · {t(`incident.kinds.${i.kind}`)} · {i.agent.firstName}
+                  {i.note && ` — ${i.note}`}
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+      )}
 
       {b.qrToken && (
         <Card>

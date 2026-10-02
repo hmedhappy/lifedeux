@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { StatusBadge } from "@/components/status";
 import { EmptyState, PageTitle, Table, Td, Th } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
@@ -43,7 +44,11 @@ export default async function AdminConsultationsPage({ params }: { params: Promi
           <tbody>
             {consultations.map((c) => (
               <tr key={c.id}>
-                <Td className="font-mono">{c.reference}</Td>
+                <Td className="font-mono">
+                  <Link href={`/${locale}/admin/consultations/${c.id}`} className="underline" data-testid="admin-consultation">
+                    {c.reference}
+                  </Link>
+                </Td>
                 <Td>
                   {c.patient.firstName} {c.patient.lastName}
                   <p className="text-xs text-muted">{c.patient.email}</p>
