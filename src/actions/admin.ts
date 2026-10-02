@@ -465,3 +465,26 @@ export async function reviewStampAction(localeRaw: string, doctorId: string, app
   }
   revalidatePath(`/${locale}/admin`, "layout");
 }
+
+/** Assigns the field agent who welcomes the patient (visible to the patient from 3 days before). */
+export async function assignAgentAction(localeRaw: string, bookingId: string, formData: FormData): Promise<void> {
+  const locale = toLocale(localeRaw);
+  if (!(await currentAdmin())) redirect(`/${locale}/login`);
+  const agentId = String(formData.get("agentId") ?? "") || null;
+  if (agentId && !(await db.user.findFirst({ where: { id: agentId, role: "AGENT", active: true } }))) return;
+  await db.booking.update({ where: { id: bookingId }, data: { agentId } });
+  revalidatePath(`/${locale}/admin/bookings`);
+}
+
+/** The booked lodging fell through: the patient is asked to pick another one. */
+export async function markLodgingUnavailableAction(localeRaw: string, bookingId: string): Promise<void> {
+  const locale = toLocale(localeRaw);
+  if (!(await currentAdmin())) redirect(`/${locale}/login`);
+  const booking = await db.booking.findUnique({ where: { id: bookingId } });
+  if (!booking?.accommodationId || booking.accommodationIssueAt) return;
+  await db.$transaction([
+    db.booking.update({ where: { id: bookingId }, data: { accommodationIssueAt: new Date() } }),
+    db.alert.create({ data: { kind: "lodgingIssue", severity: "urgent", message: `Lodging unavailable for ${booking.reference}`, bookingId } }),
+  ]);
+  revalidatePath(`/${locale}/admin/bookings`);
+}

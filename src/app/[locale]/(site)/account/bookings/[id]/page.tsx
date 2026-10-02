@@ -4,17 +4,43 @@ import { AutoRefresh } from "@/components/auto-refresh";
 import { ActionForm, ConfirmSubmit, SubmitButton } from "@/components/forms";
 import { LiveOptionsSummary, OptionsForm, OptionsProvider, type OptionsConfig, type StayOption } from "@/components/options-form";
 import { JourneyStepper, StatusBadge, TrackingTimeline, journeyIndex } from "@/components/status";
-import { ArrowLeft, Scissors } from "lucide-react";
-import { Avatar, Button, Container, Disclosure, LinkButton, Notice } from "@/components/ui";
-import { cancelBookingAction, chooseOptionsAction, editOptionsAction, startPaymentAction } from "@/actions/patient";
+import { ArrowLeft, Download, Scissors } from "lucide-react";
+import { Avatar, Button, Container, Disclosure, Field, Input, LinkButton, Notice } from "@/components/ui";
+import {
+  cancelBookingAction,
+  chooseOptionsAction,
+  chooseOtherAccommodationAction,
+  editOptionsAction,
+  startPaymentAction,
+  updateTripAction,
+} from "@/actions/patient";
 import { requireRole } from "@/lib/auth";
-import { expireOverdueBookings } from "@/lib/bookings";
+import { expireOverdueBookings, isAccommodationAvailable } from "@/lib/bookings";
 import { db } from "@/lib/db";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
 import { getT, localized, toLocale } from "@/lib/i18n";
 import { providersFor } from "@/lib/payments";
 import { computeStay } from "@/lib/pricing";
 import { getSettings } from "@/lib/settings";
+
+/** The agent's name shows from 3 days before; passports can change until 7 days before. */
+const AGENT_VISIBLE_DAYS = 3;
+const PASSPORT_DAYS = 7;
+const nowMs = () => Date.now();
+
+/** "2026-10-05T14:30" in Tunis time, for a datetime-local input. */
+function tunisLocalInput(d: Date): string {
+  return new Date(d.getTime() + 3_600_000).toISOString().slice(0, 16);
+}
+
+async function availableStays(bookingId: string, current: string | null, arrival: Date, departure: Date, travellers: number) {
+  const stays = await db.accommodation.findMany({
+    where: { active: true, capacity: { gte: travellers }, id: current ? { not: current } : undefined },
+    orderBy: { pricePerNight: "asc" },
+  });
+  const free = await Promise.all(stays.map((s) => isAccommodationAvailable(s.id, arrival, departure, bookingId)));
+  return stays.filter((_, i) => free[i]);
+}
 
 export default async function BookingPage({
   params,
@@ -38,6 +64,7 @@ export default async function BookingPage({
       slot: true,
       accommodation: true,
       companions: true,
+      agent: true,
       trackingEvents: { orderBy: { createdAt: "asc" } },
     },
   });
@@ -97,6 +124,14 @@ export default async function BookingPage({
       : null;
 
   const providers = providersFor(user.country);
+  const paid = ["PAID", "IN_PROGRESS"].includes(booking.status);
+  const msToOp = booking.slot.startsAt.getTime() - nowMs();
+  const showAgent = paid && !!booking.agent && msToOp < AGENT_VISIBLE_DAYS * 86_400_000;
+  const passportsOpen = msToOp > PASSPORT_DAYS * 86_400_000;
+  const alternatives =
+    paid && booking.accommodationIssueAt && booking.arrivalDate && booking.departureDate
+      ? await availableStays(booking.id, booking.accommodationId, booking.arrivalDate, booking.departureDate, 1 + booking.companionsCount)
+      : [];
   const trackingTimes = Object.fromEntries(booking.trackingEvents.map((e) => [e.step, formatDateTime(e.createdAt, locale)]));
 
   return (
@@ -222,10 +257,89 @@ export default async function BookingPage({
               <div className="rounded-3xl border border-line bg-white p-6 shadow-card">
                 <h2 className="text-lg font-semibold text-ink">{t("booking.paidTitle")}</h2>
                 <p className="mt-2 text-muted">{t("booking.paidText")}</p>
-                <LinkButton href={`/${locale}/account/bookings/${booking.id}/ticket`} size="lg" className="mt-6">
-                  {t("booking.viewTicket")}
-                </LinkButton>
+                <div className="mt-6 flex flex-wrap gap-2">
+                  <LinkButton href={`/${locale}/account/bookings/${booking.id}/ticket`} size="lg">
+                    {t("booking.viewTicket")}
+                  </LinkButton>
+                  <LinkButton href={`/api/bookings/${booking.id}/ticket`} size="lg" variant="secondary" target="_blank" prefetch={false} data-testid="ticket-pdf">
+                    <Download className="h-4 w-4" aria-hidden />
+                    {t("trip.pdf")}
+                  </LinkButton>
+                </div>
               </div>
+
+              {booking.accommodationIssueAt && (
+                <div className="rounded-3xl border-2 border-amber-200 bg-amber-50 p-6" data-testid="lodging-issue">
+                  <h2 className="font-semibold text-ink">{t("trip.lodgingIssueTitle")}</h2>
+                  <p className="mt-1 text-sm text-ink-soft">{t("trip.lodgingIssueText")}</p>
+                  {alternatives.length === 0 ? (
+                    <p className="mt-3 text-sm text-muted">{t("trip.noAlternative")}</p>
+                  ) : (
+                    <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+                      {alternatives.map((a) => (
+                        <li key={a.id} className="rounded-2xl bg-white p-4 shadow-card">
+                          <p className="font-semibold text-ink">{a.title}</p>
+                          <p className="text-sm text-muted">
+                            {a.city} · {t("stays.guests", { n: a.capacity })}
+                          </p>
+                          <form action={chooseOtherAccommodationAction.bind(null, locale, booking.id, a.id)} className="mt-3">
+                            <SubmitButton size="sm">{t("trip.chooseThis")}</SubmitButton>
+                          </form>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+
+              {showAgent && booking.agent && (
+                <div className="flex items-center gap-4 rounded-3xl border border-line bg-white p-5 shadow-card" data-testid="trip-agent">
+                  <Avatar name={`${booking.agent.firstName} ${booking.agent.lastName}`} size={48} />
+                  <div className="min-w-0">
+                    <p className="text-sm text-muted">{t("trip.agentTitle")}</p>
+                    <p className="font-semibold text-ink">
+                      {booking.agent.firstName} {booking.agent.lastName.charAt(0)}.
+                    </p>
+                    {booking.agent.phone && (
+                      <a href={`tel:${booking.agent.phone}`} className="text-sm font-medium text-brand-dark">
+                        {booking.agent.phone}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <section className="rounded-3xl border border-line bg-white p-6 shadow-card" data-testid="trip-prep">
+                <h2 className="text-lg font-semibold text-ink">{t("trip.title")}</h2>
+                <p className="mt-1 text-sm text-muted">{t("trip.text")}</p>
+                <ActionForm action={updateTripAction.bind(null, locale, booking.id)} className="mt-4 space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label={t("trip.flightNumber")} hint={t("trip.optional")}>
+                      <Input name="flightNumber" defaultValue={booking.flightNumber ?? ""} placeholder="TU 721" className="uppercase" />
+                    </Field>
+                    <Field label={t("trip.flightArrival")} hint={t("doctor.tunisTime")}>
+                      <Input type="datetime-local" name="flightArrivalAt" defaultValue={booking.flightArrivalAt ? tunisLocalInput(booking.flightArrivalAt) : ""} />
+                    </Field>
+                  </div>
+                  {booking.companions.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-ink">{t("trip.passports")}</p>
+                      {booking.companions.map((c) => (
+                        <label key={c.id} className="grid grid-cols-[1fr_1.2fr] items-center gap-3 text-sm">
+                          <span className="text-ink-soft">
+                            {c.firstName} {c.lastName}
+                          </span>
+                          <Input name={`passport_${c.id}`} defaultValue={c.passportNumber ?? ""} disabled={!passportsOpen} aria-label={t("fields.passport")} />
+                        </label>
+                      ))}
+                      <p className="text-xs text-muted">{t(passportsOpen ? "trip.passportsUntil" : "trip.passportsClosed")}</p>
+                    </div>
+                  )}
+                  <SubmitButton variant="soft" testId="trip-save">
+                    {t("trip.save")}
+                  </SubmitButton>
+                </ActionForm>
+              </section>
               <div className="rounded-3xl border border-line bg-white p-6 shadow-card">
                 <h2 className="mb-6 text-lg font-semibold text-ink">{t("booking.trackingTitle")}</h2>
                 <TrackingTimeline

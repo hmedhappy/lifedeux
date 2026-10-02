@@ -16,7 +16,7 @@ export default async function ScanHomePage({
 }) {
   const locale = toLocale((await params).locale);
   const t = getT(locale);
-  await requireRole(locale, ["AGENT", "ADMIN"]);
+  const user = await requireRole(locale, ["AGENT", "ADMIN"]);
   const { ref } = await searchParams;
 
   let notFound = false;
@@ -39,6 +39,11 @@ export default async function ScanHomePage({
     orderBy: { arrivalDate: "asc" },
   });
   const today = tunisDayKey(now);
+  const mine = await db.booking.findMany({
+    where: { agentId: user.id, status: { in: ["PAID", "IN_PROGRESS"] } },
+    include: { patient: true, slot: true },
+    orderBy: { slot: { startsAt: "asc" } },
+  });
 
   return (
     <div className="space-y-8">
@@ -58,12 +63,32 @@ export default async function ScanHomePage({
         )}
       </Card>
 
+      {mine.length > 0 && (
+        <section data-testid="scan-mine">
+          <h2 className="mb-3 text-lg font-semibold text-ink">{t("scan.mine")}</h2>
+          <ul className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-white shadow-card">
+            {mine.map((b) => (
+              <li key={b.id}>
+                <Link href={`/${locale}/scan/${b.qrToken}`} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 hover:bg-surface">
+                  <span className="font-medium text-ink">
+                    {b.patient.firstName} {b.patient.lastName}
+                  </span>
+                  <span className="text-sm text-muted">
+                    {b.reference} · {formatDate(b.slot.startsAt, locale, { year: undefined })}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section>
         <h2 className="mb-4 text-lg font-semibold text-ink">{t("scan.movements")}</h2>
         {bookings.length === 0 ? (
           <EmptyState title={t("scan.noMovements")} />
         ) : (
-          <ul className="divide-y divide-line rounded-2xl border border-line">
+          <ul className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-white shadow-card">
             {bookings.map((b) => {
               const arriving = b.arrivalDate && tunisDayKey(b.arrivalDate) >= today && b.status === "PAID";
               return (

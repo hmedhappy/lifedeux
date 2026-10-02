@@ -7,9 +7,9 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { fail, ok, type ActionState } from "@/lib/action-state";
 import { isLatinName } from "@/lib/latin";
+import { formatDateTime, fromTunisLocal } from "@/lib/format";
 import { isAccommodationAvailable, markPaymentAuthorized, markPaymentFailed, markPaymentSucceeded } from "@/lib/bookings";
 import { MIN_LEAD_HOURS } from "@/lib/constants";
-import { formatDateTime } from "@/lib/format";
 import { getT, toLocale } from "@/lib/i18n";
 import { sendTemplate } from "@/lib/mail";
 import { getProvider, mockPaymentsEnabled } from "@/lib/payments";
@@ -102,10 +102,20 @@ const optionsSchema = z.object({
 });
 
 const companionSchema = z.object({
-  firstName: z.string().trim().min(1).max(80),
-  lastName: z.string().trim().min(1).max(80),
-  passportNumber: z.string().trim().min(4).max(30),
+  firstName: z.string().trim().min(1).max(80).refine(isLatinName),
+  lastName: z.string().trim().min(1).max(80).refine(isLatinName),
+  /** Optional when choosing options: it can be completed until 7 days before (docs/RELOOKING.md §8). */
+  passportNumber: z
+    .string()
+    .trim()
+    .max(30)
+    .optional()
+    .transform((v) => v || null)
+    .refine((v) => v === null || v.length >= 4),
 });
+
+/** Passports can be added or corrected until this many days before the operation. */
+const PASSPORT_DEADLINE_DAYS = 7;
 
 export async function chooseOptionsAction(
   localeRaw: string,
@@ -132,7 +142,7 @@ export async function chooseOptionsAction(
     const c = companionSchema.safeParse({
       firstName: formData.get(`companion_${i}_firstName`),
       lastName: formData.get(`companion_${i}_lastName`),
-      passportNumber: formData.get(`companion_${i}_passport`),
+      passportNumber: formData.get(`companion_${i}_passport`) ?? undefined,
     });
     if (!c.success) return fail("errors.companionDetails", { n: i + 1 });
     companions.push(c.data);
@@ -324,4 +334,70 @@ export async function updateProfileAction(localeRaw: string, _: ActionState, for
   await db.user.update({ where: { id: patient.id }, data: parsed.data });
   revalidatePath(`/${parsed.data.locale}/account`);
   return ok("profile.saved");
+}
+
+/**
+ * "Préparer mon voyage" on a paid booking: companions' passports (until 7 days before)
+ * and the flight, which stays optional.
+ */
+export async function updateTripAction(localeRaw: string, bookingId: string, _: ActionState, formData: FormData): Promise<ActionState> {
+  const locale = toLocale(localeRaw);
+  const patient = await currentPatient();
+  if (!patient) return fail("errors.loginRequired");
+  const booking = await db.booking.findFirst({
+    where: { id: bookingId, patientId: patient.id, status: { in: ["PAID", "IN_PROGRESS"] } },
+    include: { slot: true, companions: true },
+  });
+  if (!booking) return fail("errors.invalid");
+  const passportsOpen = booking.slot.startsAt.getTime() - Date.now() > PASSPORT_DEADLINE_DAYS * 86_400_000;
+
+  const flightNumber = String(formData.get("flightNumber") ?? "").trim().toUpperCase().slice(0, 12) || null;
+  if (flightNumber && !/^[A-Z0-9]{2}\s?\d{1,4}[A-Z]?$/.test(flightNumber)) return fail("errors.flightInvalid");
+  const rawArrival = String(formData.get("flightArrivalAt") ?? "");
+  let flightArrivalAt: Date | null = null;
+  if (rawArrival) {
+    const [day, time] = rawArrival.split("T");
+    try {
+      flightArrivalAt = fromTunisLocal(day, time?.slice(0, 5) ?? "");
+    } catch {
+      return fail("errors.flightInvalid");
+    }
+  }
+
+  const updates = [];
+  if (passportsOpen) {
+    for (const c of booking.companions) {
+      const value = String(formData.get(`passport_${c.id}`) ?? "").trim().slice(0, 30);
+      if (value && value.length < 4) return fail("errors.companionDetails", { n: booking.companions.indexOf(c) + 1 });
+      if (value !== (c.passportNumber ?? "")) updates.push(db.companion.update({ where: { id: c.id }, data: { passportNumber: value || null } }));
+    }
+  }
+  await db.$transaction([...updates, db.booking.update({ where: { id: booking.id }, data: { flightNumber, flightArrivalAt } })]);
+  revalidatePath(`/${locale}/account/bookings/${booking.id}`);
+  return ok("trip.saved");
+}
+
+/** The booked lodging became unavailable: the patient picks another one, at no extra cost. */
+export async function chooseOtherAccommodationAction(localeRaw: string, bookingId: string, accommodationId: string): Promise<void> {
+  const locale = toLocale(localeRaw);
+  const patient = await currentPatient();
+  if (!patient) redirect(`/${locale}/login`);
+  const booking = await db.booking.findFirst({
+    where: { id: bookingId, patientId: patient.id, accommodationIssueAt: { not: null }, status: { in: ["PAID", "IN_PROGRESS"] } },
+  });
+  if (booking?.arrivalDate && booking.departureDate) {
+    const arrival = booking.arrivalDate;
+    const departure = booking.departureDate;
+    await db.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${accommodationId}))`;
+      const stay = await tx.accommodation.findFirst({
+        where: { id: accommodationId, active: true, capacity: { gte: 1 + booking.companionsCount }, NOT: { id: booking.accommodationId ?? "" } },
+      });
+      if (!stay || !(await isAccommodationAvailable(accommodationId, arrival, departure, booking.id, tx))) return;
+      await tx.booking.update({ where: { id: booking.id }, data: { accommodationId, accommodationIssueAt: null } });
+      await tx.alert.updateMany({ where: { bookingId: booking.id, kind: "lodgingIssue", resolvedAt: null }, data: { resolvedAt: new Date() } });
+    });
+  }
+  revalidatePath(`/${locale}/account/bookings/${bookingId}`);
+  redirect(`/${locale}/account/bookings/${bookingId}`);
 }

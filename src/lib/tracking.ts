@@ -26,3 +26,6 @@ export function nextTrackingStep(
   if (index === -1 || index === sequence.length - 1) return null;
   return sequence[index + 1];
 }
+
+/** Only the surgeon confirms the operation; the field agent records the other steps. */
+export const DOCTOR_ONLY_STEPS: TrackingStep[] = ["OPERATED"];
