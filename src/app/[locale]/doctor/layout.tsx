@@ -36,9 +36,10 @@ export default async function DoctorLayout({
       items={[
         { href: base, label: t("doctorArea.nav.today"), icon: "today", exact: true, badge: pending, tab: true, group: t("doctorArea.nav.groupDaily"), testId: "nav-today" },
         { href: `${base}/consultations`, label: t("doctorArea.nav.consultations"), icon: "consultations", badge: live, tab: true, group: t("doctorArea.nav.groupDaily"), testId: "nav-consultations" },
-        { href: `${base}/slots`, label: t("doctorArea.nav.agenda"), icon: "agenda", tab: true, group: t("doctorArea.nav.groupDaily"), testId: "nav-agenda" },
+        { href: `${base}/slots`, label: t("doctorArea.nav.agenda"), icon: "agenda", exact: true, tab: true, group: t("doctorArea.nav.groupDaily"), testId: "nav-agenda" },
         { href: `${base}/patients`, label: t("doctorArea.nav.patients"), icon: "patients", group: t("doctorArea.nav.groupDaily") },
         { href: `${base}/payouts`, label: t("doctorArea.nav.payouts"), icon: "wallet", group: t("doctorArea.nav.groupSettings") },
+        { href: `${base}/slots/settings`, label: t("agenda.settingsTitle"), icon: "settings", group: t("doctorArea.nav.groupSettings"), testId: "nav-agenda-settings" },
         { href: `${base}/prescription`, label: t("doctorArea.nav.prescription"), icon: "prescription", group: t("doctorArea.nav.groupSettings") },
         { href: `${base}/profile`, label: t("doctorArea.nav.profile"), icon: "profile", group: t("doctorArea.nav.groupSettings"), testId: "nav-profile" },
         ...(user.role === "SUPER_DOCTOR"

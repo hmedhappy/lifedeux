@@ -1,15 +1,26 @@
-import { CalendarOff, Scissors, Video } from "lucide-react";
-import { ActionForm, ConfirmSubmit, SubmitButton } from "@/components/forms";
-import { Badge, Disclosure, EmptyState, Field, Input, Notice, PageTitle } from "@/components/ui";
-import { addExceptionAction, deleteExceptionAction, saveScheduleAction } from "@/actions/doctor-settings";
-import { HORIZON_WEEKS, MAX_BUFFER_MINUTES, parseSchedule } from "@/lib/schedule-rules";
-import { addSlotsAction, deleteSlotAction } from "@/actions/doctor";
+import Link from "next/link";
+import { CalendarClock, ChevronRight, Settings2 } from "lucide-react";
+import { AgendaCalendar, type AgendaItem, type FreeSlot } from "@/components/agenda-calendar";
+import { LinkButton, Notice, PageTitle } from "@/components/ui";
 import { requireDoctor } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { formatDate, formatTime, tunisDayKey } from "@/lib/format";
-import { getT, toLocale } from "@/lib/i18n";
+import { formatDateTime, formatMoney, formatTime, fromTunisLocal, tunisDayKey } from "@/lib/format";
+import { getT, localized, toLocale } from "@/lib/i18n";
+import { nextMonth } from "@/lib/earnings";
 
-export default async function DoctorSlotsPage({
+const PAST_MONTHS = 2;
+const FUTURE_MONTHS = 6;
+const PAID = ["PAID", "IN_PROGRESS", "COMPLETED", "NO_SHOW"];
+const nowMs = () => Date.now();
+
+function shift(month: string, delta: number): string {
+  const [y, m] = month.split("-").map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + delta, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+/** Agenda: the month calendar of booked appointments comes first; settings live on their own page. */
+export default async function DoctorAgendaPage({
   params,
   searchParams,
 }: {
@@ -20,184 +31,119 @@ export default async function DoctorSlotsPage({
   const { welcome } = await searchParams;
   const t = getT(locale);
   const { doctor } = await requireDoctor(locale);
-  // Surgeons publish procedure slots by default; everyone else consultation slots.
-  const defaultKind = (await db.doctorOperation.count({ where: { doctorId: doctor.id } })) > 0 ? "OPERATION" : "CONSULTATION";
-  const [full, exceptions] = await Promise.all([
-    db.doctor.findUniqueOrThrow({ where: { id: doctor.id } }),
-    db.scheduleException.findMany({ where: { doctorId: doctor.id, endsOn: { gte: tunisDayKey(new Date()) } }, orderBy: { startsOn: "asc" } }),
-  ]);
-  const schedule = parseSchedule(full.weeklySchedule);
-  const slots = await db.slot.findMany({
-    where: { doctorId: doctor.id, startsAt: { gt: new Date() } },
-    orderBy: { startsAt: "asc" },
-    take: 300,
-    include: { _count: { select: { bookings: true, consultations: true } } },
-  });
 
-  const days = new Map<string, typeof slots>();
-  for (const s of slots) {
-    const key = tunisDayKey(s.startsAt);
-    days.set(key, [...(days.get(key) ?? []), s]);
-  }
   const today = tunisDayKey(new Date());
-  // Monday-first display; values follow JS getDay() (0 = Sunday).
-  const weekdays = [1, 2, 3, 4, 5, 6, 0];
+  const minMonth = shift(today.slice(0, 7), -PAST_MONTHS);
+  const maxMonth = shift(today.slice(0, 7), FUTURE_MONTHS);
+  const from = fromTunisLocal(`${minMonth}-01`, "00:00");
+  const to = fromTunisLocal(`${nextMonth(maxMonth)}-01`, "00:00");
+  const inRange = { startsAt: { gte: from, lt: to } };
+
+  const [consultations, bookings, free] = await Promise.all([
+    db.consultation.findMany({
+      where: { doctorId: doctor.id, status: { in: ["REQUESTED", "CONFIRMED", "PAID", "COMPLETED", "NO_SHOW"] }, slot: inRange },
+      include: { patient: true, slot: true },
+    }),
+    db.booking.findMany({
+      where: { doctorId: doctor.id, status: { in: ["REQUESTED", "CONFIRMED", "PAID", "IN_PROGRESS", "COMPLETED"] }, slot: inRange },
+      include: { patient: true, slot: true, operation: true },
+    }),
+    db.slot.findMany({ where: { doctorId: doctor.id, status: "FREE", startsAt: { gt: new Date(), lt: to } }, orderBy: { startsAt: "asc" } }),
+  ]);
+
+  // Full names once paid; before that, first name and initial (contacts stay hidden).
+  const who = (p: { firstName: string; lastName: string }, paid: boolean) => (paid ? `${p.firstName} ${p.lastName}` : `${p.firstName} ${p.lastName.charAt(0)}.`);
+  const items: (AgendaItem & { at: number })[] = [
+    ...consultations.map((c) => ({
+      id: c.id,
+      kind: "consultation" as const,
+      dayKey: tunisDayKey(c.slot.startsAt),
+      time: formatTime(c.slot.startsAt, locale),
+      title: `${t("consult.short")} · ${c.reference}`,
+      patient: who(c.patient, PAID.includes(c.status)),
+      fee: formatMoney(c.doctorFee, c.currency, locale),
+      status: c.status,
+      statusLabel: t(`status.${c.status}`),
+      pending: c.status === "REQUESTED" || c.status === "CONFIRMED",
+      done: c.status === "COMPLETED" || c.status === "NO_SHOW",
+      href: `/${locale}/doctor/consultations/${c.id}`,
+      at: c.slot.startsAt.getTime(),
+    })),
+    ...bookings.map((b) => ({
+      id: b.id,
+      kind: "operation" as const,
+      dayKey: tunisDayKey(b.slot.startsAt),
+      time: formatTime(b.slot.startsAt, locale),
+      title: `${localized(b.operation, "name", locale)} · ${b.reference}`,
+      patient: who(b.patient, PAID.includes(b.status)),
+      fee: formatMoney(b.doctorFee, b.currency, locale),
+      status: b.status,
+      statusLabel: t(`status.${b.status}`),
+      pending: b.status === "REQUESTED" || b.status === "CONFIRMED",
+      done: b.status === "COMPLETED",
+      href: `/${locale}/doctor/bookings/${b.id}`,
+      at: b.slot.startsAt.getTime(),
+    })),
+  ];
+  const freeSlots: FreeSlot[] = free.map((s) => ({
+    dayKey: tunisDayKey(s.startsAt),
+    time: formatTime(s.startsAt, locale),
+    kind: s.kind === "OPERATION" ? "operation" : "consultation",
+  }));
+  const now = nowMs();
+  const upcoming = items
+    .filter((i) => i.at >= now - 3_600_000 && !i.done)
+    .sort((a, b) => a.at - b.at)
+    .slice(0, 5);
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-6">
       {welcome && <Notice tone="success">{t("referral.welcome")}</Notice>}
-      <PageTitle title={t("doctorArea.slotsTitle")} subtitle={t("doctorArea.slotsSubtitle")} />
-      <section className="rounded-3xl border border-line bg-white p-5 shadow-card sm:p-6" data-testid="schedule">
-        <h2 className="text-lg font-semibold text-ink">{t("schedule.title")}</h2>
-        <p className="mt-1 text-sm text-muted">{t("schedule.text", { weeks: HORIZON_WEEKS })}</p>
-        <ActionForm action={saveScheduleAction.bind(null, locale)} className="mt-5 space-y-4">
-          <div className="space-y-2">
-            {weekdays.map((d) => (
-              <label key={d} className="grid grid-cols-[5.5rem_1fr] items-center gap-3">
-                <span className="text-sm font-medium text-ink">{t(`weekdays.${d}`)}</span>
-                <Input
-                  name={`d${d}`}
-                  defaultValue={(schedule[String(d)] ?? []).map(([a, b]) => `${a}-${b}`).join(", ")}
-                  placeholder={d >= 1 && d <= 5 ? "09:00-12:00, 14:00-17:00" : t("schedule.closed")}
-                  data-testid={`schedule-d${d}`}
-                />
-              </label>
-            ))}
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={t("schedule.minutes")}>
-              <Input type="number" name="minutes" min={10} max={120} step={5} defaultValue={full.consultationMinutes} required />
-            </Field>
-            <Field label={t("schedule.buffer")} hint={t("schedule.bufferHint", { max: MAX_BUFFER_MINUTES })}>
-              <Input type="number" name="buffer" min={0} max={MAX_BUFFER_MINUTES} defaultValue={full.bufferMinutes} required />
-            </Field>
-          </div>
-          <SubmitButton testId="schedule-save">{t("schedule.save")}</SubmitButton>
-        </ActionForm>
-      </section>
+      <PageTitle
+        title={t("agenda.title")}
+        subtitle={t("agenda.subtitle")}
+        action={
+          <LinkButton href={`/${locale}/doctor/slots/settings`} variant="secondary" data-testid="agenda-settings">
+            <Settings2 className="h-4 w-4" aria-hidden />
+            {t("agenda.settings")}
+          </LinkButton>
+        }
+      />
 
-      <section className="rounded-3xl border border-line bg-white p-5 shadow-card sm:p-6" data-testid="exceptions">
-        <h2 className="flex items-center gap-2 text-lg font-semibold text-ink">
-          <CalendarOff className="h-5 w-5 text-muted" aria-hidden />
-          {t("schedule.exceptionsTitle")}
-        </h2>
-        <p className="mt-1 text-sm text-muted">{t("schedule.exceptionsText")}</p>
-        {exceptions.length > 0 && (
-          <ul className="mt-4 divide-y divide-line">
-            {exceptions.map((e) => (
-              <li key={e.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                <span>
-                  <span className="font-medium text-ink">
-                    {formatDate(new Date(`${e.startsOn}T12:00:00Z`), locale)}
-                    {e.endsOn !== e.startsOn && ` → ${formatDate(new Date(`${e.endsOn}T12:00:00Z`), locale)}`}
+      <AgendaCalendar items={items} free={freeSlots} today={today} minMonth={minMonth} maxMonth={maxMonth} />
+
+      <section>
+        <h2 className="mb-3 text-lg font-semibold text-ink">{t("agenda.upcoming")}</h2>
+        {upcoming.length === 0 ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-dashed border-line-strong p-5 text-sm text-muted">
+            <span className="flex items-center gap-2">
+              <CalendarClock className="h-5 w-5" aria-hidden />
+              {free.length ? t("agenda.noneUpcoming") : t("agenda.noSlotsYet")}
+            </span>
+            {!free.length && (
+              <Link href={`/${locale}/doctor/slots/settings`} className="font-semibold text-brand-dark hover:underline">
+                {t("agenda.setUp")}
+              </Link>
+            )}
+          </div>
+        ) : (
+          <ul className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-white shadow-card" data-testid="agenda-upcoming">
+            {upcoming.map((i) => (
+              <li key={i.id}>
+                <Link href={i.href} className="flex items-center gap-3 px-4 py-3 hover:bg-surface/60">
+                  <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${i.kind === "operation" ? "bg-brand" : "bg-accent"}`} aria-hidden />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium text-ink">{i.patient}</span>
+                    <span className="block truncate text-sm text-muted">
+                      {formatDateTime(new Date(i.at), locale)} · {i.title}
+                    </span>
                   </span>
-                  {e.reason && <span className="ms-2 text-muted">{e.reason}</span>}
-                </span>
-                <form action={deleteExceptionAction.bind(null, locale, e.id)}>
-                  <ConfirmSubmit message={t("schedule.exceptionDelete")}>{t("rxTemplates.delete")}</ConfirmSubmit>
-                </form>
+                  <span className="text-sm font-semibold text-ink">{i.fee}</span>
+                  <ChevronRight className="h-4 w-4 text-muted rtl:-scale-x-100" aria-hidden />
+                </Link>
               </li>
             ))}
           </ul>
-        )}
-        <ActionForm action={addExceptionAction.bind(null, locale)} className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_1.4fr_auto] sm:items-end">
-          <Field label={t("doctorArea.from")}>
-            <Input type="date" name="startsOn" min={today} required data-testid="exception-from" />
-          </Field>
-          <Field label={t("doctorArea.to")}>
-            <Input type="date" name="endsOn" min={today} />
-          </Field>
-          <Field label={t("schedule.reason")}>
-            <Input name="reason" maxLength={120} placeholder={t("schedule.reasonPlaceholder")} />
-          </Field>
-          <SubmitButton variant="secondary" testId="exception-save">{t("schedule.addException")}</SubmitButton>
-        </ActionForm>
-      </section>
-
-      <Disclosure summary={t("schedule.manual")} className="rounded-3xl border border-line bg-white px-5 py-2 shadow-card">
-        <p className="mb-3 text-sm text-muted">{t("schedule.manualText")}</p>
-        <ActionForm action={addSlotsAction.bind(null, locale)} className="mt-5 space-y-5">
-          <fieldset>
-            <legend className="mb-2 text-sm font-medium text-ink">{t("doctorArea.slotKind")}</legend>
-            <div className="flex flex-wrap gap-2">
-              {(["CONSULTATION", "OPERATION"] as const).map((k) => (
-                <label key={k} className="flex cursor-pointer items-center gap-2 rounded-xl border-2 border-line px-4 py-2.5 text-sm has-[:checked]:border-ink">
-                  <input type="radio" name="kind" value={k} defaultChecked={k === defaultKind} className="accent-brand" />
-                  {k === "CONSULTATION" ? <Video className="h-4 w-4" aria-hidden /> : <Scissors className="h-4 w-4" aria-hidden />}
-                  {t(`slotKind.${k}`)}
-                </label>
-              ))}
-            </div>
-          </fieldset>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Field label={t("doctorArea.from")}>
-              <Input type="date" name="from" min={today} required />
-            </Field>
-            <Field label={t("doctorArea.to")} hint={t("doctorArea.toHint")}>
-              <Input type="date" name="to" min={today} />
-            </Field>
-            <Field label={t("doctorArea.times")} hint={t("doctorArea.timesHint")}>
-              <Input name="times" placeholder="09:00, 11:00, 14:30" required />
-            </Field>
-          </div>
-          <fieldset>
-            <legend className="mb-2 text-sm font-medium text-ink">{t("doctorArea.weekdays")}</legend>
-            <div className="flex flex-wrap gap-2">
-              {weekdays.map((d) => (
-                <label key={d} className="flex cursor-pointer items-center gap-2 rounded-full border border-line px-3 py-1.5 text-sm has-[:checked]:border-ink has-[:checked]:bg-ink has-[:checked]:text-white">
-                  <input type="checkbox" name="weekdays" value={d} defaultChecked={d >= 1 && d <= 5} className="sr-only" />
-                  {t(`weekdays.${d}`)}
-                </label>
-              ))}
-            </div>
-          </fieldset>
-          <SubmitButton>{t("doctorArea.createSlots")}</SubmitButton>
-        </ActionForm>
-      </Disclosure>
-
-      <section>
-        <h2 className="mb-4 text-lg font-semibold text-ink">{t("doctorArea.upcomingSlots")}</h2>
-        {days.size === 0 ? (
-          <EmptyState title={t("doctorArea.noSlots")} />
-        ) : (
-          <div className="space-y-4">
-            {[...days.entries()].map(([key, daySlots]) => (
-              <div key={key} className="rounded-3xl border border-line bg-white p-5 shadow-card">
-                <p className="font-semibold capitalize text-ink">
-                  {formatDate(daySlots[0].startsAt, locale, { weekday: "long" })}
-                </p>
-                <ul className="mt-3 flex flex-wrap gap-2">
-                  {daySlots.map((s) => (
-                    <li key={s.id} className="flex items-center gap-2 rounded-lg border border-line py-1.5 ps-3 pe-1.5 text-sm">
-                      {s.kind === "CONSULTATION" ? (
-                        <Video className="h-3.5 w-3.5 text-brand" aria-label={t("slotKind.CONSULTATION")} />
-                      ) : (
-                        <Scissors className="h-3.5 w-3.5 text-muted" aria-label={t("slotKind.OPERATION")} />
-                      )}
-                      <span className="font-medium">{formatTime(s.startsAt, locale)}</span>
-                      {s.status === "FREE" ? (
-                        s._count.bookings + s._count.consultations === 0 ? (
-                          <form action={deleteSlotAction.bind(null, locale, s.id)}>
-                            <button
-                              type="submit"
-                              aria-label={t("doctorArea.deleteSlot")}
-                              className="rounded-md px-1.5 text-muted hover:bg-surface hover:text-red-700"
-                            >
-                              ×
-                            </button>
-                          </form>
-                        ) : (
-                          <Badge>{t("slotStatus.FREE")}</Badge>
-                        )
-                      ) : (
-                        <Badge tone={s.status === "BOOKED" ? "green" : "amber"}>{t(`slotStatus.${s.status}`)}</Badge>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
         )}
       </section>
     </div>

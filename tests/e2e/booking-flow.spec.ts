@@ -112,9 +112,9 @@ test("admin creates a doctor who activates the account from the invitation", asy
 });
 
 test("doctor publishes slots", async () => {
-  await doctor.goto("/fr/doctor/slots");
+  await doctor.goto("/fr/doctor/slots/settings");
   // One-off slots (procedures) are folded under the weekly schedule.
-  await doctor.getByText("Créneaux ponctuels").click();
+  await doctor.locator("summary", { hasText: "Créneaux ponctuels" }).click();
   await expect(doctor.locator('input[name="kind"][value="OPERATION"]')).toBeChecked();
   await doctor.locator('input[name="from"]').fill(slotDay);
   await doctor.locator('input[name="times"]').fill("10:00, 15:30");

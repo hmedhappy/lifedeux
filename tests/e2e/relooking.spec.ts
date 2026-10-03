@@ -114,3 +114,26 @@ test("the scheduled job sends the 10-minute reminder once and nudges silent doct
   // Run twice, alerted once.
   expect(await db.alert.count({ where: { consultationId: waiting.id, kind: "noAnswer" } })).toBe(1);
 });
+
+test("the doctor's agenda opens on the month calendar and a day lists its appointments", async ({ page }) => {
+  await login(page, "dr.amira@demo.lifedeux.com", DEMO_PASSWORD);
+  await page.goto("/fr/doctor/slots");
+  await expect(page.getByTestId("agenda-calendar")).toBeVisible();
+  for (let i = 0; i < 6 && !(await page.getByTestId("agenda-day-busy").count()); i++) {
+    const next = page.getByTestId("agenda-next");
+    if (await next.isDisabled()) break;
+    await next.click();
+  }
+  const busy = page.getByTestId("agenda-day-busy").first();
+  if (await busy.count()) {
+    await busy.click();
+    const sheet = page.getByTestId("agenda-day");
+    await expect(sheet.getByTestId("agenda-appointment").first()).toBeVisible();
+    await sheet.getByTestId("agenda-appointment").first().click();
+    await expect(page).toHaveURL(/\/doctor\/(consultations|bookings)\//);
+  }
+  await page.goto("/fr/doctor/slots");
+  await page.getByTestId("agenda-settings").click();
+  await expect(page.getByTestId("schedule")).toBeVisible();
+  await expect(page.getByTestId("exceptions")).toBeVisible();
+});

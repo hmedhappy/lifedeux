@@ -1530,5 +1530,28 @@
   "support": {
     "label": "Aide sur WhatsApp",
     "prefill": "Bonjour Medelys, j'ai une question."
+  },
+  "agenda": {
+    "title": "Agenda",
+    "subtitle": "Vos rendez-vous réservés, mois par mois. Touchez un jour pour voir le détail.",
+    "settings": "Réglages",
+    "settingsTitle": "Réglages de l'agenda",
+    "settingsSubtitle": "Semaine type, absences et créneaux ponctuels. À régler une fois, à modifier de temps en temps.",
+    "back": "Agenda",
+    "published": "Créneaux publiés",
+    "today": "Aujourd'hui",
+    "legendOperation": "{n} {n:intervention|interventions}",
+    "legendConsultation": "{n} {n:consultation|consultations}",
+    "dayCount": "{n} {n:rendez-vous|rendez-vous}",
+    "noAppointments": "Aucun rendez-vous réservé ce jour-là.",
+    "freeSlots": "{n} {n:créneau libre|créneaux libres}",
+    "fee": "honoraires",
+    "legendConfirmed": "Payé ou réalisé",
+    "legendPending": "En attente (demande ou paiement)",
+    "upcoming": "Prochains rendez-vous",
+    "noneUpcoming": "Aucun rendez-vous à venir pour l'instant.",
+    "noSlotsYet": "Aucun créneau publié : définissez votre semaine type pour recevoir des rendez-vous.",
+    "setUp": "Régler mon agenda",
+    "requestHint": "Cette demande attend votre réponse dans"
   }
 }

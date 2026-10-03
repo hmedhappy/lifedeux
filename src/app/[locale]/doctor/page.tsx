@@ -114,7 +114,7 @@ export default async function DoctorTodayPage({
   const steps = [
     { key: "photo", done: !!doctor.photoUrl && doctor.bio.length > 40, href: `/${locale}/doctor/profile` },
     { key: "stamp", done: !!doctor.stampImageId, href: `/${locale}/doctor/prescription#stamp` },
-    { key: "schedule", done: !!doctor.weeklySchedule || futureSlots > 0, href: `/${locale}/doctor/slots` },
+    { key: "schedule", done: !!doctor.weeklySchedule || futureSlots > 0, href: `/${locale}/doctor/slots/settings` },
     { key: "price", done: !!(doctor.consultationPrice ?? doctor.specialty_?.consultationPrice), href: `/${locale}/doctor/profile` },
   ];
   const progress = steps.filter((s) => s.done).length;

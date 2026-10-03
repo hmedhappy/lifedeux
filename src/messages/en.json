@@ -1530,5 +1530,28 @@
   "support": {
     "label": "Help on WhatsApp",
     "prefill": "Hello Medelys, I have a question."
+  },
+  "agenda": {
+    "title": "Agenda",
+    "subtitle": "Your booked appointments, month by month. Tap a day to see the details.",
+    "settings": "Settings",
+    "settingsTitle": "Agenda settings",
+    "settingsSubtitle": "Weekly schedule, time off and one-off slots. Set once, change now and then.",
+    "back": "Agenda",
+    "published": "Published slots",
+    "today": "Today",
+    "legendOperation": "{n} {n:operation|operations}",
+    "legendConsultation": "{n} {n:consultation|consultations}",
+    "dayCount": "{n} {n:appointment|appointments}",
+    "noAppointments": "No booked appointment that day.",
+    "freeSlots": "{n} free {n:slot|slots}",
+    "fee": "fee",
+    "legendConfirmed": "Paid or done",
+    "legendPending": "Pending (request or payment)",
+    "upcoming": "Next appointments",
+    "noneUpcoming": "No upcoming appointment yet.",
+    "noSlotsYet": "No published slots: set your weekly schedule to receive appointments.",
+    "setUp": "Set up my agenda",
+    "requestHint": "This request is waiting for your answer in"
   }
 }
