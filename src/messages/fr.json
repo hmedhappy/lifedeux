@@ -1721,6 +1721,7 @@
     "confirmButton": "Confirmer mon rendez-vous",
     "alreadyConfirmed": "Ce rendez-vous est déjà confirmé. Le voir",
     "linkExpired": "Ce lien a expiré : le créneau a été libéré. Vous pouvez reprendre rendez-vous.",
-    "bookAgain": "Reprendre rendez-vous"
+    "bookAgain": "Reprendre rendez-vous",
+    "takenLegend": "Rendez-vous déjà pris ce jour-là"
   }
 }

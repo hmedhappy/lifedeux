@@ -1721,6 +1721,7 @@
     "confirmButton": "Confirm my appointment",
     "alreadyConfirmed": "This appointment is already confirmed. View it",
     "linkExpired": "This link has expired: the slot was freed. You can book again.",
-    "bookAgain": "Book again"
+    "bookAgain": "Book again",
+    "takenLegend": "Appointments already taken that day"
   }
 }

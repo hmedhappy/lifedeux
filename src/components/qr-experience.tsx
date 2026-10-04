@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import clsx from "clsx";
-import { ArrowLeft, CalendarCheck, CalendarDays, Check, Heart, Loader2, MailCheck, MapPin, X } from "lucide-react";
+import { ArrowLeft, CalendarCheck, CalendarDays, Check, ChevronLeft, ChevronRight, Heart, Loader2, MailCheck, MapPin, X } from "lucide-react";
 import { bookInPersonAsVisitorAction, saveFavoriteAction, type VisitorInput } from "@/actions/qr";
 import { requestInPersonAction } from "@/actions/consultation";
 import { MedelysLogo } from "./brand-logo";
@@ -24,11 +24,16 @@ const LARGE = "(min-width: 1024px)";
 export function QrExperience({
   doctor,
   slots,
+  taken,
+  today,
   signedIn,
   favorite: initialFavorite,
 }: {
   doctor: { id: string; name: string; photoUrl: string | null; specialty: string; address: string; price: string };
   slots: SlotOption[];
+  /** Appointments already taken with this doctor, per day key: dots on the calendar. */
+  taken: Record<string, number>;
+  today: string;
   /** A signed-in patient: no identity step, the favorite toggles at once. */
   signedIn: boolean;
   favorite: boolean;
@@ -49,11 +54,6 @@ export function QrExperience({
   const steps: Step[] = flow === "book" ? ["slot", signedIn ? "recap" : "identity", "sent"] : ["identity", "saved"];
   const step = steps[index];
   const slot = slots.find((s) => s.id === slotId) ?? null;
-  const days = useMemo(() => {
-    const seen = new Map<string, SlotOption>();
-    for (const s of slots) if (!seen.has(s.dayKey)) seen.set(s.dayKey, s);
-    return [...seen.values()].slice(0, 14);
-  }, [slots]);
   const times = slots.filter((s) => s.dayKey === day);
 
   // The overlay owns the screen on phones: the page behind does not scroll.
@@ -196,34 +196,16 @@ export function QrExperience({
                 >
                   {s === "slot" && (
                     <>
-                      <h2 className="mt-2 text-2xl font-bold tracking-tight text-ink">{t("qrBook.whenTitle")}</h2>
-                      <p className="mt-1 text-muted">{doctor.name}</p>
-                      <div className="-mx-5 mt-5 flex gap-2 overflow-x-auto px-5 pb-1" role="listbox" aria-label={t("doctor.chooseDay")}>
-                        {days.map((d) => (
-                          <button
-                            key={d.dayKey}
-                            type="button"
-                            role="option"
-                            aria-selected={d.dayKey === day}
-                            onClick={() => setDay(d.dayKey)}
-                            className={clsx(
-                              "flex min-w-16 shrink-0 flex-col items-center rounded-2xl border px-3 py-2.5 transition",
-                              d.dayKey === day ? "border-brand bg-brand text-white" : "border-line bg-white text-ink",
-                            )}
-                          >
-                            <span className="text-xs font-medium uppercase opacity-80">{d.weekday}</span>
-                            <span className="text-base font-bold">{d.dayLabel}</span>
-                          </button>
-                        ))}
-                      </div>
-                      <div className="mt-5 grid flex-1 auto-rows-min grid-cols-3 gap-2.5 overflow-y-auto pb-2" data-testid="qr-times">
+                      <h2 className="mt-1 text-2xl font-bold tracking-tight text-ink">{t("qrBook.whenTitle")}</h2>
+                      <MonthCalendar slots={slots} taken={taken} today={today} value={day} onChange={setDay} />
+                      <div className="mt-3 grid flex-1 auto-rows-min grid-cols-4 gap-2 overflow-y-auto pb-2" data-testid="qr-times">
                         {times.map((s) => (
                           <button
                             key={s.id}
                             type="button"
                             onClick={() => pickTime(s.id)}
                             className={clsx(
-                              "h-14 rounded-2xl border text-base font-semibold transition active:scale-95",
+                              "h-12 rounded-xl border text-base font-semibold transition active:scale-95",
                               s.id === slotId ? "border-brand bg-brand text-white" : "border-line bg-white text-ink",
                             )}
                           >
@@ -298,6 +280,126 @@ export function QrExperience({
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+const intlLocale = { fr: "fr-FR", en: "en-GB", ar: "ar-TN-u-nu-latn" } as const;
+const MAX_DOTS = 3;
+
+function shiftMonth(month: string, delta: number): string {
+  const [y, m] = month.split("-").map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + delta, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+/** Monday-first grid of the month; null cells pad the weeks. */
+function monthGrid(month: string): (string | null)[] {
+  const [y, m] = month.split("-").map(Number);
+  const lead = (new Date(Date.UTC(y, m - 1, 1)).getUTCDay() + 6) % 7;
+  const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const cells: (string | null)[] = Array.from({ length: lead }, () => null);
+  for (let d = 1; d <= days; d++) cells.push(`${month}-${String(d).padStart(2, "0")}`);
+  while (cells.length % 7) cells.push(null);
+  return cells;
+}
+
+/**
+ * Month calendar, as in the doctor's agenda: days with a free time can be tapped; dots
+ * under a day show the appointments already taken with this doctor that day.
+ */
+function MonthCalendar({
+  slots,
+  taken,
+  today,
+  value,
+  onChange,
+}: {
+  slots: SlotOption[];
+  taken: Record<string, number>;
+  today: string;
+  value: string | undefined;
+  onChange: (day: string) => void;
+}) {
+  const { t, locale } = useI18n();
+  const freeDays = useMemo(() => new Set(slots.map((s) => s.dayKey)), [slots]);
+  const first = slots[0]?.dayKey ?? today;
+  const last = slots[slots.length - 1]?.dayKey ?? today;
+  const [month, setMonth] = useState((value ?? first).slice(0, 7));
+  const fmt = (opts: Intl.DateTimeFormatOptions, key: string) =>
+    new Intl.DateTimeFormat(intlLocale[locale], { timeZone: "UTC", ...opts }).format(new Date(`${key}T12:00:00Z`));
+
+  return (
+    <div className="mt-3" data-testid="qr-calendar">
+      <div className="flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => setMonth(shiftMonth(month, -1))}
+          disabled={month <= today.slice(0, 7)}
+          aria-label={t("slots.prevMonth")}
+          className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface disabled:opacity-25"
+        >
+          <ChevronLeft className="h-5 w-5 rtl:-scale-x-100" aria-hidden />
+        </button>
+        <p className="text-base font-semibold capitalize text-ink" aria-live="polite">
+          {fmt({ month: "long", year: "numeric" }, `${month}-01`)}
+        </p>
+        <button
+          type="button"
+          onClick={() => setMonth(shiftMonth(month, 1))}
+          disabled={month >= last.slice(0, 7)}
+          aria-label={t("slots.nextMonth")}
+          className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface disabled:opacity-25"
+          data-testid="qr-next-month"
+        >
+          <ChevronRight className="h-5 w-5 rtl:-scale-x-100" aria-hidden />
+        </button>
+      </div>
+      <div className="mt-1 grid grid-cols-7 gap-y-0.5 text-center" role="grid" aria-label={t("doctor.chooseDay")}>
+        {Array.from({ length: 7 }, (_, i) => (
+          <span key={i} className="pb-1 text-[11px] font-medium uppercase text-muted" role="columnheader">
+            {fmt({ weekday: "narrow" }, `2024-01-0${i + 1}`)}
+          </span>
+        ))}
+        {monthGrid(month).map((key, i) => {
+          if (!key) return <span key={`b${i}`} aria-hidden />;
+          const free = freeDays.has(key);
+          const busy = taken[key] ?? 0;
+          const selected = key === value;
+          return (
+            <button
+              key={key}
+              type="button"
+              role="gridcell"
+              disabled={!free}
+              aria-selected={selected}
+              onClick={() => onChange(key)}
+              aria-label={fmt({ weekday: "long", day: "numeric", month: "long" }, key)}
+              className="flex h-11 flex-col items-center justify-center"
+              data-day={key}
+            >
+              <span
+                className={clsx(
+                  "flex h-8 w-8 items-center justify-center rounded-full text-sm tabular-nums transition",
+                  selected ? "bg-brand font-bold text-white" : free ? "font-semibold text-ink" : "text-line-strong",
+                  key === today && !selected && "ring-1 ring-brand",
+                )}
+              >
+                {Number(key.slice(8))}
+              </span>
+              <span className="flex h-1.5 items-center gap-0.5" aria-hidden>
+                {Array.from({ length: Math.min(busy, MAX_DOTS) }, (_, j) => (
+                  <span key={j} className={clsx("h-1 w-1 rounded-full", selected ? "bg-brand" : "bg-accent")} />
+                ))}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted">
+        <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />
+        {t("qrBook.takenLegend")}
+      </p>
     </div>
   );
 }

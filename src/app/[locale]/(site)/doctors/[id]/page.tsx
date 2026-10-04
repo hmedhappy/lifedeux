@@ -11,7 +11,7 @@ import { requestBookingAction } from "@/actions/patient";
 import { requestConsultationAction, requestInPersonAction } from "@/actions/consultation";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { formatDate, formatMoney } from "@/lib/format";
+import { formatDate, formatMoney, tunisDayKey } from "@/lib/format";
 import { toSlotOptions } from "@/lib/slot-options";
 import { googleEnabled } from "@/lib/google-auth";
 import { getT, localized, toLocale } from "@/lib/i18n";
@@ -83,6 +83,19 @@ export default async function DoctorPage({
   const serviceIcon = { cabinet: Building2, consultation: MessageCircle, operation: Scissors } as const;
   // Phones arriving on the practice tab (the QR code) get the one-screen experience.
   const qr = service === "cabinet" && doctor.inPerson && (!user || user.role === "PATIENT");
+  // Appointments already taken, per day (Tunis): dots on the phone calendar, no names.
+  const taken: Record<string, number> = {};
+  if (qr) {
+    const busy = await db.slot.findMany({
+      where: { doctorId: doctor.id, status: { in: ["HELD", "BOOKED"] }, startsAt: { gt: new Date() } },
+      select: { startsAt: true },
+      take: 1000,
+    });
+    for (const b of busy) {
+      const key = tunisDayKey(b.startsAt);
+      taken[key] = (taken[key] ?? 0) + 1;
+    }
+  }
   const favorite = qr && user ? !!(await db.favoriteDoctor.findUnique({ where: { patientId_doctorId: { patientId: user.id, doctorId: doctor.id } } })) : false;
 
   const panel = service ? (
@@ -140,6 +153,8 @@ export default async function DoctorPage({
             price,
           }}
           slots={slots}
+          taken={taken}
+          today={tunisDayKey(new Date())}
           signedIn={!!user}
           favorite={favorite}
         />
