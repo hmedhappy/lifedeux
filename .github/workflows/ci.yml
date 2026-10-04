@@ -4,6 +4,11 @@ on:
   push:
   pull_request:
 
+# A newer push to the same branch cancels the run still in progress (never a deployment midway).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -34,3 +39,27 @@ jobs:
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+
+  # Merged to main and every test green: the VPS runs deploy/ci-deploy.sh (backup, then deploy.sh).
+  deploy:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Deploy to the VPS
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+          HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          # The key may only run ci-deploy.sh on the server; the commit sha is its one argument.
+          ssh -i ~/.ssh/deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "root@$HOST" "$GITHUB_SHA"
+      - name: Check the site answers
+        run: curl -fsS -o /dev/null -w "%{http_code}\n" --retry 10 --retry-delay 6 --retry-all-errors https://medelys.afdev.site/fr

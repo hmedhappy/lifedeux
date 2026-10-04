@@ -91,6 +91,16 @@ cd lifedeux
 ./deploy/deploy.sh        # récupère le code (git pull), reconstruit, redémarre ; les données sont conservées
 ```
 
+## Déploiement automatique (merge sur `main`)
+
+Chaque push sur `main` lance la CI GitHub (lint, types, tests unitaires, build, tests de bout en bout). Si tout est vert, le job `deploy` se connecte au VPS et lance `deploy/ci-deploy.sh` avec le commit testé : sauvegarde de la base, passage du dossier sur ce commit, puis `deploy.sh`. Un push sur une autre branche ne déploie rien.
+
+- **Clé SSH dédiée** : sa clé publique est dans `/root/.ssh/authorized_keys` du VPS, précédée de `command="/root/lifedeux/deploy/ci-deploy.sh",no-port-forwarding,no-agent-forwarding,no-X11-forwarding,no-pty`. Elle ne peut rien faire d'autre que ce script.
+- **Secrets GitHub** (Settings → Secrets → Actions) : `VPS_SSH_KEY` (clé privée), `VPS_KNOWN_HOSTS` (`ssh-keyscan -t ed25519 <ip>`), `VPS_HOST` (IP du VPS).
+- **Changer la clé** : `ssh-keygen -t ed25519 -N "" -f deploy_key`, remplacer la ligne `github-actions-deploy@medelys` dans `authorized_keys`, puis `gh secret set VPS_SSH_KEY < deploy_key` et supprimer le fichier local.
+- **Journal** : l'onglet Actions du dépôt ; sur le VPS, `docker compose ... logs app`.
+- Deux pushs rapprochés : le second attend la fin du premier ; un commit dépassé par un plus récent n'est pas déployé.
+
 ## Variables ajoutées par le relooking (toutes facultatives)
 
 | Variable | Rôle | Sans elle |

@@ -47,7 +47,9 @@ export default defineConfig({
     screenshot: "only-on-failure",
     launchOptions: process.env.PW_CHROMIUM_PATH ? { executablePath: process.env.PW_CHROMIUM_PATH } : undefined,
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  // The full Chromium (new headless mode), not the stripped "headless shell": only the full
+  // browser opens the prescription PDF in a popup, which the consultation test reads.
+  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"], channel: "chromium" } }],
   webServer: {
     // Applies migrations and the idempotent seed (nothing is deleted), then serves the production build.
     // Run `npm run build` first. Tests use unique data, so they can be re-run on the same database.
