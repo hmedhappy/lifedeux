@@ -144,7 +144,9 @@ Sauvegarde automatique chaque nuit à 3 h (`crontab -e`, puis ajouter la ligne) 
 0 3 * * * cd /CHEMIN/VERS/lifedeux && mkdir -p backups && ./deploy/backup.sh >> backups/backup.log 2>&1
 ```
 
-Copie aussi de temps en temps le dossier `backups/` hors du VPS, par exemple avec `scp` depuis ton ordinateur.
+Copie hors du VPS : si `.env.production` contient `BACKUP_REMOTE=medelys-backup:`, chaque sauvegarde est aussi envoyée, chiffrée, sur Google Drive (dossier `Medelys-backups`, gardée 90 jours). La configuration rclone est dans `/root/.config/rclone/rclone.conf` ; le mot de passe de chiffrement est aussi dans le trousseau macOS (« Medelys backups (rclone crypt) »). Sans lui, les copies sont illisibles.
+
+Pour restaurer depuis Drive : `rclone copy medelys-backup:lifedeux-DATE.sql.gz backups/` puis `./deploy/restore.sh backups/lifedeux-DATE.sql.gz`.
 
 Ordre conseillé : `deploy.sh`, puis tu testes avec les comptes de démo. Quand tout est bon, tu lances `go-live.sh`, **une seule fois**. Ensuite, chaque mise à jour se fait avec `deploy.sh`.
 

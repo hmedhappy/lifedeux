@@ -23,3 +23,16 @@ keep="${BACKUP_KEEP:-30}"
 ls -1t "$BACKUP_DIR"/lifedeux-*.sql.gz 2>/dev/null | tail -n +"$((keep + 1))" | xargs -r rm -f
 
 echo "Backup saved: $file ($(du -h "$file" | cut -f1))"
+
+# Off-site copy, encrypted by rclone (BACKUP_REMOTE=medelys-backup: in .env.production).
+# Copies older than BACKUP_REMOTE_DAYS (default 90) are removed there.
+remote="$(env_value BACKUP_REMOTE)"
+if [ -n "$remote" ]; then
+  if rclone copy "$file" "$remote"; then
+    rclone delete --min-age "${BACKUP_REMOTE_DAYS:-90}d" "$remote" || true
+    echo "Off-site copy sent to $remote"
+  else
+    echo "Off-site copy failed (the local backup is fine)." >&2
+    exit 1
+  fi
+fi
