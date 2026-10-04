@@ -1,4 +1,5 @@
 import "server-only";
+import { expireUnverifiedBookings } from "./in-person";
 import type { Prisma } from "@prisma/client";
 import { db } from "./db";
 import { sendTemplate } from "./mail";
@@ -56,6 +57,7 @@ export async function expireOverdueBookings(now = new Date()): Promise<number> {
       await sendTemplate(booking.patient, "expired", { reference: booking.reference });
     }
   }
+  await expireUnverifiedBookings(now);
   const overdueConsultations = await db.consultation.findMany({
     where: { status: "CONFIRMED", paymentDeadline: { lt: now } },
     include: { patient: true },

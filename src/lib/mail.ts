@@ -65,9 +65,9 @@ function layout(title: string, body: string, cta?: { label: string; href: string
 type Recipient = { id?: string; email: string; firstName: string; locale: string; phone?: string | null };
 
 /** Account emails stay email-only; everything else also goes to WhatsApp when it is set up. */
-const EMAIL_ONLY = new Set(["invite", "doctorInvite", "reset", "loginCode"]);
+const EMAIL_ONLY = new Set(["invite", "doctorInvite", "reset", "loginCode", "confirmBooking", "favoriteSaved"]);
 /** Welcome emails use the centred frame. */
-const CENTERED = new Set(["doctorInvite"]);
+const CENTERED = new Set(["doctorInvite", "confirmBooking", "favoriteSaved"]);
 
 const strip = (html: string) => html.replace(/<[^>]+>/g, "");
 
@@ -89,6 +89,8 @@ export async function sendTemplate(
     | "consultPaid"
     | "consultCancelled"
     | "newInPerson"
+    | "confirmBooking"
+    | "favoriteSaved"
     | "inPersonRequested"
     | "inPersonConfirmed"
     | "inPersonReminder"

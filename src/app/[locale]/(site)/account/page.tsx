@@ -4,7 +4,7 @@ import clsx from "clsx";
 import { ArrowRight, CalendarPlus, FileText, Scissors } from "lucide-react";
 import { StatusBadge } from "@/components/status";
 import { SpecialtyIcon } from "@/components/specialty-icon";
-import { Badge, Container, Disclosure, EmptyState, LinkButton, LiveDot, PageTitle } from "@/components/ui";
+import { Avatar, Badge, Container, Disclosure, EmptyState, LinkButton, LiveDot, PageTitle } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
 import { expireOverdueBookings } from "@/lib/bookings";
 import { chatState } from "@/lib/consultation-rules";
@@ -46,7 +46,7 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
   // Accounts created with Google may still need a Latin-letter name.
   if (!user.firstName || !user.lastName) redirect(`/${locale}/account/profile?complete=1`);
   await expireOverdueBookings();
-  const [bookings, consultations] = await Promise.all([
+  const [bookings, consultations, favorites] = await Promise.all([
     db.booking.findMany({
       where: { patientId: user.id },
       include: { doctor: { include: { user: true } }, operation: true, slot: true },
@@ -60,6 +60,11 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
         _count: { select: { prescriptions: { where: { status: "ISSUED" } } } },
       },
       orderBy: { slot: { startsAt: "desc" } },
+    }),
+    db.favoriteDoctor.findMany({
+      where: { patientId: user.id },
+      include: { doctor: { include: { user: true, specialty_: true } } },
+      orderBy: { createdAt: "desc" },
     }),
   ]);
 
@@ -177,6 +182,29 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
           </LinkButton>
         }
       />
+      {favorites.length > 0 && (
+        <section className="mb-8" data-testid="favorites">
+          <h2 className="mb-3 text-lg font-semibold text-ink">{t("account.favorites")}</h2>
+          <ul className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+            {favorites.map(({ doctor: d }) => (
+              <li key={d.id} className="shrink-0">
+                <Link
+                  href={`/${locale}/doctors/${d.id}${d.offersInPerson ? "?service=cabinet" : ""}`}
+                  className="flex w-60 items-center gap-3 rounded-2xl border border-line bg-white p-3 shadow-card hover:bg-surface"
+                >
+                  <Avatar name={`${d.user.firstName} ${d.user.lastName}`} src={d.photoUrl} size={44} />
+                  <span className="min-w-0">
+                    <span className="block truncate font-semibold text-ink">
+                      Dr {d.user.firstName} {d.user.lastName}
+                    </span>
+                    <span className="block truncate text-sm text-muted">{d.specialty_ ? localized(d.specialty_, "name", locale) : d.specialty}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {items.length === 0 ? (
         <EmptyState
           icon={CalendarPlus}

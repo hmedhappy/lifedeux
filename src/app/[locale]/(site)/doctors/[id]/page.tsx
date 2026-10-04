@@ -4,11 +4,13 @@ import clsx from "clsx";
 import { BadgeCheck, Building2, Clock3, Languages, MapPin, MessageCircle, Navigation, Scissors, Star } from "lucide-react";
 import { BookingBar } from "@/components/booking-bar";
 import { BookingPanel } from "@/components/booking-panel";
+import { QrExperience } from "@/components/qr-experience";
 import { SpecialtyIcon } from "@/components/specialty-icon";
 import { Avatar, Badge, Container, Disclosure } from "@/components/ui";
 import { requestBookingAction } from "@/actions/patient";
 import { requestConsultationAction, requestInPersonAction } from "@/actions/consultation";
 import { getCurrentUser } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { formatDate, formatMoney } from "@/lib/format";
 import { toSlotOptions } from "@/lib/slot-options";
 import { googleEnabled } from "@/lib/google-auth";
@@ -79,6 +81,9 @@ export default async function DoctorPage({
       ? `https://www.google.com/maps/search/?api=1&query=${doctor.clinicLat},${doctor.clinicLng}`
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${doctor.clinicAddress}, ${doctor.city}`)}`;
   const serviceIcon = { cabinet: Building2, consultation: MessageCircle, operation: Scissors } as const;
+  // Phones arriving on the practice tab (the QR code) get the one-screen experience.
+  const qr = service === "cabinet" && doctor.inPerson && (!user || user.role === "PATIENT");
+  const favorite = qr && user ? !!(await db.favoriteDoctor.findUnique({ where: { patientId_doctorId: { patientId: user.id, doctorId: doctor.id } } })) : false;
 
   const panel = service ? (
     <BookingPanel
@@ -124,6 +129,21 @@ export default async function DoctorPage({
 
   return (
     <Container className="py-6 sm:py-10">
+      {qr && (
+        <QrExperience
+          doctor={{
+            id: doctor.id,
+            name,
+            photoUrl: doctor.photoUrl,
+            specialty: specialtyName,
+            address: [doctor.clinicAddress, doctor.city].filter(Boolean).join(", "),
+            price,
+          }}
+          slots={slots}
+          signedIn={!!user}
+          favorite={favorite}
+        />
+      )}
       <section className="flex flex-col gap-5 sm:flex-row sm:items-center">
         <Avatar name={name} src={doctor.photoUrl} size={96} />
         <div className="min-w-0">
@@ -183,7 +203,9 @@ export default async function DoctorPage({
               { icon: Languages, label: doctor.languages.join(", ") || "—" },
               service === "operation"
                 ? { icon: Scissors, label: t("doctor.surgeryFrom", { price: money(minPrice) }) }
-                : { icon: service === "cabinet" ? Building2 : MessageCircle, label: t("doctor.consultLabel", { n: doctor.consultationMinutes }) },
+                : service === "cabinet"
+                  ? { icon: Building2, label: t("cabinet.duration", { n: doctor.consultationMinutes }) }
+                  : { icon: MessageCircle, label: t("doctor.consultLabel", { n: doctor.consultationMinutes }) },
             ].map((f, i) => (
               <li key={i} className="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 text-sm text-ink shadow-card">
                 <f.icon className="h-5 w-5 shrink-0 text-brand" aria-hidden />

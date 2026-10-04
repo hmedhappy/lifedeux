@@ -305,7 +305,8 @@
       "waitingDoctor": "Waiting for the doctor",
       "upcoming": "Confirmed",
       "prescription": "{n} {n:prescription|prescriptions}"
-    }
+    },
+    "favorites": "My doctors"
   },
   "status": {
     "REQUESTED": "Awaiting confirmation",
@@ -316,7 +317,8 @@
     "IN_PROGRESS": "Stay in progress",
     "COMPLETED": "Completed",
     "CANCELLED": "Cancelled",
-    "NO_SHOW": "No-show"
+    "NO_SHOW": "No-show",
+    "UNVERIFIED": "Email to confirm"
   },
   "tracking": {
     "ARRIVED_AIRPORT": "Arrived at the airport",
@@ -920,7 +922,8 @@
     "csvColumns": "Missing columns: {columns}.",
     "csvTooLong": "File too long: {n} lines at most.",
     "nothingDue": "No balance to pay.",
-    "reauthFailed": "Wrong password: refund not made."
+    "reauthFailed": "Wrong password: refund not made.",
+    "notPatientAccount": "This email belongs to a doctor or team account. Use another address."
   },
   "email": {
     "invite": {
@@ -1090,6 +1093,18 @@
     "accountReady": {
       "text": "Your Medelys account is ready. You sign in with your email and a code, or you can add a password whenever you like.",
       "cta": "Create my password"
+    },
+    "confirmBooking": {
+      "subject": "Confirm your appointment — {reference}",
+      "title": "Confirm your appointment",
+      "body": "Appointment with {doctor} on <strong>{date}</strong>, at the practice.<br><br>Tap the button within {minutes} minutes to confirm it. Without confirmation, the slot will be freed.",
+      "cta": "Confirm my appointment"
+    },
+    "favoriteSaved": {
+      "subject": "{doctor} is in your favourites",
+      "title": "{doctor} is in your favourites",
+      "body": "Find them any time to book in a few seconds.",
+      "cta": "View the doctor"
     }
   },
   "slotKind": {
@@ -1667,7 +1682,8 @@
     "confirm": "Confirm the appointment",
     "refusePlaceholder": "Reason (e.g. slot unavailable)",
     "came": "Patient came",
-    "noShow": "No-show"
+    "noShow": "No-show",
+    "duration": "Consultation at the practice · {n} min"
   },
   "qr": {
     "nav": "Practice QR code",
@@ -1680,5 +1696,31 @@
     "print": "Print",
     "download": "Download the image",
     "open": "View the page"
+  },
+  "qrBook": {
+    "fullProfile": "View profile",
+    "book": "Book an appointment",
+    "favorite": "Save to favourites",
+    "inFavorites": "In your favourites",
+    "favoriteAdded": "Added to your favourites",
+    "favoriteRemoved": "Removed from your favourites",
+    "whenTitle": "When are you coming?",
+    "whoTitle": "In whose name?",
+    "recapTitle": "Shall we confirm?",
+    "favoriteTitle": "Keep this doctor",
+    "favoriteText": "Find {doctor} in your account and book again in one tap.",
+    "confirm": "Confirm the appointment",
+    "saveFavorite": "Save",
+    "bookFootnote": "You will get an email to confirm the appointment. Nothing to pay now.",
+    "favoriteFootnote": "Your patient account is created with this doctor in your favourites.",
+    "sentTitle": "Check your inbox",
+    "sentText": "A link was just sent to {email}. Tap it within 30 minutes to confirm your appointment.",
+    "savedTitle": "Saved!",
+    "savedText": "An email was sent to {email} to confirm your account and choose a password.",
+    "confirmTitle": "Confirm my appointment",
+    "confirmButton": "Confirm my appointment",
+    "alreadyConfirmed": "This appointment is already confirmed. View it",
+    "linkExpired": "This link has expired: the slot was freed. You can book again.",
+    "bookAgain": "Book again"
   }
 }

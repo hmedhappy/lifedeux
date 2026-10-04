@@ -305,7 +305,8 @@
       "waitingDoctor": "En attente du médecin",
       "upcoming": "Confirmé",
       "prescription": "{n} {n:ordonnance|ordonnances}"
-    }
+    },
+    "favorites": "Mes médecins"
   },
   "status": {
     "REQUESTED": "En attente de confirmation",
@@ -316,7 +317,8 @@
     "IN_PROGRESS": "Séjour en cours",
     "COMPLETED": "Terminé",
     "CANCELLED": "Annulé",
-    "NO_SHOW": "Absent"
+    "NO_SHOW": "Absent",
+    "UNVERIFIED": "Email à confirmer"
   },
   "tracking": {
     "ARRIVED_AIRPORT": "Arrivé à l'aéroport",
@@ -920,7 +922,8 @@
     "csvColumns": "Colonnes manquantes : {columns}.",
     "csvTooLong": "Fichier trop long : {n} lignes maximum.",
     "nothingDue": "Aucun solde à verser.",
-    "reauthFailed": "Mot de passe incorrect : remboursement non effectué."
+    "reauthFailed": "Mot de passe incorrect : remboursement non effectué.",
+    "notPatientAccount": "Cet email appartient à un compte médecin ou équipe. Utilisez une autre adresse."
   },
   "email": {
     "invite": {
@@ -1090,6 +1093,18 @@
     "accountReady": {
       "text": "Votre compte Medelys est créé. Vous vous connectez avec votre email et un code, ou vous pouvez ajouter un mot de passe quand vous voulez.",
       "cta": "Créer mon mot de passe"
+    },
+    "confirmBooking": {
+      "subject": "Confirmez votre rendez-vous — {reference}",
+      "title": "Confirmez votre rendez-vous",
+      "body": "Rendez-vous avec {doctor} le <strong>{date}</strong>, au cabinet.<br><br>Touchez le bouton dans les {minutes} minutes pour le confirmer. Sans confirmation, le créneau sera libéré.",
+      "cta": "Confirmer mon rendez-vous"
+    },
+    "favoriteSaved": {
+      "subject": "{doctor} est dans vos favoris",
+      "title": "{doctor} est dans vos favoris",
+      "body": "Retrouvez-le à tout moment pour prendre rendez-vous en quelques secondes.",
+      "cta": "Voir le médecin"
     }
   },
   "slotKind": {
@@ -1667,7 +1682,8 @@
     "confirm": "Confirmer le rendez-vous",
     "refusePlaceholder": "Raison (ex. créneau indisponible)",
     "came": "Patient venu",
-    "noShow": "Absent"
+    "noShow": "Absent",
+    "duration": "Consultation au cabinet · {n} min"
   },
   "qr": {
     "nav": "QR code cabinet",
@@ -1680,5 +1696,31 @@
     "print": "Imprimer",
     "download": "Télécharger l'image",
     "open": "Voir la page"
+  },
+  "qrBook": {
+    "fullProfile": "Voir le profil",
+    "book": "Prendre rendez-vous",
+    "favorite": "Enregistrer en favori",
+    "inFavorites": "Dans vos favoris",
+    "favoriteAdded": "Ajouté à vos favoris",
+    "favoriteRemoved": "Retiré de vos favoris",
+    "whenTitle": "Quand venez-vous ?",
+    "whoTitle": "À quel nom ?",
+    "recapTitle": "On confirme ?",
+    "favoriteTitle": "Garder ce médecin",
+    "favoriteText": "Retrouvez {doctor} dans votre compte, pour reprendre rendez-vous en un geste.",
+    "confirm": "Confirmer le rendez-vous",
+    "saveFavorite": "Enregistrer",
+    "bookFootnote": "Vous recevrez un email pour confirmer le rendez-vous. Rien à payer maintenant.",
+    "favoriteFootnote": "Votre compte patient est créé avec ce médecin dans vos favoris.",
+    "sentTitle": "Vérifiez votre boîte mail",
+    "sentText": "Un lien vient d'être envoyé à {email}. Touchez-le dans les 30 minutes pour confirmer votre rendez-vous.",
+    "savedTitle": "C'est enregistré !",
+    "savedText": "Un email vous a été envoyé à {email} pour confirmer votre compte et choisir un mot de passe.",
+    "confirmTitle": "Confirmer mon rendez-vous",
+    "confirmButton": "Confirmer mon rendez-vous",
+    "alreadyConfirmed": "Ce rendez-vous est déjà confirmé. Le voir",
+    "linkExpired": "Ce lien a expiré : le créneau a été libéré. Vous pouvez reprendre rendez-vous.",
+    "bookAgain": "Reprendre rendez-vous"
   }
 }

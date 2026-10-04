@@ -22,6 +22,8 @@ enum SlotKind {
 }
 
 enum ConsultationStatus {
+  /// Booked without an account check: waits for the patient to click the link in their email.
+  UNVERIFIED
   REQUESTED
   CONFIRMED
   REFUSED
@@ -131,9 +133,22 @@ model User {
   payoutsRecorded  DoctorPayout[]
   accessLogs       AccessLog[]
   reviews          Review[]
+  favorites        FavoriteDoctor[]
   assignedBookings Booking[]       @relation("AgentBookings")
   incidents        Incident[]
   auditLogs        AuditLog[]
+}
+
+/// Doctors a patient keeps at hand (e.g. saved from the practice QR code).
+model FavoriteDoctor {
+  patientId String
+  patient   User     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId  String
+  doctor    Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([patientId, doctorId])
+  @@index([doctorId])
 }
 
 /// Sign-up link sent to a doctor by the admin: the doctor fills in their own profile.
@@ -220,6 +235,7 @@ model Doctor {
   scheduleExceptions       ScheduleException[]
   prescriptionFavorites    PrescriptionFavorite[]
   reviews                  Review[]
+  favoredBy                FavoriteDoctor[]
 
   operations    DoctorOperation[]
   slots         Slot[]
@@ -296,6 +312,9 @@ model Consultation {
   slot                  Slot               @relation(fields: [slotId], references: [id])
   status                ConsultationStatus @default(REQUESTED)
   mode                  ConsultationMode   @default(ONLINE)
+  /// Link sent to a patient who booked without signing in (status UNVERIFIED).
+  emailConfirmToken     String?            @unique
+  emailConfirmExpiresAt DateTime?
   reason                String?            @db.Text
   refusalReason         String?
   durationMinutes       Int

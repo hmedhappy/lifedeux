@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { fail, ok, type ActionState } from "@/lib/action-state";
-import { CONSULT_MIN_LEAD_HOURS, IN_PERSON_MIN_LEAD_MINUTES, canMarkNoShow } from "@/lib/consultation-rules";
+import { CONSULT_MIN_LEAD_HOURS, canMarkNoShow } from "@/lib/consultation-rules";
 import {
   acceptConsultation,
   answerReschedule,
@@ -19,12 +19,12 @@ import { formatDateTime } from "@/lib/format";
 import { getT, toLocale } from "@/lib/i18n";
 import { sendTemplate } from "@/lib/mail";
 import { getProvider, providersFor } from "@/lib/payments";
-import { consultationOffer, inPersonOffer } from "@/lib/queries";
+import { consultationOffer } from "@/lib/queries";
 import { isDoctorRole } from "@/lib/roles";
 import { appUrl, getSettings } from "@/lib/settings";
 import { bookingReference } from "@/lib/tokens";
 import { IMAGE_PATH_PREFIX, saveUploadedImages } from "@/lib/images";
-import { passwordOfferPath } from "@/lib/password-offer";
+import { createInPersonBooking, submitInPerson } from "@/lib/in-person";
 
 async function currentPatient() {
   const user = await getCurrentUser();
@@ -130,52 +130,10 @@ export async function requestInPersonAction(localeRaw: string, doctorId: string,
   const slotId = String(formData.get("slotId") ?? "");
   const reason = String(formData.get("reason") ?? "").trim().slice(0, 1000) || null;
   if (!slotId) return fail("errors.chooseSlot");
-
-  const doctor = await db.doctor.findFirst({ where: { id: doctorId, active: true, user: { active: true } }, include: { user: true } });
-  const offer = doctor ? inPersonOffer(doctor) : null;
-  if (!doctor || !offer) return fail("errors.invalid");
-
-  const settings = await getSettings();
-  const earliest = new Date(Date.now() + IN_PERSON_MIN_LEAD_MINUTES * 60_000);
-  const consultation = await db.$transaction(async (tx) => {
-    const held = await tx.slot.updateMany({
-      where: { id: slotId, doctorId, kind: "CONSULTATION", status: "FREE", startsAt: { gt: earliest } },
-      data: { status: "HELD" },
-    });
-    if (held.count === 0) return null;
-    return tx.consultation.create({
-      data: {
-        reference: bookingReference().replace("LD-", "LC-"),
-        mode: "IN_PERSON",
-        patientId: patient.id,
-        doctorId,
-        slotId,
-        reason,
-        durationMinutes: doctor.consultationMinutes,
-        price: offer.price,
-        // Paid at the practice: Medelys owes the doctor nothing for it.
-        doctorFee: 0,
-        currency: settings.currency,
-      },
-      include: { slot: true },
-    });
-  });
-  if (!consultation) return fail("errors.slotTaken");
-
-  const doctorDate = formatDateTime(consultation.slot.startsAt, toLocale(doctor.user.locale));
-  await sendTemplate(doctor.user, "newInPerson", { reference: consultation.reference, date: doctorDate, patient: `${patient.firstName} ${patient.lastName}` }, `/doctor/consultations/${consultation.id}`);
-  if (doctor.instantBooking) {
-    await acceptConsultation(consultation.id);
-  } else {
-    await sendTemplate(
-      patient,
-      "inPersonRequested",
-      { reference: consultation.reference, date: formatDateTime(consultation.slot.startsAt, locale), doctor: `Dr ${doctor.user.lastName}` },
-      `/account/consultations/${consultation.id}`,
-      await passwordOfferPath(patient.id),
-    );
-  }
-  redirect(`/${locale}/account/consultations/${consultation.id}?requested=1`);
+  const booked = await createInPersonBooking({ patientId: patient.id, doctorId, slotId, reason, unverified: false });
+  if (!booked.consultation) return fail(booked.error ?? "errors.invalid");
+  await submitInPerson(booked.consultation.id);
+  redirect(`/${locale}/account/consultations/${booked.consultation.id}?requested=1`);
 }
 
 /** At the practice, the doctor records whether the patient came. */

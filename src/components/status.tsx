@@ -5,6 +5,7 @@ import { trackingSequence } from "@/lib/tracking";
 import { Badge, type BadgeTone } from "./ui";
 
 const tones: Record<BookingStatus | ConsultationStatus, BadgeTone> = {
+  UNVERIFIED: "amber",
   REQUESTED: "amber",
   CONFIRMED: "blue",
   REFUSED: "red",

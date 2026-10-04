@@ -1,19 +1,12 @@
-import { createHash } from "node:crypto";
 import { expect, test } from "@playwright/test";
-import { E2E_ENV } from "../../playwright.config";
 import { confirmSheet, db } from "./helpers";
+
+test.describe.configure({ mode: "serial" });
 
 const stamp = Date.now();
 const patientEmail = `patient.cabinet.${stamp}@test.dev`;
 // Names must be in Latin letters (no digits): encode the run id as letters.
 const letters = (n: number) => [...String(n % 100000)].map((d) => "abcdefghij"[Number(d)]).join("");
-
-/** The code is emailed; the test stores a known one (hashed like the app does) as the latest. */
-async function knownCode(email: string, code = "424242") {
-  const codeHash = createHash("sha256").update(`${email}:${code}:${E2E_ENV.AUTH_SECRET}`).digest("hex");
-  await db.loginCode.create({ data: { email, codeHash, expiresAt: new Date(Date.now() + 600_000) } });
-  return code;
-}
 
 test("a visitor scans the practice QR code and books in a few taps", async ({ browser }) => {
   // A doctor seeing patients at the practice only, auto-confirming, with a free slot this afternoon.
@@ -37,26 +30,27 @@ test("a visitor scans the practice QR code and books in a few taps", async ({ br
   const startsAt = new Date(Math.ceil((Date.now() + 3 * 3_600_000) / 1_800_000) * 1_800_000);
   const slot = await db.slot.create({ data: { doctorId: doctor.id, startsAt, kind: "CONSULTATION" } });
 
-  // Phone at the practice: the QR link opens the "at the practice" tab with the slots on the page.
+  // Phone at the practice: the QR link opens one screen with the doctor and two buttons.
   const page = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
   await page.goto(`/fr/doctors/${doctor.id}?service=cabinet`);
-  const box = page.getByTestId("cabinet-inline");
-  await expect(box).toContainText("50");
-  await expect(page.getByTestId("booking-open")).toHaveCount(0);
-  await box.getByTestId("slot-times").getByRole("button").first().click();
-  await box.getByTestId("booking-submit").click();
+  const qr = page.getByTestId("qr-experience");
+  await expect(qr).toContainText("50");
+  await qr.getByTestId("qr-book").click();
 
-  // Last step: only what is needed to create the account.
-  const panel = page.getByTestId("auth-panel");
-  await panel.getByTestId("auth-email").fill(patientEmail);
-  await panel.getByTestId("auth-send-code").click();
-  await expect(panel.getByTestId("auth-code")).toBeVisible();
-  await panel.getByTestId("auth-code").fill(await knownCode(patientEmail));
-  await panel.getByTestId("auth-verify").click();
-  await panel.getByTestId("auth-first-name").fill("Ines");
-  await panel.getByTestId("auth-last-name").fill("Patiente");
-  await panel.getByTestId("auth-consent").check();
-  await panel.getByTestId("auth-create").click();
+  // Stepper: a time (the next slide comes by itself), then name, email and phone.
+  await qr.getByTestId("qr-times").getByRole("button").first().click();
+  await qr.getByTestId("qr-first-name").fill("Ines");
+  await qr.getByTestId("qr-last-name").fill("Patiente");
+  await qr.getByTestId("qr-email").fill(patientEmail);
+  await qr.getByTestId("qr-phone").fill("+216 20 000 000");
+  await qr.getByTestId("qr-step-identity").getByTestId("qr-submit").click();
+  await expect(qr.getByTestId("qr-step-sent")).toContainText(patientEmail);
+
+  // Not sent to the doctor until the patient confirms from their mailbox.
+  const waiting = await db.consultation.findFirstOrThrow({ where: { slotId: slot.id } });
+  expect(waiting.status).toBe("UNVERIFIED");
+  await page.goto(`/fr/confirm/${waiting.emailConfirmToken}`);
+  await page.getByTestId("confirm-booking-button").click();
 
   await expect(page).toHaveURL(/\/fr\/account\/consultations\/.+\?requested=1$/);
   await expect(page.getByTestId("in-person-visit")).toBeVisible();
@@ -84,4 +78,25 @@ test("a visitor scans the practice QR code and books in a few taps", async ({ br
   await confirmSheet(page);
   await expect(page.getByRole("status").filter({ hasText: "Rendez-vous annulé" })).toBeVisible();
   expect((await db.slot.findUniqueOrThrow({ where: { id: slot.id } })).status).toBe("FREE");
+});
+
+test("a visitor saves the doctor to their favourites from the QR code", async ({ browser }) => {
+  const doctor = await db.doctor.findFirstOrThrow({ where: { offersInPerson: true, user: { email: { startsWith: "dr.cabinet." } } } });
+  const email = `patient.favori.${Date.now()}@test.dev`;
+  const page = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+  await page.goto(`/fr/doctors/${doctor.id}?service=cabinet`);
+  const qr = page.getByTestId("qr-experience");
+  await qr.getByTestId("qr-favorite").click();
+  await qr.getByTestId("qr-first-name").fill("Sami");
+  await qr.getByTestId("qr-last-name").fill("Favori");
+  await qr.getByTestId("qr-email").fill(email);
+  await qr.getByTestId("qr-phone").fill("+216 21 000 000");
+  await qr.getByTestId("qr-submit").click();
+  await expect(qr.getByTestId("qr-step-saved")).toContainText(email);
+
+  const account = await db.user.findUniqueOrThrow({ where: { email }, include: { favorites: true } });
+  expect(account.role).toBe("PATIENT");
+  expect(account.favorites.map((f) => f.doctorId)).toEqual([doctor.id]);
+  // The email carries the link to confirm the account and choose a password.
+  expect(account.inviteToken).toBeTruthy();
 });

@@ -305,7 +305,8 @@
       "waitingDoctor": "في انتظار الطبيب",
       "upcoming": "مؤكد",
       "prescription": "وصفات طبية: {n}"
-    }
+    },
+    "favorites": "أطبائي"
   },
   "status": {
     "REQUESTED": "في انتظار التأكيد",
@@ -316,7 +317,8 @@
     "IN_PROGRESS": "الإقامة جارية",
     "COMPLETED": "منتهٍ",
     "CANCELLED": "ملغى",
-    "NO_SHOW": "غائب"
+    "NO_SHOW": "غائب",
+    "UNVERIFIED": "البريد بانتظار التأكيد"
   },
   "tracking": {
     "ARRIVED_AIRPORT": "وصل إلى المطار",
@@ -920,7 +922,8 @@
     "csvColumns": "أعمدة ناقصة: {columns}.",
     "csvTooLong": "الملف طويل جداً: {n} سطر كحد أقصى.",
     "nothingDue": "لا يوجد رصيد للدفع.",
-    "reauthFailed": "كلمة مرور خاطئة: لم يتم الاسترداد."
+    "reauthFailed": "كلمة مرور خاطئة: لم يتم الاسترداد.",
+    "notPatientAccount": "هذا البريد مرتبط بحساب طبيب أو فريق. استخدم عنوانًا آخر."
   },
   "email": {
     "invite": {
@@ -1090,6 +1093,18 @@
     "accountReady": {
       "text": "تم إنشاء حسابك على Medelys. تسجّل الدخول ببريدك الإلكتروني ورمز، ويمكنك إضافة كلمة مرور متى شئت.",
       "cta": "إنشاء كلمة المرور"
+    },
+    "confirmBooking": {
+      "subject": "أكّد موعدك — {reference}",
+      "title": "أكّد موعدك",
+      "body": "موعد مع {doctor} يوم <strong>{date}</strong> في العيادة.<br><br>المس الزر خلال {minutes} دقيقة لتأكيده. دون تأكيد، سيتم تحرير الموعد.",
+      "cta": "تأكيد موعدي"
+    },
+    "favoriteSaved": {
+      "subject": "{doctor} في مفضلتك",
+      "title": "{doctor} في مفضلتك",
+      "body": "تجده في أي وقت لتحجز موعدًا في ثوانٍ.",
+      "cta": "عرض الطبيب"
     }
   },
   "slotKind": {
@@ -1667,7 +1682,8 @@
     "confirm": "تأكيد الموعد",
     "refusePlaceholder": "السبب (مثال: الموعد غير متاح)",
     "came": "حضر المريض",
-    "noShow": "غائب"
+    "noShow": "غائب",
+    "duration": "استشارة في العيادة · {n} دقيقة"
   },
   "qr": {
     "nav": "رمز QR للعيادة",
@@ -1680,5 +1696,31 @@
     "print": "طباعة",
     "download": "تنزيل الصورة",
     "open": "عرض الصفحة"
+  },
+  "qrBook": {
+    "fullProfile": "عرض الملف",
+    "book": "احجز موعدًا",
+    "favorite": "حفظ في المفضلة",
+    "inFavorites": "في مفضلتك",
+    "favoriteAdded": "أُضيف إلى مفضلتك",
+    "favoriteRemoved": "أُزيل من مفضلتك",
+    "whenTitle": "متى ستأتي؟",
+    "whoTitle": "باسم من؟",
+    "recapTitle": "هل نؤكد؟",
+    "favoriteTitle": "احتفظ بهذا الطبيب",
+    "favoriteText": "تجد {doctor} في حسابك لتحجز مجددًا بلمسة واحدة.",
+    "confirm": "تأكيد الموعد",
+    "saveFavorite": "حفظ",
+    "bookFootnote": "ستتلقى بريدًا إلكترونيًا لتأكيد الموعد. لا شيء للدفع الآن.",
+    "favoriteFootnote": "يُنشأ حسابك كمريض مع هذا الطبيب في مفضلتك.",
+    "sentTitle": "تحقق من بريدك الإلكتروني",
+    "sentText": "أُرسل رابط إلى {email}. المسه خلال 30 دقيقة لتأكيد موعدك.",
+    "savedTitle": "تم الحفظ!",
+    "savedText": "أُرسل بريد إلكتروني إلى {email} لتأكيد حسابك واختيار كلمة مرور.",
+    "confirmTitle": "تأكيد موعدي",
+    "confirmButton": "تأكيد موعدي",
+    "alreadyConfirmed": "هذا الموعد مؤكد بالفعل. عرضه",
+    "linkExpired": "انتهت صلاحية هذا الرابط وتم تحرير الموعد. يمكنك الحجز من جديد.",
+    "bookAgain": "الحجز من جديد"
   }
 }
