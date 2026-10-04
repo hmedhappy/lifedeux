@@ -15,15 +15,15 @@ fi
 exec 9>/tmp/medelys-deploy.lock
 flock -n 9 || { echo "ci-deploy: another deployment is running." >&2; exit 3; }
 
-echo "== $(date -u +%FT%TZ) deploying ${sha}"
-./deploy/backup.sh
-
 git fetch --quiet origin main
 if [ "$(git rev-parse origin/main)" != "$sha" ]; then
-  # A newer push reached main: its own run deploys it.
-  echo "ci-deploy: main has moved past ${sha}, skipping." >&2
+  # Not the head of main (a newer push reached it, and its own run deploys it).
+  echo "ci-deploy: ${sha} is not the head of main, skipping." >&2
   exit 0
 fi
+
+echo "== $(date -u +%FT%TZ) deploying ${sha}"
+./deploy/backup.sh
 git checkout --quiet -B main "$sha"
 
 SKIP_PULL=1 ./deploy/deploy.sh
