@@ -314,7 +314,7 @@ test("admin sees the doctor's balance and records a cash payout", async () => {
 
   await doctor.goto("/fr/doctor/payouts");
   await expect(doctor.getByText("Déjà versé")).toBeVisible();
-  await expect(doctor.locator("table")).toContainText(/3\s000/);
+  await expect(doctor.locator("table").filter({ visible: true })).toContainText(/3\s000/);
 });
 
 test("admin can manage stays and see bookings", async () => {
@@ -331,5 +331,6 @@ test("admin can manage stays and see bookings", async () => {
 
   const booking = await db.booking.findUniqueOrThrow({ where: { id: bookingId } });
   await admin.goto(`/fr/admin/bookings?q=${booking.reference}`);
-  await expect(admin.locator("table")).toContainText(booking.reference);
+  // Next keeps recently visited pages in the DOM, hidden: only the table on screen counts.
+  await expect(admin.locator("table").filter({ visible: true })).toContainText(booking.reference);
 });
