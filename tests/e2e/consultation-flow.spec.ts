@@ -346,7 +346,8 @@ test("admin manages specialties, medications and sees consultations", async ({ p
   await expect(page.getByTestId("medication-row")).toHaveCount(1);
 
   // The new medication is immediately searchable by doctors.
-  const res = await doctor.request.get(`/api/medications?q=${name.slice(0, 6)}`);
+  // The full name: earlier runs left many "Testamol…" in the test database.
+  const res = await doctor.request.get(`/api/medications?q=${name}`);
   expect(((await res.json()) as { results: { name: string }[] }).results.map((r) => r.name)).toContain(name);
 
   await page.goto("/fr/admin/consultations");
