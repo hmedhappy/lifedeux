@@ -129,6 +129,20 @@ model User {
   auditLogs        AuditLog[]
 }
 
+/// Sign-up link sent to a doctor by the admin: the doctor fills in their own profile.
+model DoctorInvite {
+  id          String    @id @default(cuid())
+  email       String
+  token       String    @unique
+  locale      String    @default("fr")
+  invitedById String?
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([email])
+}
+
 /// One-time sign-in code sent by email (passwordless login and booking without an account).
 model LoginCode {
   id        String    @id @default(cuid())
@@ -189,6 +203,13 @@ model Doctor {
   /// Consultation price requested by the doctor, waiting for admin validation (cents).
   pendingConsultationPrice Int?
   onboardingDoneAt         DateTime?
+  /// Consultations at the clinic, paid there on the day (Medelys takes no share).
+  offersInPerson           Boolean                @default(false)
+  /// Price shown to patients for a consultation at the clinic (cents).
+  inPersonPrice            Int?
+  /// Clinic position picked on the map during sign-up.
+  clinicLat                Float?
+  clinicLng                Float?
   scheduleExceptions       ScheduleException[]
   prescriptionFavorites    PrescriptionFavorite[]
   reviews                  Review[]

@@ -84,9 +84,10 @@ export async function deleteExceptionAction(localeRaw: string, id: string): Prom
 
 const profileSchema = z.object({
   bio: z.string().trim().min(1).max(4000),
-  clinicName: z.string().trim().min(1).max(160),
-  clinicAddress: z.string().trim().min(1).max(300),
-  city: z.string().trim().min(1).max(80),
+  // Optional for doctors who only consult online; required below for consultations at the clinic.
+  clinicName: z.string().trim().max(160),
+  clinicAddress: z.string().trim().max(300),
+  city: z.string().trim().max(80),
   languages: z.string().trim().max(200),
   yearsOfExperience: z.coerce.number().int().min(0).max(70),
 });
@@ -112,6 +113,12 @@ export async function updateDoctorProfileAction(localeRaw: string, _: ActionStat
   const current = me.doctor.consultationPrice;
   const pendingConsultationPrice = price && price !== current ? price : me.doctor.pendingConsultationPrice;
 
+  const offersInPerson = formData.get("offersInPerson") === "on";
+  const rawInPerson = String(formData.get("inPersonPrice") ?? "").trim();
+  const inPersonPrice = rawInPerson ? parseMoneyToCents(rawInPerson) : null;
+  if (rawInPerson && !inPersonPrice) return fail("errors.invalid");
+  if (offersInPerson && (!inPersonPrice || !parsed.data.clinicAddress || !parsed.data.city)) return fail("errors.missingFields");
+
   const { languages, ...rest } = parsed.data;
   await db.doctor.update({
     where: { id: me.doctor.id },
@@ -121,6 +128,9 @@ export async function updateDoctorProfileAction(localeRaw: string, _: ActionStat
       ...(photoUrl ? { photoUrl } : {}),
       instantBooking: formData.get("instantBooking") === "on",
       offersConsultation: formData.get("offersConsultation") === "on",
+      // Paid at the clinic, without commission: applies at once, no admin review.
+      offersInPerson,
+      inPersonPrice,
       pendingConsultationPrice: price === current ? null : pendingConsultationPrice,
     },
   });

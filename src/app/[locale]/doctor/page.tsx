@@ -25,10 +25,10 @@ export default async function DoctorTodayPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ done?: string; ref?: string }>;
+  searchParams: Promise<{ done?: string; ref?: string; welcome?: string }>;
 }) {
   const locale = toLocale((await params).locale);
-  const { done, ref } = await searchParams;
+  const { done, ref, welcome } = await searchParams;
   const t = getT(locale);
   const { user, doctor: me } = await requireDoctor(locale);
   await expireOverdueBookings();
@@ -115,7 +115,7 @@ export default async function DoctorTodayPage({
     { key: "photo", done: !!doctor.photoUrl && doctor.bio.length > 40, href: `/${locale}/doctor/profile` },
     { key: "stamp", done: !!doctor.stampImageId, href: `/${locale}/doctor/prescription#stamp` },
     { key: "schedule", done: !!doctor.weeklySchedule || futureSlots > 0, href: `/${locale}/doctor/slots/settings` },
-    { key: "price", done: !!(doctor.consultationPrice ?? doctor.specialty_?.consultationPrice), href: `/${locale}/doctor/profile` },
+    { key: "price", done: !!(doctor.consultationPrice ?? doctor.inPersonPrice ?? doctor.specialty_?.consultationPrice), href: `/${locale}/doctor/profile` },
   ];
   const progress = steps.filter((s) => s.done).length;
   const earned = (monthConsults._sum.doctorFee ?? 0) + (monthOps._sum.doctorFee ?? 0);
@@ -127,6 +127,9 @@ export default async function DoctorTodayPage({
         <p className="text-muted">{t("today.subtitle", { n: items.length })}</p>
       </header>
 
+      {welcome && (
+        <Notice tone="success">{t("onboard.welcome", { name: user.lastName })}</Notice>
+      )}
       {done && ref && ["confirmed", "refused", "accepted"].includes(done) && <Notice tone="success">{t(`doctorArea.${done}`, { reference: ref })}</Notice>}
       {done === "tooLate" && ref && <Notice tone="warning">{t("doctorArea.tooLate", { reference: ref })}</Notice>}
 

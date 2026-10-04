@@ -130,10 +130,12 @@ export default async function DoctorPage({
           </div>
           <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
             <span>{doctor.specialty}</span>
-            <span className="inline-flex items-center gap-1">
-              <MapPin className="h-4 w-4" aria-hidden />
-              {doctor.clinicName}, {doctor.city}
-            </span>
+            {doctor.clinicName && (
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="h-4 w-4" aria-hidden />
+                {doctor.clinicName}, {doctor.city}
+              </span>
+            )}
           </p>
         </div>
       </section>
@@ -222,9 +224,11 @@ export default async function DoctorPage({
 
           <Disclosure summary={t("doctor.about")} className="rounded-2xl border border-line bg-white px-5 py-2">
             <p className="whitespace-pre-line text-sm leading-relaxed text-ink-soft">{doctor.bio}</p>
-            <p className="mt-3 text-sm text-muted">
-              {t("doctor.clinic")} : {doctor.clinicAddress}, {doctor.city}
-            </p>
+            {doctor.clinicAddress && (
+              <p className="mt-3 text-sm text-muted">
+                {t("doctor.clinic")} : {doctor.clinicAddress}, {doctor.city}
+              </p>
+            )}
           </Disclosure>
         </div>
 

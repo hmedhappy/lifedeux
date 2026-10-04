@@ -812,7 +812,17 @@
     "revoke": "Annuler",
     "revokeConfirm": "Annuler définitivement l'ordonnance {number} ?",
     "rxRevoked": "Ordonnance annulée.",
-    "payoutOverBalance": "Versement enregistré. Attention : il dépasse le solde dû (avance)."
+    "payoutOverBalance": "Versement enregistré. Attention : il dépasse le solde dû (avance).",
+    "doctorInvite": {
+      "title": "Inviter un médecin par email",
+      "text": "Le médecin reçoit un lien et remplit lui-même son profil en 3 étapes. Seul son email est nécessaire.",
+      "send": "Envoyer l'invitation",
+      "sent": "Invitation envoyée à {email}. Vous pouvez aussi lui transmettre ce lien :",
+      "pending": "Invitations en attente",
+      "sentOn": "Envoyée le {date}",
+      "expired": "Expirée",
+      "resend": "Renvoyer"
+    }
   },
   "scan": {
     "title": "Scan & suivi",
@@ -1035,6 +1045,12 @@
       "title": "À traiter, {name}",
       "body": "{message}",
       "cta": "Ouvrir « À traiter »"
+    },
+    "doctorInvite": {
+      "subject": "Bienvenue sur Medelys",
+      "title": "Bienvenue sur Medelys",
+      "body": "Vous êtes invité(e) à rejoindre Medelys. Créez votre profil médecin en 3 étapes, en moins de 3 minutes : vos patients pourront ensuite réserver une consultation à votre cabinet ou en ligne.<br><br>Ce lien est valable {days} jours.",
+      "cta": "Commencer"
     }
   },
   "slotKind": {
@@ -1336,7 +1352,10 @@
     "pricePending": "Nouveau tarif demandé : {price}, en attente de validation.",
     "save": "Enregistrer",
     "saved": "Profil enregistré.",
-    "savedPricePending": "Profil enregistré. Le nouveau tarif sera appliqué après validation."
+    "savedPricePending": "Profil enregistré. Le nouveau tarif sera appliqué après validation.",
+    "inPerson": "Consultation au cabinet",
+    "inPersonOffers": "Je reçois des patients à mon cabinet",
+    "inPersonPrice": "Prix de la consultation au cabinet ({currency})"
   },
   "inbox": {
     "accept": "Accepter",
@@ -1553,5 +1572,40 @@
     "noSlotsYet": "Aucun créneau publié : définissez votre semaine type pour recevoir des rendez-vous.",
     "setUp": "Régler mon agenda",
     "requestHint": "Cette demande attend votre réponse dans"
+  },
+  "onboard": {
+    "title": "Créez votre profil médecin",
+    "subtitle": "3 étapes, moins de 3 minutes.",
+    "step1": "Vous",
+    "step2": "Votre pratique",
+    "step3": "Vos tarifs",
+    "emailLocked": "L'adresse de votre invitation. Elle vous servira à vous connecter.",
+    "phoneOptional": "Téléphone (facultatif)",
+    "specialty": "Spécialité",
+    "specialtyPick": "Choisissez votre spécialité",
+    "where": "Où consultez-vous ?",
+    "modeClinic": "Au cabinet",
+    "modeClinicHint": "Le patient vient à votre cabinet",
+    "modeOnline": "En ligne",
+    "modeOnlineHint": "Par messagerie, sans déplacement",
+    "modeBoth": "Les deux",
+    "modeBothHint": "Au cabinet et en ligne",
+    "clinicName": "Nom du cabinet (facultatif)",
+    "address": "Adresse du cabinet",
+    "addressPlaceholder": "Ex. 12 avenue Habib Bourguiba, Tunis",
+    "search": "Chercher l'adresse",
+    "noResult": "Adresse introuvable. Placez le repère directement sur la carte.",
+    "mapHint": "Touchez la carte pour placer votre cabinet, ou cherchez l'adresse.",
+    "pinSet": "Cabinet placé. Déplacez le repère pour ajuster.",
+    "myPosition": "Ma position",
+    "city": "Ville",
+    "priceOnline": "Consultation en ligne",
+    "priceOnlineHint": "Payée en ligne par le patient. Vous recevez {share} % du prix.",
+    "priceClinic": "Consultation au cabinet",
+    "priceClinicHint": "Payée par le patient à votre cabinet, le jour du rendez-vous. Sans commission.",
+    "stampNote": "Vous ajouterez ensuite votre cachet médical : il est obligatoire pour activer les consultations en ligne.",
+    "submit": "Créer mon profil",
+    "invalid": "Ce lien d'inscription n'est plus valable. Demandez une nouvelle invitation à l'équipe Medelys.",
+    "welcome": "Bienvenue sur Medelys, Dr {name} ! Ajoutez vos horaires pour recevoir vos premiers patients."
   }
 }

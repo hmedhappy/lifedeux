@@ -812,7 +812,17 @@
     "revoke": "Cancel",
     "revokeConfirm": "Permanently cancel prescription {number}?",
     "rxRevoked": "Prescription cancelled.",
-    "payoutOverBalance": "Payout recorded. Note: it exceeds the balance due (advance)."
+    "payoutOverBalance": "Payout recorded. Note: it exceeds the balance due (advance).",
+    "doctorInvite": {
+      "title": "Invite a doctor by email",
+      "text": "The doctor receives a link and fills in their own profile in 3 steps. Only their email is needed.",
+      "send": "Send the invitation",
+      "sent": "Invitation sent to {email}. You can also share this link:",
+      "pending": "Pending invitations",
+      "sentOn": "Sent on {date}",
+      "expired": "Expired",
+      "resend": "Resend"
+    }
   },
   "scan": {
     "title": "Scan & tracking",
@@ -1035,6 +1045,12 @@
       "title": "To handle, {name}",
       "body": "{message}",
       "cta": "Open \"To do\""
+    },
+    "doctorInvite": {
+      "subject": "Welcome to Medelys",
+      "title": "Welcome to Medelys",
+      "body": "You are invited to join Medelys. Create your doctor profile in 3 steps, in under 3 minutes: patients will then be able to book a consultation at your practice or online.<br><br>This link is valid for {days} days.",
+      "cta": "Get started"
     }
   },
   "slotKind": {
@@ -1336,7 +1352,10 @@
     "pricePending": "New price requested: {price}, waiting for validation.",
     "save": "Save",
     "saved": "Profile saved.",
-    "savedPricePending": "Profile saved. The new price applies after validation."
+    "savedPricePending": "Profile saved. The new price applies after validation.",
+    "inPerson": "Consultation at the practice",
+    "inPersonOffers": "I see patients at my practice",
+    "inPersonPrice": "Price of a consultation at the practice ({currency})"
   },
   "inbox": {
     "accept": "Accept",
@@ -1553,5 +1572,40 @@
     "noSlotsYet": "No published slots: set your weekly schedule to receive appointments.",
     "setUp": "Set up my agenda",
     "requestHint": "This request is waiting for your answer in"
+  },
+  "onboard": {
+    "title": "Create your doctor profile",
+    "subtitle": "3 steps, under 3 minutes.",
+    "step1": "You",
+    "step2": "Your practice",
+    "step3": "Your fees",
+    "emailLocked": "The address you were invited at. You will use it to sign in.",
+    "phoneOptional": "Phone (optional)",
+    "specialty": "Specialty",
+    "specialtyPick": "Choose your specialty",
+    "where": "Where do you see patients?",
+    "modeClinic": "At my practice",
+    "modeClinicHint": "The patient comes to your practice",
+    "modeOnline": "Online",
+    "modeOnlineHint": "By chat, no travel",
+    "modeBoth": "Both",
+    "modeBothHint": "At the practice and online",
+    "clinicName": "Practice name (optional)",
+    "address": "Practice address",
+    "addressPlaceholder": "E.g. 12 avenue Habib Bourguiba, Tunis",
+    "search": "Search the address",
+    "noResult": "Address not found. Place the pin directly on the map.",
+    "mapHint": "Tap the map to place your practice, or search the address.",
+    "pinSet": "Practice placed. Drag the pin to adjust.",
+    "myPosition": "My location",
+    "city": "City",
+    "priceOnline": "Online consultation",
+    "priceOnlineHint": "Paid online by the patient. You receive {share}% of the price.",
+    "priceClinic": "Consultation at the practice",
+    "priceClinicHint": "Paid by the patient at your practice on the day. No commission.",
+    "stampNote": "You will then add your medical stamp: it is required to open online consultations.",
+    "submit": "Create my profile",
+    "invalid": "This sign-up link is no longer valid. Ask the Medelys team for a new invitation.",
+    "welcome": "Welcome to Medelys, Dr {name}! Add your opening hours to receive your first patients."
   }
 }

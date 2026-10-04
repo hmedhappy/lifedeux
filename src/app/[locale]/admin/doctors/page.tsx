@@ -1,10 +1,13 @@
 import Link from "next/link";
-import { Avatar, Badge, EmptyState, LinkButton, PageTitle, Table, Td, Th } from "@/components/ui";
+import { Mail } from "lucide-react";
+import { ActionForm, SubmitButton } from "@/components/forms";
+import { Avatar, Badge, Button, EmptyState, Input, LinkButton, PageTitle, Table, Td, Th } from "@/components/ui";
+import { inviteDoctorByEmailAction, resendDoctorInviteAction } from "@/actions/onboarding";
 import { requireRole } from "@/lib/auth";
 import { prescriptionReadiness } from "@/lib/doctor-readiness";
 import type { TFunction } from "@/lib/i18n";
 import { db } from "@/lib/db";
-import { formatMoney } from "@/lib/format";
+import { formatDate, formatMoney } from "@/lib/format";
 import { getT, localized, toLocale } from "@/lib/i18n";
 import { getSettings } from "@/lib/settings";
 
@@ -12,7 +15,7 @@ export default async function AdminDoctorsPage({ params }: { params: Promise<{ l
   const locale = toLocale((await params).locale);
   const t = getT(locale);
   await requireRole(locale, ["ADMIN"]);
-  const [doctors, settings] = await Promise.all([
+  const [doctors, settings, invites] = await Promise.all([
     db.doctor.findMany({
       include: {
         user: true,
@@ -23,7 +26,11 @@ export default async function AdminDoctorsPage({ params }: { params: Promise<{ l
       orderBy: { createdAt: "desc" },
     }),
     getSettings(),
+    db.doctorInvite.findMany({ where: { usedAt: null }, orderBy: { createdAt: "desc" }, take: 20 }),
   ]);
+  const now = new Date();
+  // Only the latest link per address matters; older ones were replaced.
+  const pending = invites.filter((inv, i) => invites.findIndex((o) => o.email === inv.email) === i);
 
   return (
     <div>
@@ -32,6 +39,43 @@ export default async function AdminDoctorsPage({ params }: { params: Promise<{ l
         subtitle={t("admin.doctorsSubtitle")}
         action={<LinkButton href={`/${locale}/admin/doctors/new`}>{t("admin.addDoctor")}</LinkButton>}
       />
+      <section className="mb-6 rounded-2xl border border-line bg-white p-5 shadow-card" data-testid="doctor-invite">
+        <h2 className="flex items-center gap-2 font-semibold text-ink">
+          <Mail className="h-4 w-4 text-brand" aria-hidden />
+          {t("admin.doctorInvite.title")}
+        </h2>
+        <p className="mt-1 text-sm text-muted">{t("admin.doctorInvite.text")}</p>
+        <ActionForm action={inviteDoctorByEmailAction.bind(null, locale)} className="mt-4">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input type="email" name="email" required placeholder="dr.nom@exemple.com" aria-label={t("fields.email")} className="sm:max-w-sm" data-testid="doctor-invite-email" />
+            <SubmitButton testId="doctor-invite-send">{t("admin.doctorInvite.send")}</SubmitButton>
+          </div>
+        </ActionForm>
+        {pending.length > 0 && (
+          <div className="mt-5 border-t border-line pt-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">{t("admin.doctorInvite.pending")}</h3>
+            <ul className="mt-2 divide-y divide-line">
+              {pending.map((inv) => (
+                <li key={inv.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium text-ink">{inv.email}</span>
+                    <span className="text-xs text-muted">{t("admin.doctorInvite.sentOn", { date: formatDate(inv.createdAt, locale) })}</span>
+                  </span>
+                  <span className="flex items-center gap-2">
+                    {inv.expiresAt < now ? <Badge>{t("admin.doctorInvite.expired")}</Badge> : <Badge tone="amber">{t("admin.invitePending")}</Badge>}
+                    <form action={resendDoctorInviteAction.bind(null, locale, inv.id)}>
+                      <Button type="submit" size="sm" variant="secondary">
+                        {t("admin.doctorInvite.resend")}
+                      </Button>
+                    </form>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
+
       {doctors.length === 0 ? (
         <EmptyState title={t("admin.noDoctors")} />
       ) : (
@@ -79,7 +123,7 @@ export default async function AdminDoctorsPage({ params }: { params: Promise<{ l
                 </Td>
                 <Td>{d._count.slots}</Td>
                 <Td>
-                  {!d.user.passwordHash ? (
+                  {d.user.inviteToken && !d.user.passwordHash ? (
                     <Badge tone="amber">{t("admin.invitePending")}</Badge>
                   ) : d.active && d.user.active ? (
                     <Badge tone="green">{t("admin.active")}</Badge>

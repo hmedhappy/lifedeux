@@ -60,14 +60,14 @@ export default async function DoctorProfilePage({ params }: { params: Promise<{ 
               <Input type="number" name="yearsOfExperience" min={0} max={70} defaultValue={doctor.yearsOfExperience} />
             </Field>
             <Field label={t("admin.doctor.clinicName")}>
-              <Input name="clinicName" defaultValue={doctor.clinicName} required />
+              <Input name="clinicName" defaultValue={doctor.clinicName} />
             </Field>
             <Field label={t("admin.doctor.city")}>
-              <Input name="city" defaultValue={doctor.city} required />
+              <Input name="city" defaultValue={doctor.city} />
             </Field>
           </div>
           <Field label={t("admin.doctor.clinicAddress")}>
-            <Input name="clinicAddress" defaultValue={doctor.clinicAddress} required />
+            <Input name="clinicAddress" defaultValue={doctor.clinicAddress} />
           </Field>
         </section>
 
@@ -93,6 +93,19 @@ export default async function DoctorProfilePage({ params }: { params: Promise<{ 
           {doctor.pendingConsultationPrice && (
             <Notice tone="info">{t("doctorProfile.pricePending", { price: formatMoney(doctor.pendingConsultationPrice, settings.currency, locale) })}</Notice>
           )}
+        </section>
+        <section className="space-y-4 rounded-3xl border border-line bg-white p-5 shadow-card sm:p-6">
+          <h2 className="font-semibold text-ink">{t("doctorProfile.inPerson")}</h2>
+          <label className="flex items-start gap-3 text-sm">
+            <input type="checkbox" name="offersInPerson" defaultChecked={doctor.offersInPerson} className="mt-1 h-4 w-4 accent-brand" />
+            <span>
+              <span className="block font-medium text-ink">{t("doctorProfile.inPersonOffers")}</span>
+              <span className="text-muted">{t("onboard.priceClinicHint")}</span>
+            </span>
+          </label>
+          <Field label={t("doctorProfile.inPersonPrice", { currency: settings.currency })}>
+            <Input name="inPersonPrice" inputMode="decimal" defaultValue={doctor.inPersonPrice ? centsToInput(doctor.inPersonPrice) : ""} />
+          </Field>
         </section>
         <SubmitButton size="lg" testId="doctor-profile-save">
           {t("doctorProfile.save")}

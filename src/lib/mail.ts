@@ -41,13 +41,17 @@ export async function sendMail(mail: Mail): Promise<void> {
 }
 
 /** Medelys email frame: logo as a hosted PNG (mail clients block SVG), brand button, calm footer. */
-function layout(title: string, body: string, cta?: { label: string; href: string }): string {
+function layout(title: string, body: string, cta?: { label: string; href: string }, centered = false): string {
+  const align = centered ? "center" : "left";
   const button = cta
-    ? `<p style="margin:28px 0"><a href="${cta.href}" style="background:#014D7D;color:#fff;padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:600">${cta.label}</a></p>`
+    ? `<p style="margin:28px 0;text-align:${align}"><a href="${cta.href}" style="display:inline-block;background:#014D7D;color:#fff;padding:${centered ? "14px 36px" : "12px 22px"};border-radius:10px;text-decoration:none;font-weight:600">${cta.label}</a></p>`
     : "";
-  return `<div style="font-family:Poppins,Arial,Helvetica,sans-serif;max-width:560px;margin:auto;color:#12304F">
-  <p style="margin:0 0 24px"><img src="${appUrl()}/brand/logo-horizontal.png" alt="Medelys" width="160" height="36" style="display:block;border:0;height:36px;width:160px"></p>
-  <h2 style="font-size:18px">${title}</h2>
+  const logo = centered
+    ? `<img src="${appUrl()}/brand/logo-horizontal.png" alt="Medelys" width="160" height="36" style="display:block;margin:0 auto;border:0;height:36px;width:160px">`
+    : `<img src="${appUrl()}/brand/logo-horizontal.png" alt="Medelys" width="160" height="36" style="display:block;border:0;height:36px;width:160px">`;
+  return `<div style="font-family:Poppins,Arial,Helvetica,sans-serif;max-width:560px;margin:auto;color:#12304F;text-align:${align}">
+  <p style="margin:0 0 24px">${logo}</p>
+  <h2 style="font-size:${centered ? "22px" : "18px"}">${title}</h2>
   <p style="line-height:1.6">${body}</p>${button}
   <p style="color:#5B6B7A;font-size:12px;border-top:1px solid #DCE4E8;padding-top:12px">Medelys</p></div>`;
 }
@@ -55,7 +59,9 @@ function layout(title: string, body: string, cta?: { label: string; href: string
 type Recipient = { id?: string; email: string; firstName: string; locale: string; phone?: string | null };
 
 /** Account emails stay email-only; everything else also goes to WhatsApp when it is set up. */
-const EMAIL_ONLY = new Set(["invite", "reset", "loginCode"]);
+const EMAIL_ONLY = new Set(["invite", "doctorInvite", "reset", "loginCode"]);
+/** Welcome emails use the centred frame. */
+const CENTERED = new Set(["doctorInvite"]);
 
 const strip = (html: string) => html.replace(/<[^>]+>/g, "");
 
@@ -64,6 +70,7 @@ export async function sendTemplate(
   to: Recipient,
   template:
     | "invite"
+    | "doctorInvite"
     | "reset"
     | "loginCode"
     | "requestReceived"
@@ -95,7 +102,7 @@ export async function sendTemplate(
   await sendMail({
     to: to.email,
     subject: t(`email.${template}.subject`, data),
-    html: layout(t(`email.${template}.title`, data), body, href ? { label: t(`email.${template}.cta`, data), href } : undefined),
+    html: layout(t(`email.${template}.title`, data), body, href ? { label: t(`email.${template}.cta`, data), href } : undefined, CENTERED.has(template)),
   });
   const logs = [{ userId: to.id ?? null, channel: "email", template, target: to.email, status: process.env.SMTP_HOST && deliverable(to.email) ? "sent" : "logged" }];
   const phone = EMAIL_ONLY.has(template) || !whatsappEnabled() ? null : whatsappNumber(to.phone);

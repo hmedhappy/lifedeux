@@ -207,6 +207,21 @@ h1, h2, h3 {
   }
 }
 
+/* Clinic pin on the sign-up map (Leaflet divIcon). */
+.clinic-pin span {
+  display: block;
+  width: 28px;
+  height: 28px;
+  border: 3px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  background: var(--color-brand);
+  box-shadow: var(--shadow-float);
+  transform: rotate(-45deg);
+}
+.leaflet-container {
+  font-family: inherit;
+}
+
 /* Data tables become one card per row on phones; cells show their column title above the value. */
 @media (max-width: 767px) {
   .rtable {

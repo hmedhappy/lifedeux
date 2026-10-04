@@ -144,7 +144,8 @@ test("patient registers and requests an appointment", async ({ browser }) => {
 
   // Submitting without a slot is refused.
   await patient.getByRole("button", { name: "Demander ce rendez-vous" }).click();
-  await expect(patient.getByRole("alert").filter({ hasText: /./ })).toContainText("Choisissez un créneau");
+  // Scoped to the form: Next's route announcer is also an alert.
+  await expect(patient.getByTestId("booking-operation").getByRole("alert")).toContainText("Choisissez un créneau");
 
   await patient.getByTestId("slot-times").getByRole("button", { name: "10:00" }).click();
   await patient.locator('textarea[name="note"]').fill("Arrivée depuis Paris.");
