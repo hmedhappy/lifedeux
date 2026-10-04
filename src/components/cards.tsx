@@ -20,6 +20,7 @@ export function DoctorCard({
   currency,
   nextSlot,
   rating,
+  distance,
   service,
 }: {
   doctor: Doctor & { user: Pick<User, "firstName" | "lastName"> };
@@ -33,8 +34,10 @@ export function DoctorCard({
   currency: string;
   nextSlot?: string | null;
   rating?: { average: number; count: number } | null;
+  /** Km to the practice, when the patient sorted by distance. */
+  distance?: number | null;
   /** Opens the profile on this tab (e.g. "operation" from the surgery list). */
-  service?: "consultation" | "operation";
+  service?: "consultation" | "operation" | "cabinet";
 }) {
   const name = `Dr ${doctor.user.firstName} ${doctor.user.lastName}`;
   const atPracticeOnly = service !== "operation" && consultationPrice == null && inPersonPrice != null;
@@ -60,6 +63,11 @@ export function DoctorCard({
           )}
           <p className="mt-0.5 flex items-center gap-2 text-sm text-muted">
             <span className="truncate">{doctor.city}</span>
+            {distance != null && (
+              <span className="shrink-0 font-semibold text-brand-dark" data-testid="doctor-distance">
+                {new Intl.NumberFormat(locale === "ar" ? "ar-TN-u-nu-latn" : locale, { maximumFractionDigits: distance < 10 ? 1 : 0 }).format(distance)} km
+              </span>
+            )}
             {rating && (
               <span className="inline-flex shrink-0 items-center gap-0.5 font-semibold text-ink">
                 <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden />

@@ -1742,5 +1742,12 @@
     "photosText": "Facultatif : une lésion, une ordonnance, des résultats. Seul le médecin la verra.",
     "confirmOnline": "Envoyer la demande",
     "bookOnlineFootnote": "Vous recevrez un email pour confirmer. Le paiement se fait une fois la demande acceptée."
+  },
+  "filters": {
+    "label": "Trier et filtrer",
+    "soon": "Disponible vite",
+    "rating": "Mieux notés",
+    "near": "Près de moi",
+    "noLocation": "Position indisponible. Autorisez la localisation ou cherchez une ville."
   }
 }

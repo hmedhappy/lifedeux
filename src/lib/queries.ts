@@ -4,6 +4,7 @@ import { db } from "./db";
 import { MIN_LEAD_HOURS } from "./constants";
 import { CONSULT_MIN_LEAD_HOURS, IN_PERSON_MIN_LEAD_MINUTES } from "./consultation-rules";
 import { specialtiesForSymptom } from "./symptoms";
+import { cityCentre } from "./cities";
 
 /** Publicly listed doctors: active accounts; referred doctors only once the admin has verified them. */
 const activeDoctor = {
@@ -50,8 +51,33 @@ export async function listSpecialties() {
   return specialties.map(({ _count, ...s }) => ({ ...s, doctorCount: _count.doctors }));
 }
 
+export type DoctorSort = "soon" | "rating" | "near";
+
+/** Distance in km between two points (haversine). */
+export function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
+  const rad = (d: number) => (d * Math.PI) / 180;
+  const h = Math.sin(rad(b.lat - a.lat) / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(rad(b.lng - a.lng) / 2) ** 2;
+  return 6371 * 2 * Math.asin(Math.sqrt(h));
+}
+
+/** Km to the practice: its pin on the map, or else the centre of its city. */
+function practiceDistance(from: { lat: number; lng: number }, d: { clinicLat: number | null; clinicLng: number | null; city: string }): number | null {
+  const at = d.clinicLat !== null && d.clinicLng !== null ? { lat: d.clinicLat, lng: d.clinicLng } : cityCentre(d.city);
+  return at ? distanceKm(from, at) : null;
+}
+
 export async function listPublicDoctors(
-  filters: { specialtySlug?: string; q?: string; operationSlug?: string; surgeryOnly?: boolean } = {},
+  filters: {
+    specialtySlug?: string;
+    q?: string;
+    operationSlug?: string;
+    surgeryOnly?: boolean;
+    /** Only doctors seeing patients at their practice, or consulting online. */
+    mode?: "cabinet" | "online";
+    sort?: DoctorSort;
+    /** The patient's position, for "near me" (rounded by the client). */
+    near?: { lat: number; lng: number } | null;
+  } = {},
 ) {
   const q = filters.q?.trim();
   const symptomSlugs = q ? specialtiesForSymptom(q) : [];
@@ -60,6 +86,8 @@ export async function listPublicDoctors(
     ...(filters.specialtySlug ? { specialty_: { slug: filters.specialtySlug, active: true } } : {}),
     ...(filters.operationSlug ? { operations: { some: { operation: { slug: filters.operationSlug, active: true } } } } : {}),
     ...(filters.surgeryOnly && !filters.operationSlug ? { operations: { some: { operation: { active: true } } } } : {}),
+    ...(filters.mode === "cabinet" ? { offersInPerson: true, inPersonPrice: { not: null }, NOT: { clinicAddress: "" } } : {}),
+    ...(filters.mode === "online" ? { offersConsultation: true, stampImageId: { not: null } } : {}),
     ...(q
       ? {
           OR: [
@@ -101,9 +129,18 @@ export async function listPublicDoctors(
       inPerson: inPersonOffer(d),
       nextSlot: d.slots[0]?.startsAt ?? null,
       rating: ratings.get(d.id) ?? null,
+      distance: filters.near ? practiceDistance(filters.near, d) : null,
     }))
-    // Soonest availability first; doctors without a free slot go last.
-    .sort((a, b) => (a.nextSlot?.getTime() ?? Infinity) - (b.nextSlot?.getTime() ?? Infinity));
+    .sort((a, b) => {
+      const at = (d: typeof a) => d.nextSlot?.getTime() ?? Number.MAX_SAFE_INTEGER;
+      const soon = at(a) - at(b);
+      // Best rated: average, then number of reviews; unrated doctors after.
+      if (filters.sort === "rating") return (b.rating?.average ?? 0) - (a.rating?.average ?? 0) || (b.rating?.count ?? 0) - (a.rating?.count ?? 0) || soon;
+      // Nearest practice first; doctors without a known position after.
+      if (filters.sort === "near") return (a.distance ?? 1e9) - (b.distance ?? 1e9) || soon;
+      // Soonest availability first; doctors without a free slot go last.
+      return soon;
+    });
 }
 
 /** Average rating and number of visible reviews per doctor. */

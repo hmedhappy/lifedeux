@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Search, SearchX } from "lucide-react";
+import { ArrowRight, Search, SearchX } from "lucide-react";
 import { DoctorCard } from "@/components/cards";
+import { DoctorFilters } from "@/components/doctor-filters";
 import { SpecialtyBrowser, type SpecialtyTile } from "@/components/specialty-browser";
 import { SpecialtyIcon } from "@/components/specialty-icon";
 import { Container, EmptyState, LinkButton } from "@/components/ui";
@@ -20,16 +21,22 @@ export default async function DoctorsPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ specialty?: string; q?: string; operation?: string; service?: string }>;
+  searchParams: Promise<{ specialty?: string; q?: string; operation?: string; service?: string; sort?: string; mode?: string; lat?: string; lng?: string }>;
 }) {
   const locale = toLocale((await params).locale);
-  const { specialty: specialtySlug, q, operation, service } = await searchParams;
+  const sp = await searchParams;
+  const { specialty: specialtySlug, q, operation, service } = sp;
+  const sort = sp.sort === "rating" || sp.sort === "near" ? sp.sort : "soon";
+  const mode = sp.mode === "cabinet" || sp.mode === "online" ? sp.mode : undefined;
+  const lat = Number(sp.lat), lng = Number(sp.lng);
+  const near = sort === "near" && Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 ? { lat, lng } : null;
   const surgeryOnly = service === "operation";
   const t = getT(locale);
   const [specialties, settings] = await Promise.all([listSpecialties(), getSettings()]);
   const current = specialties.find((s) => s.slug === specialtySlug) ?? null;
-  const showDoctors = !!current || q !== undefined || !!operation || surgeryOnly;
-  const doctors = showDoctors ? await listPublicDoctors({ specialtySlug: current?.slug, q, operationSlug: operation, surgeryOnly }) : [];
+  const showDoctors = !!current || q !== undefined || !!operation || surgeryOnly || !!mode || sort !== "soon";
+  const doctors = showDoctors ? await listPublicDoctors({ specialtySlug: current?.slug, q, operationSlug: operation, surgeryOnly, mode, sort, near }) : [];
+  const filterParams = { specialty: current?.slug, q, operation, service, sort: sort === "soon" ? undefined : sort, mode, lat: near ? sp.lat : undefined, lng: near ? sp.lng : undefined };
   const symptomSlugs = q ? specialtiesForSymptom(q) : [];
   const suggested = specialties.filter((s) => symptomSlugs.includes(s.slug));
 
@@ -53,6 +60,9 @@ export default async function DoctorsPage({
           </Container>
         </section>
         <Container className="py-8 sm:py-10">
+          <div className="mb-6">
+            <DoctorFilters base={`/${locale}/doctors`} params={{}} idle />
+          </div>
           <SpecialtyBrowser specialties={tiles} />
         </Container>
       </>
@@ -97,10 +107,27 @@ export default async function DoctorsPage({
             className="min-w-0 flex-1 bg-transparent py-1.5 text-sm focus:outline-none"
             data-testid="doctor-search"
           />
-          <button type="submit" className="min-h-10 rounded-full bg-brand px-4 text-sm font-semibold text-white hover:bg-brand-dark">
-            {t("common.search")}
+          {sort !== "soon" && <input type="hidden" name="sort" value={sort} />}
+          {mode && <input type="hidden" name="mode" value={mode} />}
+          {near && (
+            <>
+              <input type="hidden" name="lat" value={sp.lat} />
+              <input type="hidden" name="lng" value={sp.lng} />
+            </>
+          )}
+          <button
+            type="submit"
+            aria-label={t("common.search")}
+            className="flex min-h-10 min-w-10 items-center justify-center rounded-full bg-brand text-sm font-semibold text-white hover:bg-brand-dark sm:px-4"
+          >
+            <ArrowRight className="h-5 w-5 rtl:-scale-x-100 sm:hidden" aria-hidden />
+            <span className="hidden sm:inline">{t("common.search")}</span>
           </button>
         </form>
+      </div>
+
+      <div className="mt-5">
+        <DoctorFilters base={`/${locale}/doctors`} params={filterParams} />
       </div>
 
       {suggested.length > 0 && !current && (
@@ -133,7 +160,8 @@ export default async function DoctorsPage({
                 currency={settings.currency}
                 nextSlot={shortDate(d.nextSlot, locale)}
                 rating={d.rating}
-                service={surgeryOnly || operation ? "operation" : undefined}
+                distance={near ? d.distance : null}
+                service={surgeryOnly || operation ? "operation" : mode === "cabinet" ? "cabinet" : undefined}
               />
             ))}
           </div>

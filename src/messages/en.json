@@ -1742,5 +1742,12 @@
     "photosText": "Optional: a skin issue, a prescription, test results. Only the doctor will see it.",
     "confirmOnline": "Send the request",
     "bookOnlineFootnote": "You will get an email to confirm. You pay once the request is accepted."
+  },
+  "filters": {
+    "label": "Sort and filter",
+    "soon": "Soonest",
+    "rating": "Best rated",
+    "near": "Near me",
+    "noLocation": "Location unavailable. Allow location or search a city."
   }
 }

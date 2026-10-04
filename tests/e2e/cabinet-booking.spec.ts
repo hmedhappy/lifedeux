@@ -148,3 +148,19 @@ test("on a phone, a visitor asks for an online consultation in a few taps", asyn
   await expect(page).toHaveURL(/\/fr\/account\/consultations\/.+\?requested=1$/);
   expect((await db.consultation.findUniqueOrThrow({ where: { id: waiting.id } })).status).toBe("REQUESTED");
 });
+
+test("doctors can be sorted by distance and filtered to the practice", async ({ browser }) => {
+  // Sousse: the practice doctor created above is placed in Tunis (city centre), ~120 km away.
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, permissions: ["geolocation"], geolocation: { latitude: 35.8256, longitude: 10.6084 } });
+  const page = await ctx.newPage();
+  await page.goto("/fr/doctors?q=");
+  await page.getByTestId("filter-near").click();
+  await expect(page).toHaveURL(/sort=near&lat=35\.83&lng=10\.61|sort=near.*lat=35\.83/);
+  await expect(page.getByTestId("doctor-distance").first()).toBeVisible();
+
+  await page.getByTestId("filter-cabinet").click();
+  await expect(page).toHaveURL(/mode=cabinet/);
+  const cards = page.getByTestId("doctor-card");
+  await expect(cards.first()).toBeVisible();
+  for (const href of await cards.evaluateAll((els) => els.map((e) => e.getAttribute("href")))) expect(href).toContain("service=cabinet");
+});
