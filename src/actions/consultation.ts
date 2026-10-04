@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { fail, ok, type ActionState } from "@/lib/action-state";
-import { CONSULT_MIN_LEAD_HOURS, canMarkNoShow } from "@/lib/consultation-rules";
+import { canMarkNoShow } from "@/lib/consultation-rules";
 import {
   acceptConsultation,
   answerReschedule,
@@ -18,13 +18,11 @@ import {
 import { formatDateTime } from "@/lib/format";
 import { getT, toLocale } from "@/lib/i18n";
 import { sendTemplate } from "@/lib/mail";
-import { getProvider, providersFor } from "@/lib/payments";
-import { consultationOffer } from "@/lib/queries";
+import { getProvider } from "@/lib/payments";
 import { isDoctorRole } from "@/lib/roles";
-import { appUrl, getSettings } from "@/lib/settings";
-import { bookingReference } from "@/lib/tokens";
-import { IMAGE_PATH_PREFIX, saveUploadedImages } from "@/lib/images";
+import { appUrl } from "@/lib/settings";
 import { createInPersonBooking, submitInPerson } from "@/lib/in-person";
+import { createOnlineRequest, submitOnlineRequest } from "@/lib/online-request";
 
 async function currentPatient() {
   const user = await getCurrentUser();
@@ -51,72 +49,10 @@ export async function requestConsultationAction(
   const reason = String(formData.get("reason") ?? "").trim().slice(0, 1000) || null;
   if (!slotId) return fail("errors.chooseSlot");
   if (formData.get("consent") !== "on") return fail("errors.consentRequired");
-
-  const doctor = await db.doctor.findFirst({
-    where: { id: doctorId, active: true, user: { active: true } },
-    include: { user: true, specialty_: true },
-  });
-  const offer = doctor ? consultationOffer(doctor) : null;
-  if (!doctor || !offer) return fail("errors.invalid");
-
-  const settings = await getSettings();
-  const earliest = new Date(Date.now() + CONSULT_MIN_LEAD_HOURS * 3_600_000);
-  const consultation = await db.$transaction(async (tx) => {
-    const held = await tx.slot.updateMany({
-      where: { id: slotId, doctorId, kind: "CONSULTATION", status: "FREE", startsAt: { gt: earliest } },
-      data: { status: "HELD" },
-    });
-    if (held.count === 0) return null;
-    return tx.consultation.create({
-      data: {
-        reference: bookingReference().replace("LD-", "LC-"),
-        patientId: patient.id,
-        doctorId,
-        slotId,
-        reason,
-        durationMinutes: doctor.consultationMinutes,
-        price: offer.price,
-        doctorFee: offer.fee,
-        currency: settings.currency,
-      },
-      include: { slot: true },
-    });
-  });
-  if (!consultation) return fail("errors.slotTaken");
-
-  // Photos sent with the request go straight into the (private) conversation.
-  const photos = await saveUploadedImages(formData, "photos", 3, { private: true, consultationId: consultation.id });
-  if (!("error" in photos) && photos.paths.length) {
-    await db.message.createMany({
-      data: photos.paths.map((path, i) => ({
-        consultationId: consultation.id,
-        senderId: patient.id,
-        kind: "IMAGE" as const,
-        imageId: path.slice(IMAGE_PATH_PREFIX.length),
-        createdAt: new Date(Date.now() + i),
-      })),
-    });
-  }
-
-  await Promise.all([
-    sendTemplate(
-      patient,
-      "requestReceived",
-      { reference: consultation.reference, date: formatDateTime(consultation.slot.startsAt, locale) },
-      `/account/consultations/${consultation.id}`,
-    ),
-    sendTemplate(
-      doctor.user,
-      "newRequest",
-      { reference: consultation.reference, date: formatDateTime(consultation.slot.startsAt, toLocale(doctor.user.locale)) },
-      "/doctor",
-    ),
-  ]);
-  // Instant booking with no way to hold a card: accept now, the patient pays right after.
-  if (doctor.instantBooking && providersFor(patient.country, { hold: true }).length === 0) {
-    await acceptConsultation(consultation.id);
-  }
-  redirect(`/${locale}/account/consultations/${consultation.id}?requested=1`);
+  const created = await createOnlineRequest({ patientId: patient.id, doctorId, slotId, reason, formData, unverified: false });
+  if (!created.consultation) return fail(created.error ?? "errors.invalid");
+  await submitOnlineRequest(created.consultation.id);
+  redirect(`/${locale}/account/consultations/${created.consultation.id}?requested=1`);
 }
 
 /**

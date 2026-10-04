@@ -85,7 +85,7 @@ export async function sendBookingConfirmation(consultationId: string): Promise<v
   if (!c.emailConfirmToken) return;
   await sendTemplate(
     c.patient,
-    "confirmBooking",
+    c.mode === "IN_PERSON" ? "confirmBooking" : "confirmOnlineBooking",
     {
       reference: c.reference,
       date: formatDateTime(c.slot.startsAt, toLocale(c.patient.locale)),
@@ -109,7 +109,8 @@ export async function confirmBookingByEmail(token: string): Promise<EmailConfirm
   if (!c.emailConfirmExpiresAt || c.emailConfirmExpiresAt < new Date()) return { ok: false, error: "expired" };
   const res = await db.consultation.updateMany({ where: { id: c.id, status: "UNVERIFIED" }, data: { status: "REQUESTED", emailConfirmExpiresAt: null } });
   if (res.count === 0) return { ok: false, error: "taken" };
-  await submitInPerson(c.id);
+  if (c.mode === "IN_PERSON") await submitInPerson(c.id);
+  else await (await import("./online-request")).submitOnlineRequest(c.id);
   return { ok: true, consultationId: c.id, patientId: c.patientId };
 }
 

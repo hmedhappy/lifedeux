@@ -45,7 +45,7 @@ export default async function ConfirmBookingPage({
               <CalendarDays className="h-5 w-5 text-brand" aria-hidden />
               {formatDateTime(c.slot.startsAt, locale)}
             </p>
-            {c.doctor.clinicAddress && (
+            {c.mode === "IN_PERSON" && c.doctor.clinicAddress && (
               <p className="mt-1 flex items-center justify-center gap-2 text-sm text-muted">
                 <MapPin className="h-4 w-4" aria-hidden />
                 {[c.doctor.clinicAddress, c.doctor.city].filter(Boolean).join(", ")}

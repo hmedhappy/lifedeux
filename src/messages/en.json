@@ -1105,6 +1105,12 @@
       "title": "{doctor} is in your favourites",
       "body": "Find them any time to book in a few seconds.",
       "cta": "View the doctor"
+    },
+    "confirmOnlineBooking": {
+      "subject": "Confirm your request — {reference}",
+      "title": "Confirm your request",
+      "body": "Online consultation with {doctor} on <strong>{date}</strong>.<br><br>Tap the button within {minutes} minutes to send the request to the doctor. Without confirmation, the slot will be freed.",
+      "cta": "Confirm my request"
     }
   },
   "slotKind": {
@@ -1722,6 +1728,19 @@
     "alreadyConfirmed": "This appointment is already confirmed. View it",
     "linkExpired": "This link has expired: the slot was freed. You can book again.",
     "bookAgain": "Book again",
-    "takenLegend": "Appointments already taken that day"
+    "takenLegend": "Appointments already taken that day",
+    "notNow": "Not now",
+    "surgery": "Surgery",
+    "modeTitle": "How would you like to consult?",
+    "modeCabinetHint": "At the practice, paid there",
+    "modeOnlineHint": "By chat, with a prescription",
+    "whenOnlineTitle": "When are you available?",
+    "reasonTitle": "What is it about?",
+    "reasonText": "Optional: it helps the doctor prepare.",
+    "reasonNote": "Anything to add (optional)",
+    "photosTitle": "A photo to show?",
+    "photosText": "Optional: a skin issue, a prescription, test results. Only the doctor will see it.",
+    "confirmOnline": "Send the request",
+    "bookOnlineFootnote": "You will get an email to confirm. You pay once the request is accepted."
   }
 }

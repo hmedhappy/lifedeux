@@ -4,7 +4,7 @@ import clsx from "clsx";
 import { BadgeCheck, Building2, Clock3, Languages, MapPin, MessageCircle, Navigation, Scissors, Star } from "lucide-react";
 import { BookingBar } from "@/components/booking-bar";
 import { BookingPanel } from "@/components/booking-panel";
-import { QrExperience } from "@/components/qr-experience";
+import { MobileBooking } from "@/components/mobile-booking";
 import { SpecialtyIcon } from "@/components/specialty-icon";
 import { Avatar, Badge, Container, Disclosure } from "@/components/ui";
 import { requestBookingAction } from "@/actions/patient";
@@ -81,8 +81,8 @@ export default async function DoctorPage({
       ? `https://www.google.com/maps/search/?api=1&query=${doctor.clinicLat},${doctor.clinicLng}`
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${doctor.clinicAddress}, ${doctor.city}`)}`;
   const serviceIcon = { cabinet: Building2, consultation: MessageCircle, operation: Scissors } as const;
-  // Phones arriving on the practice tab (the QR code) get the one-screen experience.
-  const qr = service === "cabinet" && doctor.inPerson && (!user || user.role === "PATIENT");
+  // Phones get the one-screen booking (practice or online); surgery stays on the full page.
+  const qr = (!!doctor.inPerson || !!doctor.consultation) && service !== "operation" && (!user || user.role === "PATIENT");
   // Appointments already taken, per day (Tunis): dots on the phone calendar, no names.
   const taken: Record<string, number> = {};
   if (qr) {
@@ -143,16 +143,20 @@ export default async function DoctorPage({
   return (
     <Container className="py-6 sm:py-10">
       {qr && (
-        <QrExperience
+        <MobileBooking
           doctor={{
             id: doctor.id,
             name,
             photoUrl: doctor.photoUrl,
             specialty: specialtyName,
             address: [doctor.clinicAddress, doctor.city].filter(Boolean).join(", "),
-            price,
           }}
-          slots={slots}
+          offers={{
+            ...(doctor.inPerson ? { cabinet: { price: money(doctor.inPerson.price), slots: toSlotOptions(doctor.inPersonSlots, locale) } } : {}),
+            ...(doctor.consultation ? { consultation: { price: money(doctor.consultation.price), slots: toSlotOptions(doctor.consultationSlots, locale) } } : {}),
+          }}
+          initialMode={requested === "cabinet" || requested === "consultation" ? requested : null}
+          operationHref={offers.length ? `/${locale}/doctors/${doctor.id}?service=operation` : null}
           taken={taken}
           today={tunisDayKey(new Date())}
           signedIn={!!user}
@@ -201,16 +205,6 @@ export default async function DoctorPage({
         <div className="min-w-0 space-y-8">
           {tabs && <div className="lg:hidden">{tabs}</div>}
 
-          {/* At the practice (QR code on the desk), phones get the slots right on the page: no extra tap. */}
-          {service === "cabinet" && (!user || user.role === "PATIENT") && (
-            <section className="space-y-4 rounded-3xl border border-line bg-white p-5 shadow-card lg:hidden" data-testid="cabinet-inline">
-              <div className="flex items-baseline justify-between gap-3">
-                <p className="text-sm text-muted">{t("cabinet.price")}</p>
-                <p className="text-2xl font-bold text-ink">{price}</p>
-              </div>
-              {panel}
-            </section>
-          )}
 
           <ul className="grid gap-3 sm:grid-cols-3">
             {[
@@ -330,7 +324,7 @@ export default async function DoctorPage({
       </div>
 
       {/* Doctors, admins and agents cannot book: no "choose a slot" bar for them. */}
-      {service && service !== "cabinet" && (!user || user.role === "PATIENT") && (
+      {service && !qr && (!user || user.role === "PATIENT") && (
         <BookingBar
           price={price}
           nextSlot={slots[0] ? slots[0].full : null}

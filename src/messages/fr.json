@@ -1105,6 +1105,12 @@
       "title": "{doctor} est dans vos favoris",
       "body": "Retrouvez-le à tout moment pour prendre rendez-vous en quelques secondes.",
       "cta": "Voir le médecin"
+    },
+    "confirmOnlineBooking": {
+      "subject": "Confirmez votre demande — {reference}",
+      "title": "Confirmez votre demande",
+      "body": "Consultation en ligne avec {doctor} le <strong>{date}</strong>.<br><br>Touchez le bouton dans les {minutes} minutes pour envoyer la demande au médecin. Sans confirmation, le créneau sera libéré.",
+      "cta": "Confirmer ma demande"
     }
   },
   "slotKind": {
@@ -1722,6 +1728,19 @@
     "alreadyConfirmed": "Ce rendez-vous est déjà confirmé. Le voir",
     "linkExpired": "Ce lien a expiré : le créneau a été libéré. Vous pouvez reprendre rendez-vous.",
     "bookAgain": "Reprendre rendez-vous",
-    "takenLegend": "Rendez-vous déjà pris ce jour-là"
+    "takenLegend": "Rendez-vous déjà pris ce jour-là",
+    "notNow": "Pas maintenant",
+    "surgery": "Intervention chirurgicale",
+    "modeTitle": "Comment consulter ?",
+    "modeCabinetHint": "Vous venez au cabinet, réglé sur place",
+    "modeOnlineHint": "Par messagerie, avec ordonnance",
+    "whenOnlineTitle": "Quand êtes-vous disponible ?",
+    "reasonTitle": "Le motif ?",
+    "reasonText": "Facultatif : il aide le médecin à se préparer.",
+    "reasonNote": "Une précision (facultatif)",
+    "photosTitle": "Une photo à montrer ?",
+    "photosText": "Facultatif : une lésion, une ordonnance, des résultats. Seul le médecin la verra.",
+    "confirmOnline": "Envoyer la demande",
+    "bookOnlineFootnote": "Vous recevrez un email pour confirmer. Le paiement se fait une fois la demande acceptée."
   }
 }

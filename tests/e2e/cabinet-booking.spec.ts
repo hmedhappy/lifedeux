@@ -39,6 +39,8 @@ test("a visitor scans the practice QR code and books in a few taps", async ({ br
 
   // Stepper: a time (the next slide comes by itself), then name, email and phone.
   await qr.getByTestId("qr-times").getByRole("button").first().click();
+  // The reason is optional: "Pas maintenant".
+  await qr.getByTestId("qr-reason-skip").click();
   await qr.getByTestId("qr-first-name").fill("Ines");
   await qr.getByTestId("qr-last-name").fill("Patiente");
   await qr.getByTestId("qr-email").fill(patientEmail);
@@ -99,4 +101,50 @@ test("a visitor saves the doctor to their favourites from the QR code", async ({
   expect(account.favorites.map((f) => f.doctorId)).toEqual([doctor.id]);
   // The email carries the link to confirm the account and choose a password.
   expect(account.inviteToken).toBeTruthy();
+});
+
+test("on a phone, a visitor asks for an online consultation in a few taps", async ({ browser }) => {
+  const specialty = await db.specialty.findFirstOrThrow({ where: { active: true } });
+  const doctor = await db.doctor.create({
+    data: {
+      specialty: specialty.nameFr,
+      specialty_: { connect: { id: specialty.id } },
+      bio: "",
+      languages: [],
+      clinicName: "",
+      clinicAddress: "",
+      city: "Tunis",
+      offersConsultation: true,
+      consultationPrice: 4000,
+      stampImageId: "e2e-stamp",
+      user: { create: { email: `dr.online.${stamp}@test.dev`, firstName: "Omar", lastName: `Enligne ${letters(stamp)}`, role: "DOCTOR" as const } },
+    },
+  });
+  const startsAt = new Date(Math.ceil((Date.now() + 5 * 3_600_000) / 1_800_000) * 1_800_000);
+  const slot = await db.slot.create({ data: { doctorId: doctor.id, startsAt, kind: "CONSULTATION" } });
+  const email = `patient.online.${stamp}@test.dev`;
+
+  const page = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+  await page.goto(`/fr/doctors/${doctor.id}`);
+  const qr = page.getByTestId("qr-experience");
+  await expect(qr).toContainText("40");
+  await qr.getByTestId("qr-book").click();
+  await qr.getByTestId("qr-times").getByRole("button").first().click();
+  await qr.getByTestId("qr-step-reason").getByRole("button", { name: "Suivi" }).click();
+  await qr.getByTestId("qr-reason-next").click();
+  await qr.getByTestId("qr-photos-skip").click();
+  await qr.getByTestId("qr-first-name").fill("Lea");
+  await qr.getByTestId("qr-last-name").fill("Enligne");
+  await qr.getByTestId("qr-email").fill(email);
+  await qr.getByTestId("qr-phone").fill("+216 22 000 000");
+  await qr.getByTestId("qr-consent").check();
+  await qr.getByTestId("qr-step-identity").getByTestId("qr-submit").click();
+  await expect(qr.getByTestId("qr-step-sent")).toContainText(email);
+
+  const waiting = await db.consultation.findFirstOrThrow({ where: { slotId: slot.id } });
+  expect(waiting).toMatchObject({ mode: "ONLINE", status: "UNVERIFIED", reason: "Suivi", price: 4000 });
+  await page.goto(`/fr/confirm/${waiting.emailConfirmToken}`);
+  await page.getByTestId("confirm-booking-button").click();
+  await expect(page).toHaveURL(/\/fr\/account\/consultations\/.+\?requested=1$/);
+  expect((await db.consultation.findUniqueOrThrow({ where: { id: waiting.id } })).status).toBe("REQUESTED");
 });

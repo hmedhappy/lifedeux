@@ -11,6 +11,7 @@ import { sendTemplate } from "@/lib/mail";
 import { passwordOfferPath } from "@/lib/password-offer";
 import { rateLimit } from "@/lib/rate-limit";
 import { confirmBookingByEmail, createInPersonBooking, sendBookingConfirmation } from "@/lib/in-person";
+import { createOnlineRequest } from "@/lib/online-request";
 
 /** Who the visitor says they are: checked later by the link in their email. */
 export type VisitorInput = { firstName: string; lastName: string; email: string; phone: string };
@@ -51,14 +52,29 @@ async function visitorAccount(input: VisitorInput, locale: string) {
   return { user, created: true };
 }
 
-/** Booking from the practice QR code without signing in: confirmed from the email link. */
-export async function bookInPersonAsVisitorAction(localeRaw: string, doctorId: string, slotId: string, input: VisitorInput): Promise<QrResult> {
+/**
+ * Booking from a phone without signing in, at the practice or online: the visitor gives
+ * their name, email and phone; the request waits for the link sent to that email.
+ */
+export async function bookAsVisitorAction(localeRaw: string, doctorId: string, mode: "cabinet" | "consultation", formData: FormData): Promise<QrResult> {
   const locale = toLocale(localeRaw);
   if (!(await allowed("qr-book"))) return { ok: false, error: "errors.tooManyAttempts" };
+  const slotId = String(formData.get("slotId") ?? "");
   if (!slotId) return { ok: false, error: "errors.chooseSlot" };
+  const reason = String(formData.get("reason") ?? "").trim().slice(0, 1000) || null;
+  if (mode === "consultation" && formData.get("consent") !== "on") return { ok: false, error: "errors.consentRequired" };
+  const input = {
+    firstName: String(formData.get("firstName") ?? ""),
+    lastName: String(formData.get("lastName") ?? ""),
+    email: String(formData.get("email") ?? ""),
+    phone: String(formData.get("phone") ?? ""),
+  };
   const account = await visitorAccount(input, locale);
   if (!account.user) return { ok: false, error: account.error ?? "errors.invalid" };
-  const booked = await createInPersonBooking({ patientId: account.user.id, doctorId, slotId, unverified: true });
+  const booked =
+    mode === "cabinet"
+      ? await createInPersonBooking({ patientId: account.user.id, doctorId, slotId, reason, unverified: true })
+      : await createOnlineRequest({ patientId: account.user.id, doctorId, slotId, reason, formData, unverified: true });
   if (!booked.consultation) return { ok: false, error: booked.error ?? "errors.invalid" };
   await sendBookingConfirmation(booked.consultation.id);
   return { ok: true, email: account.user.email };
