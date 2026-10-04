@@ -264,7 +264,10 @@
     "resend": "Renvoyer le code",
     "newAccount": "Première visite : dites-nous comment vous appeler.",
     "consentGeneral": "J'accepte les conditions d'utilisation et le traitement de mes données de santé pour ma prise en charge.",
-    "createAndContinue": "Créer mon compte et continuer"
+    "createAndContinue": "Créer mon compte et continuer",
+    "createPasswordTitle": "Créer mon mot de passe",
+    "createPasswordSubtitle": "Pour vous connecter plus vite avec {email}. Facultatif : le code par email marche toujours.",
+    "createPasswordButton": "Enregistrer mon mot de passe"
   },
   "fields": {
     "name": "Nom",
@@ -1083,6 +1086,10 @@
       "title": "Un rendez-vous a été annulé",
       "body": "{patient} a annulé son rendez-vous du {date} à votre cabinet. Le créneau est de nouveau libre.",
       "cta": "Voir mon agenda"
+    },
+    "accountReady": {
+      "text": "Votre compte Medelys est créé. Vous vous connectez avec votre email et un code, ou vous pouvez ajouter un mot de passe quand vous voulez.",
+      "cta": "Créer mon mot de passe"
     }
   },
   "slotKind": {

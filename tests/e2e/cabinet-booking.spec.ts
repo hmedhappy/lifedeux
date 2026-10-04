@@ -66,6 +66,19 @@ test("a visitor scans the practice QR code and books in a few taps", async ({ br
   expect(booked).toMatchObject({ mode: "IN_PERSON", status: "CONFIRMED", price: 5000, doctorFee: 0 });
   expect(booked.slot.status).toBe("BOOKED");
 
+  // The confirmation email offers a password (optional: the email code keeps working).
+  const account = await db.user.findUniqueOrThrow({ where: { email: patientEmail } });
+  expect(account.passwordHash).toBeNull();
+  expect(account.inviteToken).toBeTruthy();
+  const setup = await (await browser.newContext()).newPage();
+  await setup.goto(`/fr/reset/${account.inviteToken}?new=1`);
+  await expect(setup.getByRole("heading", { name: "Créer mon mot de passe" })).toBeVisible();
+  await setup.locator('input[name="password"]').fill("Patient12345!");
+  await setup.locator('input[name="confirm"]').fill("Patient12345!");
+  await setup.getByRole("button", { name: "Enregistrer mon mot de passe" }).click();
+  await expect(setup).toHaveURL(/\/fr\/account$/);
+  expect((await db.user.findUniqueOrThrow({ where: { email: patientEmail } })).passwordHash).toBeTruthy();
+
   // A change of plan: one tap (and a confirmation) frees the slot again.
   await page.getByTestId("consult-cancel").click();
   await confirmSheet(page);

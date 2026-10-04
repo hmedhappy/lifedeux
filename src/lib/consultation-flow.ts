@@ -5,6 +5,7 @@ import { formatDateTime } from "./format";
 import { getT, toLocale } from "./i18n";
 import { sendTemplate } from "./mail";
 import { capturePayment, raiseAlert, refundPayment, releaseConsultationPayments, releasePayment } from "./payment-ops";
+import { passwordOfferPath } from "./password-offer";
 import { getSettings } from "./settings";
 
 /** Practice address for an email body (HTML): typed by the doctor, so escaped. */
@@ -51,6 +52,7 @@ export async function acceptConsultation(id: string): Promise<AcceptOutcome> {
       "inPersonConfirmed",
       { reference: c.reference, date, doctor: `Dr ${doctor.user.lastName}`, address: clinicAddressHtml(doctor), maps: mapsLink(doctor) },
       `/account/consultations/${c.id}`,
+      await passwordOfferPath(c.patientId),
     );
     return "confirmed";
   }

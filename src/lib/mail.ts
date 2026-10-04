@@ -41,7 +41,9 @@ export async function sendMail(mail: Mail): Promise<void> {
 }
 
 /** Medelys email frame: logo as a hosted PNG (mail clients block SVG), brand button, calm footer. */
-function layout(title: string, body: string, cta?: { label: string; href: string }, centered = false): string {
+type Extra = { text: string; label: string; href: string };
+
+function layout(title: string, body: string, cta?: { label: string; href: string }, centered = false, extra?: Extra): string {
   const align = centered ? "center" : "left";
   const button = cta
     ? `<p style="margin:28px 0;text-align:${align}"><a href="${cta.href}" style="display:inline-block;background:#014D7D;color:#fff;padding:${centered ? "14px 36px" : "12px 22px"};border-radius:10px;text-decoration:none;font-weight:600">${cta.label}</a></p>`
@@ -52,7 +54,11 @@ function layout(title: string, body: string, cta?: { label: string; href: string
   return `<div style="font-family:Poppins,Arial,Helvetica,sans-serif;max-width:560px;margin:auto;color:#12304F;text-align:${align}">
   <p style="margin:0 0 24px">${logo}</p>
   <h2 style="font-size:${centered ? "22px" : "18px"}">${title}</h2>
-  <p style="line-height:1.6">${body}</p>${button}
+  <p style="line-height:1.6">${body}</p>${button}${
+    extra
+      ? `<div style="margin:8px 0 24px;padding:16px;border-radius:12px;background:#F4F7F8;text-align:${align}"><p style="margin:0 0 12px;line-height:1.6">${extra.text}</p><a href="${extra.href}" style="display:inline-block;border:1px solid #014D7D;color:#014D7D;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:600">${extra.label}</a></div>`
+      : ""
+  }
   <p style="color:#5B6B7A;font-size:12px;border-top:1px solid #DCE4E8;padding-top:12px">Medelys</p></div>`;
 }
 
@@ -98,6 +104,8 @@ export async function sendTemplate(
     | "adminAlert",
   vars: Record<string, string>,
   path?: string,
+  /** Path of the "create my password" page, for accounts made by email code. */
+  passwordPath?: string | null,
 ): Promise<void> {
   const locale = toLocale(to.locale);
   const t = getT(locale);
@@ -107,7 +115,10 @@ export async function sendTemplate(
   await sendMail({
     to: to.email,
     subject: t(`email.${template}.subject`, data),
-    html: layout(t(`email.${template}.title`, data), body, href ? { label: t(`email.${template}.cta`, data), href } : undefined, CENTERED.has(template)),
+    html: layout(t(`email.${template}.title`, data), body, href ? { label: t(`email.${template}.cta`, data), href } : undefined,
+      CENTERED.has(template),
+      passwordPath ? { text: t("email.accountReady.text"), label: t("email.accountReady.cta"), href: `${appUrl()}/${locale}${passwordPath}` } : undefined,
+    ),
   });
   const logs = [{ userId: to.id ?? null, channel: "email", template, target: to.email, status: process.env.SMTP_HOST && deliverable(to.email) ? "sent" : "logged" }];
   const phone = EMAIL_ONLY.has(template) || !whatsappEnabled() ? null : whatsappNumber(to.phone);

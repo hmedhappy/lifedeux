@@ -264,7 +264,10 @@
     "resend": "Send the code again",
     "newAccount": "First visit: tell us your name.",
     "consentGeneral": "I accept the terms of use and the processing of my health data for my care.",
-    "createAndContinue": "Create my account and continue"
+    "createAndContinue": "Create my account and continue",
+    "createPasswordTitle": "Create my password",
+    "createPasswordSubtitle": "To sign in faster with {email}. Optional: the email code always works.",
+    "createPasswordButton": "Save my password"
   },
   "fields": {
     "name": "Name",
@@ -1083,6 +1086,10 @@
       "title": "An appointment was cancelled",
       "body": "{patient} cancelled their appointment of {date} at your practice. The slot is free again.",
       "cta": "View my agenda"
+    },
+    "accountReady": {
+      "text": "Your Medelys account is ready. You sign in with your email and a code, or you can add a password whenever you like.",
+      "cta": "Create my password"
     }
   },
   "slotKind": {

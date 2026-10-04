@@ -24,6 +24,7 @@ import { isDoctorRole } from "@/lib/roles";
 import { appUrl, getSettings } from "@/lib/settings";
 import { bookingReference } from "@/lib/tokens";
 import { IMAGE_PATH_PREFIX, saveUploadedImages } from "@/lib/images";
+import { passwordOfferPath } from "@/lib/password-offer";
 
 async function currentPatient() {
   const user = await getCurrentUser();
@@ -171,6 +172,7 @@ export async function requestInPersonAction(localeRaw: string, doctorId: string,
       "inPersonRequested",
       { reference: consultation.reference, date: formatDateTime(consultation.slot.startsAt, locale), doctor: `Dr ${doctor.user.lastName}` },
       `/account/consultations/${consultation.id}`,
+      await passwordOfferPath(patient.id),
     );
   }
   redirect(`/${locale}/account/consultations/${consultation.id}?requested=1`);
