@@ -1,6 +1,7 @@
 import Link from "next/link";
 import clsx from "clsx";
 import { AlertCircle, CheckCircle2, Info, TriangleAlert, type LucideIcon } from "lucide-react";
+import { ResponsiveTable } from "./responsive-table";
 
 export type Variant = "primary" | "secondary" | "ghost" | "danger" | "dangerSolid" | "dark" | "soft";
 
@@ -211,12 +212,9 @@ export function Skeleton({ className }: { className?: string }) {
   return <div className={clsx("ld-skeleton rounded-md", className)} aria-hidden />;
 }
 
+/** Data table; one card per row on phones. */
 export function Table({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="overflow-x-auto rounded-2xl border border-line bg-white shadow-card">
-      <table className="w-full min-w-[640px] text-start text-sm">{children}</table>
-    </div>
-  );
+  return <ResponsiveTable>{children}</ResponsiveTable>;
 }
 
 export function Th({ children, className }: { children?: React.ReactNode; className?: string }) {

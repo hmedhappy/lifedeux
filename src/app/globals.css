@@ -207,6 +207,78 @@ h1, h2, h3 {
   }
 }
 
+/* Data tables become one card per row on phones; cells show their column title above the value. */
+@media (max-width: 767px) {
+  .rtable {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .rtable table {
+    min-width: 0;
+  }
+  .rtable thead {
+    display: none;
+  }
+  .rtable tbody {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .rtable tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem 1rem;
+    padding: 1rem;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-2xl);
+    background: var(--color-white);
+    box-shadow: var(--shadow-card);
+  }
+  .rtable tbody td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    overflow-wrap: anywhere;
+  }
+  /* The first cell is the card's title. */
+  .rtable tbody td:first-child {
+    grid-column: 1 / -1;
+    font-weight: 600;
+  }
+  .rtable tbody td:first-child::before,
+  .rtable tbody td[data-label=""]::before {
+    display: none;
+  }
+  /* Untitled cells (status, actions) take the full width at the bottom. */
+  .rtable tbody td[data-label=""] {
+    grid-column: 1 / -1;
+  }
+  .rtable tbody td:empty {
+    display: none;
+  }
+  .rtable tbody td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 0.125rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+  [dir="rtl"] .rtable tbody td::before {
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  /* Rows holding a single cell (empty states) stay plain. */
+  .rtable tbody td[colspan] {
+    grid-column: 1 / -1;
+  }
+}
+
 /* Padding so page content is never hidden behind the mobile tab bar. */
 .has-tabbar {
   padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
