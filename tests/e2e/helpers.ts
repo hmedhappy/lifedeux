@@ -4,6 +4,9 @@ import { E2E_ENV } from "../../playwright.config";
 
 export const db = new PrismaClient({ datasources: { db: { url: E2E_ENV.DATABASE_URL } } });
 
+/** Alerts of the page, without Next's route announcer (also role="alert", it holds the page title). */
+export const NOT_ANNOUNCER = '[role="alert"]:not(#__next-route-announcer__)';
+
 export const DEMO_PASSWORD = "Demo12345!";
 
 /** Password sign-in (folded under "Se connecter avec un mot de passe" since the email-code login). */

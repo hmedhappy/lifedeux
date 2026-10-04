@@ -196,8 +196,9 @@
     "reasonHint": "Facultatif, visible uniquement par le médecin.",
     "requestConsult": "Demander la consultation",
     "service": {
-      "consultation": "Consultation en ligne",
-      "operation": "Intervention"
+      "consultation": "En ligne",
+      "operation": "Intervention",
+      "cabinet": "Au cabinet"
     },
     "chooseDay": "Choisir un jour",
     "chooseSlotCta": "Choisir un créneau",
@@ -403,7 +404,8 @@
       "question": "Question"
     },
     "signInTitle": "Dernière étape",
-    "signInIntro": "Indiquez votre email pour envoyer la demande et suivre votre rendez-vous."
+    "signInIntro": "Indiquez votre email pour envoyer la demande et suivre votre rendez-vous.",
+    "optional": "facultatif"
   },
   "options": {
     "title": "Personnalisez votre séjour",
@@ -547,7 +549,7 @@
     "tooLate": "Trop tard pour accepter {reference} : le rendez-vous est trop proche pour que le patient paie.",
     "service": "Service",
     "acceptConsult": "Accepter la consultation de {name}",
-    "consultationsTitle": "Consultations en ligne",
+    "consultationsTitle": "Consultations",
     "consultationsSubtitle": "Vos consultations acceptées, en cours et terminées.",
     "upcoming": "À venir",
     "past": "Terminées",
@@ -769,7 +771,7 @@
       "supportWhatsappHint": "Format international, ex. +216 98 123 456. Affiché en bouton discret pour les patients."
     },
     "photoUploadHint": "JPEG, PNG ou WebP. Les images sont redimensionnées automatiquement.",
-    "consultationsTitle": "Consultations en ligne",
+    "consultationsTitle": "Consultations",
     "consultationsSubtitle": "Toutes les téléconsultations de la plateforme.",
     "specialtiesTitle": "Spécialités",
     "specialtiesSubtitle": "Tarif de consultation par défaut et visibilité de chaque spécialité.",
@@ -1051,6 +1053,36 @@
       "title": "Bienvenue sur Medelys",
       "body": "Vous êtes invité(e) à rejoindre Medelys. Créez votre profil médecin en 3 étapes, en moins de 3 minutes : vos patients pourront ensuite réserver une consultation à votre cabinet ou en ligne.<br><br>Ce lien est valable {days} jours.",
       "cta": "Commencer"
+    },
+    "newInPerson": {
+      "subject": "Nouveau rendez-vous au cabinet — {reference}",
+      "title": "Nouveau rendez-vous au cabinet",
+      "body": "{patient} a réservé le {date} à votre cabinet.",
+      "cta": "Voir le rendez-vous"
+    },
+    "inPersonRequested": {
+      "subject": "Demande envoyée — {reference}",
+      "title": "Demande envoyée, {name}",
+      "body": "Votre demande de rendez-vous au cabinet avec {doctor} le {date} est envoyée. Vous recevrez un email dès qu'elle est confirmée.",
+      "cta": "Voir ma demande"
+    },
+    "inPersonConfirmed": {
+      "subject": "Rendez-vous confirmé — {reference}",
+      "title": "C'est confirmé, {name} !",
+      "body": "Votre rendez-vous avec {doctor} est confirmé le <strong>{date}</strong>.<br><br>Adresse : {address} — <a href=\"{maps}\">itinéraire</a>.<br>La consultation se règle au cabinet, le jour du rendez-vous.",
+      "cta": "Voir mon rendez-vous"
+    },
+    "inPersonReminder": {
+      "subject": "Rappel : votre rendez-vous — {reference}",
+      "title": "À bientôt, {name}",
+      "body": "Rappel : rendez-vous avec {doctor} le <strong>{date}</strong>.<br><br>Adresse : {address} — <a href=\"{maps}\">itinéraire</a>.<br>Un empêchement ? Annulez en un clic pour libérer le créneau.",
+      "cta": "Voir ou annuler"
+    },
+    "inPersonCancelled": {
+      "subject": "Rendez-vous annulé — {reference}",
+      "title": "Un rendez-vous a été annulé",
+      "body": "{patient} a annulé son rendez-vous du {date} à votre cabinet. Le créneau est de nouveau libre.",
+      "cta": "Voir mon agenda"
     }
   },
   "slotKind": {
@@ -1607,5 +1639,39 @@
     "submit": "Créer mon profil",
     "invalid": "Ce lien d'inscription n'est plus valable. Demandez une nouvelle invitation à l'équipe Medelys.",
     "welcome": "Bienvenue sur Medelys, Dr {name} ! Ajoutez vos horaires pour recevoir vos premiers patients."
+  },
+  "cabinet": {
+    "tag": "Au cabinet",
+    "title": "Consultation au cabinet",
+    "text": "Vous venez au cabinet et vous réglez sur place, le jour du rendez-vous.",
+    "price": "Consultation au cabinet",
+    "directions": "Itinéraire",
+    "book": "Réserver ce rendez-vous",
+    "payThere": "À régler au cabinet le jour du rendez-vous. Rien à payer maintenant.",
+    "paidAtPractice": "réglée au cabinet",
+    "signInIntro": "Entrez votre email pour confirmer le rendez-vous. Vous recevrez un code, puis la confirmation.",
+    "confirmed": "Confirmé",
+    "bookedNotice": "C'est réservé ! La confirmation vous a été envoyée par email.",
+    "requestedNotice": "Demande envoyée. Le médecin la confirme au plus vite, vous recevrez un email.",
+    "cancelledNotice": "Rendez-vous annulé. Le médecin a été prévenu.",
+    "refusedNotice": "Le médecin n'a pas pu accepter ce rendez-vous : {reason}",
+    "cancel": "Annuler le rendez-vous",
+    "cancelConfirm": "Annuler ce rendez-vous au cabinet ? Le créneau sera libéré.",
+    "confirm": "Confirmer le rendez-vous",
+    "refusePlaceholder": "Raison (ex. créneau indisponible)",
+    "came": "Patient venu",
+    "noShow": "Absent"
+  },
+  "qr": {
+    "nav": "QR code cabinet",
+    "title": "QR code de votre cabinet",
+    "subtitle": "Imprimez-le et posez-le sur votre bureau ou dans la salle d'attente : vos patients le scannent et réservent leur prochain rendez-vous en quelques secondes.",
+    "noInPerson": "La consultation au cabinet n'est pas encore activée : le QR code ouvrira votre page, mais sans réservation au cabinet.",
+    "noInPersonLink": "L'activer dans mon profil",
+    "scan": "Prenez rendez-vous",
+    "scanHint": "Scannez avec l'appareil photo de votre téléphone",
+    "print": "Imprimer",
+    "download": "Télécharger l'image",
+    "open": "Voir la page"
   }
 }

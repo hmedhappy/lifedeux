@@ -327,6 +327,22 @@ h1, h2, h3 {
   .no-print {
     display: none !important;
   }
+  /* The practice QR poster prints alone, centred on the page. */
+  body:has(.qr-poster) * {
+    visibility: hidden;
+  }
+  body:has(.qr-poster) .qr-poster,
+  body:has(.qr-poster) .qr-poster * {
+    visibility: visible;
+  }
+  .qr-poster {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    height: fit-content;
+    border: 0;
+    box-shadow: none;
+  }
   body {
     background: #fff;
   }

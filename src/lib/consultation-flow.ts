@@ -7,6 +7,22 @@ import { sendTemplate } from "./mail";
 import { capturePayment, raiseAlert, refundPayment, releaseConsultationPayments, releasePayment } from "./payment-ops";
 import { getSettings } from "./settings";
 
+/** Practice address for an email body (HTML): typed by the doctor, so escaped. */
+export function clinicAddressHtml(d: { clinicName: string; clinicAddress: string; city: string }): string {
+  return [d.clinicName, d.clinicAddress, d.city]
+    .filter(Boolean)
+    .join(", ")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+/** Google Maps link to the practice: the pin when known, the address otherwise. */
+export function mapsLink(d: { clinicLat: number | null; clinicLng: number | null; clinicAddress: string; city: string }): string {
+  const q = d.clinicLat !== null && d.clinicLng !== null ? `${d.clinicLat},${d.clinicLng}` : `${d.clinicAddress}, ${d.city}`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+}
+
 export type AcceptOutcome = "paid" | "confirmed" | "tooLate" | "invalid";
 
 /**
@@ -19,6 +35,25 @@ export async function acceptConsultation(id: string): Promise<AcceptOutcome> {
   if (!c || c.status !== "REQUESTED") return "invalid";
   const patientLocale = toLocale(c.patient.locale);
   const date = formatDateTime(c.slot.startsAt, patientLocale);
+
+  if (c.mode === "IN_PERSON") {
+    // Nothing to pay online: the slot is the patient's as soon as the doctor says yes.
+    const done = await db.$transaction(async (tx) => {
+      const res = await tx.consultation.updateMany({ where: { id: c.id, status: "REQUESTED" }, data: { status: "CONFIRMED", confirmedAt: new Date() } });
+      if (res.count === 0) return false;
+      await tx.slot.updateMany({ where: { id: c.slotId, status: "HELD" }, data: { status: "BOOKED" } });
+      return true;
+    });
+    if (!done) return "invalid";
+    const doctor = await db.doctor.findUniqueOrThrow({ where: { id: c.doctorId }, include: { user: true } });
+    await sendTemplate(
+      c.patient,
+      "inPersonConfirmed",
+      { reference: c.reference, date, doctor: `Dr ${doctor.user.lastName}`, address: clinicAddressHtml(doctor), maps: mapsLink(doctor) },
+      `/account/consultations/${c.id}`,
+    );
+    return "confirmed";
+  }
 
   const hold = await db.payment.findFirst({
     where: { consultationId: c.id, status: "AUTHORIZED" },

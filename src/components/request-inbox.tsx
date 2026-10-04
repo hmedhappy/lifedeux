@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import { Check, ChevronRight, ImageIcon, Scissors, ShieldCheck, Video, X } from "lucide-react";
+import { Building2, Check, ChevronRight, ImageIcon, Scissors, ShieldCheck, Video, X } from "lucide-react";
 import { answerRequestAction, type InboxAnswer } from "@/actions/inbox";
 import { useI18n } from "./i18n-provider";
 import { Sheet } from "./overlay";
@@ -24,6 +24,8 @@ export type InboxItem = {
   photos: number;
   held: boolean;
   nights: number;
+  /** Appointment at the practice: `fee` is then the price paid there. */
+  inPerson?: boolean;
 };
 
 const UNDO_MS = 5000;
@@ -95,7 +97,13 @@ export function RequestInbox({ items, locale }: { items: InboxItem[]; locale: st
           <SwipeRow key={item.id} onAccept={() => (item.kind === "booking" ? setDetail(item) : accept(item))} onRefuse={() => setRefusing(item)}>
             <button type="button" onClick={() => setDetail(item)} className="flex w-full items-center gap-3 px-4 py-3.5 text-start hover:bg-surface/60" data-testid="inbox-row">
               <span className={clsx("flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl", item.kind === "booking" ? "bg-trip-soft text-trip" : "bg-brand-soft text-brand")}>
-                {item.kind === "booking" ? <Scissors className="h-5 w-5" aria-hidden /> : <Video className="h-5 w-5" aria-hidden />}
+                {item.kind === "booking" ? (
+                  <Scissors className="h-5 w-5" aria-hidden />
+                ) : item.inPerson ? (
+                  <Building2 className="h-5 w-5" aria-hidden />
+                ) : (
+                  <Video className="h-5 w-5" aria-hidden />
+                )}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-2">
@@ -140,7 +148,7 @@ export function RequestInbox({ items, locale }: { items: InboxItem[]; locale: st
             <dl className="grid grid-cols-2 gap-3">
               <Info label={t("doctorArea.service")} value={detail.service} />
               <Info label={t("doctorArea.slot")} value={detail.when} />
-              <Info label={t("doctorArea.fee")} value={detail.fee} />
+              <Info label={t(detail.inPerson ? "cabinet.price" : "doctorArea.fee")} value={detail.fee} />
               <Info label={t("fields.country")} value={detail.country ?? "—"} />
             </dl>
             {detail.reason && (

@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { demoPhoto } from "../../prisma/lib/demo-images";
-import { DEMO_PASSWORD, confirmSheet, db, login } from "./helpers";
+import { DEMO_PASSWORD, NOT_ANNOUNCER, confirmSheet, db, login } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
@@ -58,7 +58,7 @@ test("patient requests an online consultation", async ({ browser }) => {
 
   const doc = await db.doctor.findFirstOrThrow({ where: { user: { email: "dr.amira@demo.lifedeux.com" } } });
   await patient.goto(`/fr/doctors/${doc.id}`);
-  await expect(patient.getByRole("tab", { name: "Consultation en ligne" })).toHaveCount(0); // single service: no tabs
+  await expect(patient.getByRole("tab", { name: "En ligne" })).toHaveCount(0); // single service: no tabs
   await patient.locator("[data-testid=slot-times] button").first().click();
   await patient.getByRole("button", { name: "Suivi", exact: true }).click();
   await patient.locator('textarea[name="reasonText"]').fill("Eczéma sur les mains.");
@@ -190,7 +190,7 @@ test("doctor writes a prescription with a live preview and sends it", async () =
   // Incomplete lines are refused.
   await editor.getByTestId("rx-send").click();
   await confirmSheet(doctor);
-  await expect(editor.getByRole("alert").filter({ hasText: /./ })).toContainText("Complétez chaque ligne");
+  await expect(editor.locator(NOT_ANNOUNCER)).toContainText("Complétez chaque ligne");
 
   await item.locator('input[name="dosage"]').fill("1 gélule");
   await item.locator('input[name="frequency"]').fill("3 fois par jour");

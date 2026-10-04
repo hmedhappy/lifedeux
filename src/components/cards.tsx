@@ -4,7 +4,7 @@ import { formatMoney } from "@/lib/format";
 import type { Locale, TFunction } from "@/lib/i18n";
 import { Avatar } from "./ui";
 import { Photo } from "./photo";
-import { Scissors, Star, Video } from "lucide-react";
+import { Building2, Scissors, Star, Video } from "lucide-react";
 import { specialtyTint } from "@/lib/specialty-tint";
 import { SpecialtyIcon } from "./specialty-icon";
 
@@ -15,6 +15,7 @@ export function DoctorCard({
   t,
   fromPrice,
   consultationPrice,
+  inPersonPrice,
   specialty,
   currency,
   nextSlot,
@@ -26,6 +27,8 @@ export function DoctorCard({
   t: TFunction;
   fromPrice: number | null;
   consultationPrice?: number | null;
+  /** Consultation at the practice, paid there. */
+  inPersonPrice?: number | null;
   specialty?: { name: string; icon: string; slug?: string } | null;
   currency: string;
   nextSlot?: string | null;
@@ -34,8 +37,9 @@ export function DoctorCard({
   service?: "consultation" | "operation";
 }) {
   const name = `Dr ${doctor.user.firstName} ${doctor.user.lastName}`;
-  const showSurgery = service === "operation" || consultationPrice == null;
-  const price = showSurgery ? fromPrice : consultationPrice;
+  const atPracticeOnly = service !== "operation" && consultationPrice == null && inPersonPrice != null;
+  const showSurgery = !atPracticeOnly && (service === "operation" || consultationPrice == null);
+  const price = atPracticeOnly ? inPersonPrice : showSurgery ? fromPrice : consultationPrice;
   return (
     <Link
       href={`/${locale}/doctors/${doctor.id}${service ? `?service=${service}` : ""}`}
@@ -66,6 +70,12 @@ export function DoctorCard({
           </p>
         </div>
         <div className="flex shrink-0 gap-1">
+          {inPersonPrice != null && (
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-soft text-accent-ink" title={t("cabinet.tag")}>
+              <Building2 className="h-3.5 w-3.5" aria-hidden />
+              <span className="sr-only">{t("cabinet.tag")}</span>
+            </span>
+          )}
           {consultationPrice != null && (
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-soft text-brand" title={t("doctors.online")}>
               <Video className="h-3.5 w-3.5" aria-hidden />
@@ -86,7 +96,7 @@ export function DoctorCard({
         </span>
         {price != null && (
           <span className="text-end text-sm">
-            <span className="text-muted">{showSurgery ? t("doctors.from") : t("doctors.consultFrom")} </span>
+            <span className="text-muted">{atPracticeOnly ? t("cabinet.tag") : showSurgery ? t("doctors.from") : t("doctors.consultFrom")} </span>
             <span className="font-bold text-ink">{formatMoney(price, currency, locale)}</span>
           </span>
         )}

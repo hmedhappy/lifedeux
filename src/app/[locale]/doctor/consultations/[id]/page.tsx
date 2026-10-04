@@ -4,6 +4,7 @@ import { ArrowLeft, Building2, CalendarClock, EllipsisVertical, FileText, Scisso
 import { AutoRefresh } from "@/components/auto-refresh";
 import { Chat } from "@/components/chat";
 import { ConsultWorkspace } from "@/components/consult-workspace";
+import { DoctorInPersonVisit } from "@/components/doctor-in-person-visit";
 import { ConfirmSubmit, SubmitButton } from "@/components/forms";
 import { Dropdown } from "@/components/menu";
 import { PrescriptionEditor, type Favorite } from "@/components/prescription-editor";
@@ -39,6 +40,7 @@ export default async function DoctorConsultationPage({ params }: { params: Promi
   const found = await getConsultationForUser(id, user);
   if (!found || found.as !== "doctor") notFound();
   const { consultation: c, chat } = found;
+  if (c.mode === "IN_PERSON") return <DoctorInPersonVisit c={c} locale={locale} t={t} />;
   const patientName = `${c.patient.firstName} ${c.patient.lastName}`;
   const paid = ["PAID", "COMPLETED", "NO_SHOW"].includes(c.status);
   const [messages, issued, templates, history, operations, moveSlot, favorites, draft] = await Promise.all([

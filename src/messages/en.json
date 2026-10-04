@@ -196,8 +196,9 @@
     "reasonHint": "Optional, visible to the doctor only.",
     "requestConsult": "Request the consultation",
     "service": {
-      "consultation": "Online consultation",
-      "operation": "Procedure"
+      "consultation": "Online",
+      "operation": "Procedure",
+      "cabinet": "At the practice"
     },
     "chooseDay": "Choose a day",
     "chooseSlotCta": "Choose a time",
@@ -403,7 +404,8 @@
       "question": "Question"
     },
     "signInTitle": "Last step",
-    "signInIntro": "Enter your email to send the request and follow your appointment."
+    "signInIntro": "Enter your email to send the request and follow your appointment.",
+    "optional": "optional"
   },
   "options": {
     "title": "Customise your stay",
@@ -547,7 +549,7 @@
     "tooLate": "Too late to accept {reference}: the appointment is too close for the patient to pay.",
     "service": "Service",
     "acceptConsult": "Accept {name}'s consultation",
-    "consultationsTitle": "Online consultations",
+    "consultationsTitle": "Consultations",
     "consultationsSubtitle": "Your accepted, ongoing and completed consultations.",
     "upcoming": "Upcoming",
     "past": "Completed",
@@ -769,7 +771,7 @@
       "supportWhatsappHint": "International format, e.g. +216 98 123 456. Shown as a discreet button to patients."
     },
     "photoUploadHint": "JPEG, PNG or WebP. Images are resized automatically.",
-    "consultationsTitle": "Online consultations",
+    "consultationsTitle": "Consultations",
     "consultationsSubtitle": "All teleconsultations on the platform.",
     "specialtiesTitle": "Specialties",
     "specialtiesSubtitle": "Default consultation price and visibility of each specialty.",
@@ -1051,6 +1053,36 @@
       "title": "Welcome to Medelys",
       "body": "You are invited to join Medelys. Create your doctor profile in 3 steps, in under 3 minutes: patients will then be able to book a consultation at your practice or online.<br><br>This link is valid for {days} days.",
       "cta": "Get started"
+    },
+    "newInPerson": {
+      "subject": "New appointment at the practice — {reference}",
+      "title": "New appointment at the practice",
+      "body": "{patient} booked {date} at your practice.",
+      "cta": "View the appointment"
+    },
+    "inPersonRequested": {
+      "subject": "Request sent — {reference}",
+      "title": "Request sent, {name}",
+      "body": "Your request for an appointment with {doctor} on {date} at the practice has been sent. You will get an email as soon as it is confirmed.",
+      "cta": "View my request"
+    },
+    "inPersonConfirmed": {
+      "subject": "Appointment confirmed — {reference}",
+      "title": "You're booked, {name}!",
+      "body": "Your appointment with {doctor} is confirmed for <strong>{date}</strong>.<br><br>Address: {address} — <a href=\"{maps}\">directions</a>.<br>The consultation is paid at the practice, on the day.",
+      "cta": "View my appointment"
+    },
+    "inPersonReminder": {
+      "subject": "Reminder: your appointment — {reference}",
+      "title": "See you soon, {name}",
+      "body": "Reminder: appointment with {doctor} on <strong>{date}</strong>.<br><br>Address: {address} — <a href=\"{maps}\">directions</a>.<br>Can't make it? Cancel in one click to free the slot.",
+      "cta": "View or cancel"
+    },
+    "inPersonCancelled": {
+      "subject": "Appointment cancelled — {reference}",
+      "title": "An appointment was cancelled",
+      "body": "{patient} cancelled their appointment of {date} at your practice. The slot is free again.",
+      "cta": "View my agenda"
     }
   },
   "slotKind": {
@@ -1607,5 +1639,39 @@
     "submit": "Create my profile",
     "invalid": "This sign-up link is no longer valid. Ask the Medelys team for a new invitation.",
     "welcome": "Welcome to Medelys, Dr {name}! Add your opening hours to receive your first patients."
+  },
+  "cabinet": {
+    "tag": "At the practice",
+    "title": "Consultation at the practice",
+    "text": "You come to the practice and pay there, on the day of the appointment.",
+    "price": "Consultation at the practice",
+    "directions": "Directions",
+    "book": "Book this appointment",
+    "payThere": "Paid at the practice on the day. Nothing to pay now.",
+    "paidAtPractice": "paid at the practice",
+    "signInIntro": "Enter your email to confirm the appointment. You will get a code, then the confirmation.",
+    "confirmed": "Confirmed",
+    "bookedNotice": "You're booked! The confirmation has been sent by email.",
+    "requestedNotice": "Request sent. The doctor will confirm it shortly; you will get an email.",
+    "cancelledNotice": "Appointment cancelled. The doctor has been told.",
+    "refusedNotice": "The doctor could not accept this appointment: {reason}",
+    "cancel": "Cancel the appointment",
+    "cancelConfirm": "Cancel this appointment at the practice? The slot will be freed.",
+    "confirm": "Confirm the appointment",
+    "refusePlaceholder": "Reason (e.g. slot unavailable)",
+    "came": "Patient came",
+    "noShow": "No-show"
+  },
+  "qr": {
+    "nav": "Practice QR code",
+    "title": "Your practice QR code",
+    "subtitle": "Print it and put it on your desk or in the waiting room: patients scan it and book their next appointment in seconds.",
+    "noInPerson": "Consultations at the practice are not on yet: the QR code will open your page, without booking at the practice.",
+    "noInPersonLink": "Turn it on in my profile",
+    "scan": "Book an appointment",
+    "scanHint": "Scan with your phone's camera",
+    "print": "Print",
+    "download": "Download the image",
+    "open": "View the page"
   }
 }

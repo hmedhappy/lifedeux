@@ -33,6 +33,13 @@ enum ConsultationStatus {
   NO_SHOW
 }
 
+enum ConsultationMode {
+  /// By chat, paid online.
+  ONLINE
+  /// At the doctor's practice, paid there on the day: no payment, no chat.
+  IN_PERSON
+}
+
 enum MessageKind {
   TEXT
   IMAGE
@@ -288,6 +295,7 @@ model Consultation {
   slotId                String
   slot                  Slot               @relation(fields: [slotId], references: [id])
   status                ConsultationStatus @default(REQUESTED)
+  mode                  ConsultationMode   @default(ONLINE)
   reason                String?            @db.Text
   refusalReason         String?
   durationMinutes       Int

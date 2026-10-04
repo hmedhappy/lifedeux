@@ -162,6 +162,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                   t={t}
                   fromPrice={d.fromPrice}
                   consultationPrice={d.consultation?.price ?? null}
+                inPersonPrice={d.inPerson?.price ?? null}
                   specialty={d.specialty_ ? { name: localized(d.specialty_, "name", locale), icon: d.specialty_.icon, slug: d.specialty_.slug } : null}
                   currency={settings.currency}
                   nextSlot={d.nextSlot ? formatDate(d.nextSlot, locale, { day: "numeric", month: "short", year: undefined }) : null}

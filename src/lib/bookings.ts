@@ -236,7 +236,8 @@ export async function doctorBalances() {
   ]);
   const consultations = await db.consultation.groupBy({
     by: ["doctorId"],
-    where: { status: { in: ["COMPLETED", "NO_SHOW"] } },
+    // Consultations at the practice are paid there: not part of what Medelys owes.
+    where: { status: { in: ["COMPLETED", "NO_SHOW"] }, mode: "ONLINE" },
     _sum: { doctorFee: true },
     _count: true,
   });

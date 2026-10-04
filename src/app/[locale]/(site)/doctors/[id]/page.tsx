@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import clsx from "clsx";
-import { BadgeCheck, Clock3, Languages, MapPin, MessageCircle, Scissors, Star } from "lucide-react";
+import { BadgeCheck, Building2, Clock3, Languages, MapPin, MessageCircle, Navigation, Scissors, Star } from "lucide-react";
 import { BookingBar } from "@/components/booking-bar";
 import { BookingPanel } from "@/components/booking-panel";
 import { SpecialtyIcon } from "@/components/specialty-icon";
 import { Avatar, Badge, Container, Disclosure } from "@/components/ui";
 import { requestBookingAction } from "@/actions/patient";
-import { requestConsultationAction } from "@/actions/consultation";
+import { requestConsultationAction, requestInPersonAction } from "@/actions/consultation";
 import { getCurrentUser } from "@/lib/auth";
 import { formatDate, formatMoney } from "@/lib/format";
 import { toSlotOptions } from "@/lib/slot-options";
@@ -17,7 +17,7 @@ import { getPublicDoctor } from "@/lib/queries";
 import { getSettings } from "@/lib/settings";
 import { specialtyTint } from "@/lib/specialty-tint";
 
-type Service = "consultation" | "operation";
+type Service = "cabinet" | "consultation" | "operation";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string; id: string }> }) {
   const { id } = await params;
@@ -51,15 +51,34 @@ export default async function DoctorPage({
 
   const name = `Dr ${doctor.user.firstName} ${doctor.user.lastName}`;
   const offers = doctor.operations;
-  const services: Service[] = [...(doctor.consultation ? (["consultation"] as const) : []), ...(offers.length ? (["operation"] as const) : [])];
-  const service: Service | undefined = services.includes(requested as Service) ? (requested as Service) : services[0];
+  const services: Service[] = [
+    ...(doctor.inPerson ? (["cabinet"] as const) : []),
+    ...(doctor.consultation ? (["consultation"] as const) : []),
+    ...(offers.length ? (["operation"] as const) : []),
+  ];
+  // The QR code on the practice desk asks for "cabinet"; otherwise online comes first when offered.
+  const fallback = services.includes("consultation") ? "consultation" : services[0];
+  const service: Service | undefined = services.includes(requested as Service) ? (requested as Service) : fallback;
   const money = (v: number) => formatMoney(v, settings.currency, locale);
   const minPrice = offers.length ? Math.min(...offers.map((o) => o.price)) : 0;
   const specialtyName = doctor.specialty_ ? localized(doctor.specialty_, "name", locale) : doctor.specialty;
-  const slots = toSlotOptions(service === "consultation" ? doctor.consultationSlots : doctor.operationSlots, locale);
-  const price = service === "consultation" ? money(doctor.consultation!.price) : money(minPrice);
+  const slots = toSlotOptions(
+    service === "cabinet" ? doctor.inPersonSlots : service === "consultation" ? doctor.consultationSlots : doctor.operationSlots,
+    locale,
+  );
+  const price = service === "cabinet" ? money(doctor.inPerson!.price) : service === "consultation" ? money(doctor.consultation!.price) : money(minPrice);
   const next = `/${locale}/doctors/${doctor.id}${service ? `?service=${service}` : ""}`;
-  const action = service === "consultation" ? requestConsultationAction.bind(null, locale, doctor.id) : requestBookingAction.bind(null, locale, doctor.id);
+  const action =
+    service === "cabinet"
+      ? requestInPersonAction.bind(null, locale, doctor.id)
+      : service === "consultation"
+        ? requestConsultationAction.bind(null, locale, doctor.id)
+        : requestBookingAction.bind(null, locale, doctor.id);
+  const mapsHref =
+    doctor.clinicLat !== null && doctor.clinicLng !== null
+      ? `https://www.google.com/maps/search/?api=1&query=${doctor.clinicLat},${doctor.clinicLng}`
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${doctor.clinicAddress}, ${doctor.city}`)}`;
+  const serviceIcon = { cabinet: Building2, consultation: MessageCircle, operation: Scissors } as const;
 
   const panel = service ? (
     <BookingPanel
@@ -80,7 +99,7 @@ export default async function DoctorPage({
 
   const tabs =
     services.length > 1 ? (
-      <div className="grid grid-cols-2 gap-1 rounded-2xl bg-surface p-1" role="tablist" aria-label={t("doctor.chooseService")}>
+      <div className={clsx("grid gap-1 rounded-2xl bg-surface p-1", services.length > 2 ? "grid-cols-3" : "grid-cols-2")} role="tablist" aria-label={t("doctor.chooseService")}>
         {services.map((s) => (
           <Link
             key={s}
@@ -93,8 +112,11 @@ export default async function DoctorPage({
               s === service ? "bg-white text-ink shadow-card" : "text-muted hover:text-ink",
             )}
           >
-            {s === "consultation" ? <MessageCircle className="h-4 w-4" aria-hidden /> : <Scissors className="h-4 w-4" aria-hidden />}
-            {t(`doctor.service.${s}`)}
+            {(() => {
+              const Icon = serviceIcon[s];
+              return <Icon className="h-4 w-4 shrink-0" aria-hidden />;
+            })()}
+            <span className="truncate">{t(`doctor.service.${s}`)}</span>
           </Link>
         ))}
       </div>
@@ -144,13 +166,24 @@ export default async function DoctorPage({
         <div className="min-w-0 space-y-8">
           {tabs && <div className="lg:hidden">{tabs}</div>}
 
+          {/* At the practice (QR code on the desk), phones get the slots right on the page: no extra tap. */}
+          {service === "cabinet" && (!user || user.role === "PATIENT") && (
+            <section className="space-y-4 rounded-3xl border border-line bg-white p-5 shadow-card lg:hidden" data-testid="cabinet-inline">
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="text-sm text-muted">{t("cabinet.price")}</p>
+                <p className="text-2xl font-bold text-ink">{price}</p>
+              </div>
+              {panel}
+            </section>
+          )}
+
           <ul className="grid gap-3 sm:grid-cols-3">
             {[
               { icon: Clock3, label: t("doctors.experience", { n: doctor.yearsOfExperience }) },
               { icon: Languages, label: doctor.languages.join(", ") || "—" },
-              service === "consultation"
-                ? { icon: MessageCircle, label: t("doctor.consultLabel", { n: doctor.consultationMinutes }) }
-                : { icon: Scissors, label: t("doctor.surgeryFrom", { price: money(minPrice) }) },
+              service === "operation"
+                ? { icon: Scissors, label: t("doctor.surgeryFrom", { price: money(minPrice) }) }
+                : { icon: service === "cabinet" ? Building2 : MessageCircle, label: t("doctor.consultLabel", { n: doctor.consultationMinutes }) },
             ].map((f, i) => (
               <li key={i} className="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 text-sm text-ink shadow-card">
                 <f.icon className="h-5 w-5 shrink-0 text-brand" aria-hidden />
@@ -158,6 +191,21 @@ export default async function DoctorPage({
               </li>
             ))}
           </ul>
+
+          {service === "cabinet" && (
+            <section className="rounded-2xl bg-brand-soft/60 p-5" data-testid="cabinet-info">
+              <h2 className="font-semibold text-ink">{t("cabinet.title")}</h2>
+              <p className="mt-1 flex items-start gap-2 text-sm text-ink-soft">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
+                <span>{[doctor.clinicName, doctor.clinicAddress, doctor.city].filter(Boolean).join(", ")}</span>
+              </p>
+              <p className="mt-1 text-sm text-ink-soft">{t("cabinet.text")}</p>
+              <a href={mapsHref} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-brand hover:underline">
+                <Navigation className="h-4 w-4" aria-hidden />
+                {t("cabinet.directions")}
+              </a>
+            </section>
+          )}
 
           {service === "consultation" && (
             <section className="rounded-2xl bg-brand-soft/60 p-5">
@@ -236,7 +284,7 @@ export default async function DoctorPage({
           <div className="sticky top-24 space-y-5 rounded-3xl border border-line bg-white p-6 shadow-float">
             {tabs}
             <div className="flex items-baseline justify-between gap-3">
-              <p className="text-sm text-muted">{service === "consultation" ? t("doctor.consultPrice") : t("doctors.from")}</p>
+              <p className="text-sm text-muted">{service === "cabinet" ? t("cabinet.price") : service === "consultation" ? t("doctor.consultPrice") : t("doctors.from")}</p>
               <p className="text-2xl font-bold text-ink">{price}</p>
             </div>
             {panel}
@@ -245,11 +293,11 @@ export default async function DoctorPage({
       </div>
 
       {/* Doctors, admins and agents cannot book: no "choose a slot" bar for them. */}
-      {service && (!user || user.role === "PATIENT") && (
+      {service && service !== "cabinet" && (!user || user.role === "PATIENT") && (
         <BookingBar
           price={price}
           nextSlot={slots[0] ? slots[0].full : null}
-          label={service === "consultation" ? t("doctor.chooseSlotCta") : t("doctor.chooseSlotSurgery")}
+          label={service === "operation" ? t("doctor.chooseSlotSurgery") : t("doctor.chooseSlotCta")}
           title={service === "consultation" ? t("doctor.consultTitle") : t("doctor.service.operation")}
         >
           {panel}

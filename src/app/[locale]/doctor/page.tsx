@@ -1,6 +1,6 @@
 import Link from "next/link";
 import clsx from "clsx";
-import { ArrowRight, CalendarClock, Check, CircleDashed, MessageCircle, Wallet } from "lucide-react";
+import { ArrowRight, Building2, CalendarClock, Check, CircleDashed, MessageCircle, Wallet } from "lucide-react";
 import { RequestInbox, type InboxItem } from "@/components/request-inbox";
 import { StatusBadge } from "@/components/status";
 import { Badge, LinkButton, LiveDot, Notice } from "@/components/ui";
@@ -52,7 +52,11 @@ export default async function DoctorTodayPage({
       orderBy: { slot: { startsAt: "asc" } },
     }),
     db.consultation.findMany({
-      where: { doctorId: me.id, status: "PAID", endedAt: null, slot: { startsAt: { gt: hoursAgo(3) } } },
+      where: {
+        doctorId: me.id,
+        OR: [{ status: "PAID", endedAt: null }, { status: "CONFIRMED", mode: "IN_PERSON" }],
+        slot: { startsAt: { gt: hoursAgo(3) } },
+      },
       include: { patient: true, slot: true },
       orderBy: { slot: { startsAt: "asc" } },
       take: 3,
@@ -85,8 +89,9 @@ export default async function DoctorTodayPage({
       name: initial(c.patient.firstName, c.patient.lastName),
       country: c.patient.country,
       when: formatDateTime(c.slot.startsAt, locale),
-      fee: formatMoney(c.doctorFee, c.currency, locale),
-      service: t("consult.short"),
+      fee: formatMoney(c.mode === "IN_PERSON" ? c.price : c.doctorFee, c.currency, locale),
+      service: t(c.mode === "IN_PERSON" ? "cabinet.tag" : "consult.short"),
+      inPerson: c.mode === "IN_PERSON",
       reason: c.reason,
       photos: c._count.messages,
       held: c.payments.length > 0,
@@ -212,10 +217,19 @@ function NextConsultations({
 }: {
   t: TFunction;
   locale: string;
-  list: { id: string; status: string; endedAt: Date | null; slot: { startsAt: Date }; patient: { firstName: string; lastName: string }; reason: string | null }[];
+  list: {
+    id: string;
+    status: string;
+    mode: "ONLINE" | "IN_PERSON";
+    endedAt: Date | null;
+    slot: { startsAt: Date };
+    patient: { firstName: string; lastName: string };
+    reason: string | null;
+  }[];
 }) {
   const [first, ...rest] = list;
-  const live = chatState(first) === "open";
+  const atPractice = first.mode === "IN_PERSON";
+  const live = !atPractice && chatState(first) === "open";
   return (
     <section className="rounded-3xl bg-brand p-5 text-white shadow-float" data-testid="today-next">
       <p className="flex items-center gap-2 text-sm text-white/80">
@@ -227,11 +241,14 @@ function NextConsultations({
           <p className="text-xl font-bold">
             {first.patient.firstName} {first.patient.lastName}
           </p>
-          <p className="text-white/85">{formatDateTime(first.slot.startsAt, locale as never)}</p>
+          <p className="text-white/85">
+            {formatDateTime(first.slot.startsAt, locale as never)}
+            {atPractice && ` · ${t("cabinet.tag")}`}
+          </p>
           {first.reason && <p className="mt-1 line-clamp-1 text-sm text-white/75">{first.reason}</p>}
         </div>
         <LinkButton href={`/${locale}/doctor/consultations/${first.id}`} variant="secondary" className="border-white bg-white text-brand-dark">
-          <MessageCircle className="h-4 w-4" aria-hidden />
+          {atPractice ? <Building2 className="h-4 w-4" aria-hidden /> : <MessageCircle className="h-4 w-4" aria-hidden />}
           {t(live ? "today.join" : "today.open")}
         </LinkButton>
       </div>
@@ -241,6 +258,7 @@ function NextConsultations({
             <li key={c.id}>
               <Link href={`/${locale}/doctor/consultations/${c.id}`} className="hover:underline">
                 {formatDateTime(c.slot.startsAt, locale as never)} · {c.patient.firstName} {c.patient.lastName.charAt(0)}.
+                {c.mode === "IN_PERSON" && ` · ${t("cabinet.tag")}`}
               </Link>
             </li>
           ))}

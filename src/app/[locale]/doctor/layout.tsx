@@ -38,6 +38,7 @@ export default async function DoctorLayout({
         { href: `${base}/consultations`, label: t("doctorArea.nav.consultations"), icon: "consultations", badge: live, tab: true, group: t("doctorArea.nav.groupDaily"), testId: "nav-consultations" },
         { href: `${base}/slots`, label: t("doctorArea.nav.agenda"), icon: "agenda", exact: true, tab: true, group: t("doctorArea.nav.groupDaily"), testId: "nav-agenda" },
         { href: `${base}/patients`, label: t("doctorArea.nav.patients"), icon: "patients", group: t("doctorArea.nav.groupDaily") },
+        { href: `${base}/qr`, label: t("qr.nav"), icon: "qr", group: t("doctorArea.nav.groupSettings"), testId: "nav-qr" },
         { href: `${base}/payouts`, label: t("doctorArea.nav.payouts"), icon: "wallet", group: t("doctorArea.nav.groupSettings") },
         { href: `${base}/slots/settings`, label: t("agenda.settingsTitle"), icon: "settings", group: t("doctorArea.nav.groupSettings"), testId: "nav-agenda-settings" },
         { href: `${base}/prescription`, label: t("doctorArea.nav.prescription"), icon: "prescription", group: t("doctorArea.nav.groupSettings") },
@@ -47,7 +48,8 @@ export default async function DoctorLayout({
           : []),
       ]}
     >
-      {!doctor.stampImageId && (
+      {/* The stamp only matters for online consultations. */}
+      {!doctor.stampImageId && doctor.offersConsultation && (
         <div className="mb-6">
           <Notice tone="warning">
             {t(doctor.pendingStampImageId ? "doctorArea.stampPendingBanner" : "doctorArea.stampMissingBanner")}{" "}

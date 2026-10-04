@@ -1,6 +1,9 @@
 /** A consultation slot must start at least this long after the request. */
 export const CONSULT_MIN_LEAD_HOURS = 2;
 
+/** At the practice the patient may book for later the same day, e.g. from the waiting room. */
+export const IN_PERSON_MIN_LEAD_MINUTES = 30;
+
 /** Payment must be received at least this long before the consultation. */
 export const CONSULT_PAYMENT_CUTOFF_MINUTES = 30;
 

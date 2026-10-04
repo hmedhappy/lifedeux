@@ -43,7 +43,7 @@ export default async function AdminConsultationPage({ params }: { params: Promis
       </Link>
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-bold text-ink">{c.reference}</h1>
-        <StatusBadge status={c.status} t={t} />
+        <StatusBadge status={c.status} t={t} mode={c.mode} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

@@ -2,7 +2,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { db } from "./db";
 import { MIN_LEAD_HOURS } from "./constants";
-import { CONSULT_MIN_LEAD_HOURS } from "./consultation-rules";
+import { CONSULT_MIN_LEAD_HOURS, IN_PERSON_MIN_LEAD_MINUTES } from "./consultation-rules";
 import { specialtiesForSymptom } from "./symptoms";
 
 /** Publicly listed doctors: active accounts; referred doctors only once the admin has verified them. */
@@ -28,6 +28,12 @@ export function consultationOffer(doctor: {
   const price = doctor.consultationPrice ?? doctor.specialty_?.consultationPrice;
   if (!price) return null;
   return { price, fee: doctor.consultationFee ?? Math.round(price * DEFAULT_CONSULTATION_FEE_RATIO) };
+}
+
+/** Consultation at the practice, paid there: only needs a price and an address. */
+export function inPersonOffer(doctor: { offersInPerson: boolean; inPersonPrice: number | null; clinicAddress: string }): { price: number } | null {
+  if (!doctor.offersInPerson || !doctor.inPersonPrice || !doctor.clinicAddress) return null;
+  return { price: doctor.inPersonPrice };
 }
 
 export async function listActiveOperations() {
@@ -92,6 +98,7 @@ export async function listPublicDoctors(
       ...d,
       fromPrice: d.operations.length ? Math.min(...d.operations.map((o) => o.price)) : null,
       consultation: consultationOffer(d),
+      inPerson: inPersonOffer(d),
       nextSlot: d.slots[0]?.startsAt ?? null,
       rating: ratings.get(d.id) ?? null,
     }))
@@ -123,12 +130,14 @@ export async function getPublicDoctor(id: string) {
       orderBy: { startsAt: "asc" },
       take: 120,
     }),
+    // One agenda for both: the practice accepts shorter notice than online.
     db.slot.findMany({
-      where: { doctorId: id, kind: "CONSULTATION", status: "FREE", startsAt: { gt: new Date(Date.now() + CONSULT_MIN_LEAD_HOURS * 3_600_000) } },
+      where: { doctorId: id, kind: "CONSULTATION", status: "FREE", startsAt: { gt: new Date(Date.now() + IN_PERSON_MIN_LEAD_MINUTES * 60_000) } },
       orderBy: { startsAt: "asc" },
       take: 200,
     }),
   ]);
+  const onlineFrom = Date.now() + CONSULT_MIN_LEAD_HOURS * 3_600_000;
   const [ratings, reviews] = await Promise.all([
     doctorRatings([id]),
     db.review.findMany({
@@ -141,8 +150,10 @@ export async function getPublicDoctor(id: string) {
   return {
     ...doctor,
     operationSlots,
-    consultationSlots,
+    consultationSlots: consultationSlots.filter((s) => s.startsAt.getTime() > onlineFrom),
+    inPersonSlots: consultationSlots,
     consultation: consultationOffer(doctor),
+    inPerson: inPersonOffer(doctor),
     rating: ratings.get(id) ?? null,
     reviews: reviews.map((r) => ({ id: r.id, rating: r.rating, text: r.text, createdAt: r.createdAt, author: `${r.patient.firstName} ${r.patient.lastName.charAt(0)}.` })),
   };

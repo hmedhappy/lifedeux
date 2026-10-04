@@ -1,5 +1,6 @@
 import "server-only";
 import { expireOverdueBookings } from "./bookings";
+import { clinicAddressHtml, mapsLink } from "./consultation-flow";
 import { db } from "./db";
 import { addDays, formatDate, formatDateTime, formatTime, tunisDayKey } from "./format";
 import { getT, toLocale } from "./i18n";
@@ -26,14 +27,19 @@ async function oncePerDay(name: string, now: Date, run: () => Promise<void>) {
 export async function sendReminders(now = new Date()): Promise<number> {
   let sent = 0;
   const day = await db.consultation.findMany({
-    where: { status: "PAID", reminderDaySentAt: null, slot: { startsAt: { gt: new Date(now.getTime() + 2 * HOUR), lt: new Date(now.getTime() + 24 * HOUR) } } },
+    where: { OR: [{ status: "PAID" }, { status: "CONFIRMED", mode: "IN_PERSON" }], reminderDaySentAt: null, slot: { startsAt: { gt: new Date(now.getTime() + 2 * HOUR), lt: new Date(now.getTime() + 24 * HOUR) } } },
     include: { patient: true, slot: true, doctor: { include: { user: true } } },
   });
   for (const c of day) {
     const res = await db.consultation.updateMany({ where: { id: c.id, reminderDaySentAt: null }, data: { reminderDaySentAt: now } });
     if (!res.count) continue;
     const date = formatDateTime(c.slot.startsAt, toLocale(c.patient.locale));
-    await sendTemplate(c.patient, "reminderDay", { reference: c.reference, date, doctor: `Dr ${c.doctor.user.lastName}` }, `/account/consultations/${c.id}`);
+    if (c.mode === "IN_PERSON") {
+      const address = clinicAddressHtml(c.doctor);
+      await sendTemplate(c.patient, "inPersonReminder", { reference: c.reference, date, doctor: `Dr ${c.doctor.user.lastName}`, address, maps: mapsLink(c.doctor) }, `/account/consultations/${c.id}`);
+    } else {
+      await sendTemplate(c.patient, "reminderDay", { reference: c.reference, date, doctor: `Dr ${c.doctor.user.lastName}` }, `/account/consultations/${c.id}`);
+    }
     sent++;
   }
   const soon = await db.consultation.findMany({

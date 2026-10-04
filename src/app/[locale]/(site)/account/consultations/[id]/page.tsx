@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { ArrowLeft, Check, Clock, CreditCard, FileText, Lock, MessageCircle, RotateCcw, ShieldCheck, Star } from "lucide-react";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { Chat } from "@/components/chat";
+import { InPersonVisit } from "@/components/in-person-visit";
 import { ActionForm, ConfirmSubmit, SubmitButton } from "@/components/forms";
 import { RescheduleSheet } from "@/components/reschedule-sheet";
 import { ReviewForm } from "@/components/review-form";
@@ -60,6 +61,10 @@ export default async function PatientConsultationPage({
   const found = await getConsultationForUser(id, user);
   if (!found || found.as !== "patient") notFound();
   const { consultation: c, chat } = found;
+  if (c.mode === "IN_PERSON") {
+    const spec = c.doctor.specialty_ ? localized(c.doctor.specialty_, "name", locale) : c.doctor.specialty;
+    return <InPersonVisit c={c} specialty={spec} locale={locale} t={t} requested={!!requested} cancel={cancel} />;
+  }
   const doctorName = `Dr ${c.doctor.user.firstName} ${c.doctor.user.lastName}`;
   const specialty = c.doctor.specialty_ ? localized(c.doctor.specialty_, "name", locale) : c.doctor.specialty;
   const money = (v: number) => formatMoney(v, c.currency, locale);

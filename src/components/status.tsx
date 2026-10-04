@@ -16,8 +16,15 @@ const tones: Record<BookingStatus | ConsultationStatus, BadgeTone> = {
   NO_SHOW: "red",
 };
 
-export function StatusBadge({ status, t }: { status: BookingStatus | ConsultationStatus; t: TFunction }) {
+export function StatusBadge({ status, t, mode }: { status: BookingStatus | ConsultationStatus; t: TFunction; mode?: "ONLINE" | "IN_PERSON" }) {
+  // At the practice nothing is paid online: once confirmed, the appointment is settled.
+  if (mode === "IN_PERSON" && status === "CONFIRMED") return <Badge tone="green">{t("cabinet.confirmed")}</Badge>;
   return <Badge tone={tones[status]}>{t(`status.${status}`)}</Badge>;
+}
+
+/** Small "Au cabinet" tag next to appointments at the practice. */
+export function CabinetTag({ t }: { t: TFunction }) {
+  return <Badge tone="blue">{t("cabinet.tag")}</Badge>;
 }
 
 export function TrackingTimeline({

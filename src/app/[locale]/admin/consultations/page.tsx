@@ -68,7 +68,7 @@ export default async function AdminConsultationsPage({ params }: { params: Promi
                   {t("rx.count", { n: c._count.prescriptions })}
                 </Td>
                 <Td>
-                  <StatusBadge status={c.status} t={t} />
+                  <StatusBadge status={c.status} t={t} mode={c.mode} />
                 </Td>
               </tr>
             ))}

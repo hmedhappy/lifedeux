@@ -1,7 +1,7 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { E2E_ENV } from "../../playwright.config";
 import { demoStamp } from "../../prisma/lib/demo-images";
-import { DEMO_PASSWORD, db, futureWeekday, login } from "./helpers";
+import { DEMO_PASSWORD, NOT_ANNOUNCER, db, futureWeekday, login } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
@@ -62,7 +62,7 @@ test("wrong password is rejected", async ({ page }) => {
   await form.locator('input[name="email"]').fill(E2E_ENV.ADMIN_EMAIL);
   await form.locator('input[name="password"]').fill("not-the-password");
   await page.getByTestId("password-login").click();
-  await expect(page.getByRole("alert").filter({ hasText: /./ })).toContainText("incorrect");
+  await expect(page.locator(NOT_ANNOUNCER)).toContainText("incorrect");
 });
 
 test("admin creates a doctor who activates the account from the invitation", async ({ browser }) => {
@@ -151,7 +151,7 @@ test("patient registers and requests an appointment", async ({ browser }) => {
   await patient.locator('textarea[name="note"]').fill("Arrivée depuis Paris.");
   // Consent is required.
   await patient.getByRole("button", { name: "Demander ce rendez-vous" }).click();
-  await expect(patient.getByRole("alert").filter({ hasText: /./ })).toBeVisible();
+  await expect(patient.locator(NOT_ANNOUNCER)).toBeVisible();
   await patient.getByTestId("booking-consent").check();
   await patient.getByRole("button", { name: "Demander ce rendez-vous" }).click();
   await expect(patient).toHaveURL(/\/fr\/account\/bookings\/\w+\?requested=1/);

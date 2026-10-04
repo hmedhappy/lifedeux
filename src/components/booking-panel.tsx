@@ -12,6 +12,7 @@ import { SlotStrip, type SlotOption } from "./slot-strip";
 import { Button, Field, Input, Notice, Select, Textarea } from "./ui";
 
 const REASONS = ["first", "followUp", "results", "renewal", "pain", "question"] as const;
+const CABINET_REASONS = ["first", "followUp", "results", "renewal"] as const;
 const MAX_PHOTOS = 3;
 
 type Action = (state: ActionState, formData: FormData) => Promise<ActionState>;
@@ -31,7 +32,7 @@ export function BookingPanel({
   needsContact,
   next,
 }: {
-  service: "consultation" | "operation";
+  service: "consultation" | "cabinet" | "operation";
   slots: SlotOption[];
   action: Action;
   signedIn: boolean;
@@ -61,7 +62,7 @@ export function BookingPanel({
   function buildData(): FormData | null {
     if (!form.current) return null;
     const data = new FormData(form.current);
-    if (service === "consultation") {
+    if (service !== "operation") {
       const labels = chips.map((c) => t(`booking.reasons.${c}`));
       data.set("reason", [labels.join(", "), text.trim()].filter(Boolean).join(" — "));
       data.delete("photos");
@@ -84,7 +85,8 @@ export function BookingPanel({
     e.preventDefault();
     setError(null);
     if (!slotId) return setError(t("errors.chooseSlot"));
-    if (!consent) return setError(t("errors.consentRequired"));
+    // At the practice nothing medical is shared before the visit: no consent box, one click less.
+    if (service !== "cabinet" && !consent) return setError(t("errors.consentRequired"));
     if (!signedIn) return setAuth(true);
     send();
   }
@@ -116,7 +118,32 @@ export function BookingPanel({
         <SlotStrip slots={slots} value={slotId} onChange={setSlotId} />
       </div>
 
-      {service === "consultation" ? (
+      {service === "cabinet" ? (
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-ink">
+            {t("doctor.reason")} <span className="font-normal text-muted">({t("booking.optional")})</span>
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {CABINET_REASONS.map((r) => {
+              const on = chips.includes(r);
+              return (
+                <button
+                  key={r}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setChips((list) => (on ? list.filter((x) => x !== r) : [...list, r]))}
+                  className={clsx(
+                    "min-h-9 rounded-full border px-3 text-sm transition",
+                    on ? "border-brand bg-brand-soft font-semibold text-brand-dark" : "border-line bg-white text-ink-soft hover:border-brand",
+                  )}
+                >
+                  {t(`booking.reasons.${r}`)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : service === "consultation" ? (
         <div className="space-y-3">
           <p className="text-sm font-semibold text-ink">{t("doctor.reason")}</p>
           <div className="flex flex-wrap gap-2">
@@ -192,24 +219,28 @@ export function BookingPanel({
         </>
       )}
 
+      {service !== "cabinet" && (
       <label className="flex items-start gap-3 text-sm text-ink">
         <input type="checkbox" name="consent" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1 h-4 w-4 accent-brand" data-testid="booking-consent" />
         <span>{t(service === "consultation" ? "booking.consentConsultation" : "booking.consentSurgery")}</span>
       </label>
+      )}
 
       {error && <Notice tone="error">{error}</Notice>}
 
       <Button type="submit" size="lg" className="w-full" disabled={pending} data-testid="booking-submit">
         {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
-        {service === "consultation" ? t("doctor.requestConsult") : t("doctor.requestButton")}
+        {service === "cabinet" ? t("cabinet.book") : service === "consultation" ? t("doctor.requestConsult") : t("doctor.requestButton")}
       </Button>
-      <p className="text-center text-xs text-muted">{t(service === "consultation" ? "booking.policyConsultation" : "doctor.noChargeYet")}</p>
+      <p className="text-center text-xs text-muted">
+        {t(service === "cabinet" ? "cabinet.payThere" : service === "consultation" ? "booking.policyConsultation" : "doctor.noChargeYet")}
+      </p>
 
       <Sheet open={auth} onClose={() => setAuth(false)} title={t("booking.signInTitle")} size="sm">
         <AuthPanel
           next={next}
           googleEnabled={googleEnabled}
-          intro={t("booking.signInIntro")}
+          intro={t(service === "cabinet" ? "cabinet.signInIntro" : "booking.signInIntro")}
           onSignedIn={() => {
             setAuth(false);
             send();

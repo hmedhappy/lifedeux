@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { StatusBadge } from "@/components/status";
+import { CabinetTag, StatusBadge } from "@/components/status";
 import { Avatar, Badge, EmptyState, PageTitle } from "@/components/ui";
 import { requireDoctor } from "@/lib/auth";
 import { expireOverdueBookings } from "@/lib/bookings";
@@ -14,7 +14,7 @@ export default async function DoctorConsultationsPage({ params }: { params: Prom
   const { doctor } = await requireDoctor(locale);
   await expireOverdueBookings();
   const consultations = await db.consultation.findMany({
-    where: { doctorId: doctor.id, status: { in: ["CONFIRMED", "PAID", "COMPLETED"] } },
+    where: { doctorId: doctor.id, status: { in: ["REQUESTED", "CONFIRMED", "PAID", "COMPLETED", "NO_SHOW"] }, OR: [{ mode: "IN_PERSON" }, { status: { not: "REQUESTED" } }] },
     include: { patient: true, slot: true, _count: { select: { prescriptions: { where: { status: "ISSUED" } } } } },
     orderBy: { slot: { startsAt: "asc" } },
   });
@@ -45,10 +45,11 @@ export default async function DoctorConsultationsPage({ params }: { params: Prom
                   </p>
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-2 sm:mt-0 sm:shrink-0 sm:gap-3">
-                  <span className="text-sm text-muted">{formatMoney(c.doctorFee, c.currency, locale)}</span>
+                  {c.mode === "IN_PERSON" && <CabinetTag t={t} />}
+                  <span className="text-sm text-muted">{formatMoney(c.mode === "IN_PERSON" ? c.price : c.doctorFee, c.currency, locale)}</span>
                   {c.rescheduleSlotId && <Badge tone="amber">{t("doctorArea.moveAsked")}</Badge>}
                   {c._count.prescriptions > 0 && <Badge tone="blue">{t("rx.count", { n: c._count.prescriptions })}</Badge>}
-                  {state === "open" ? <Badge tone="green">{t("chat.live")}</Badge> : <StatusBadge status={c.status} t={t} />}
+                  {state === "open" ? <Badge tone="green">{t("chat.live")}</Badge> : <StatusBadge status={c.status} t={t} mode={c.mode} />}
                 </div>
               </div>
             </Link>

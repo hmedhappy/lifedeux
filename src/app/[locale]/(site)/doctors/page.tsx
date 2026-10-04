@@ -128,6 +128,7 @@ export default async function DoctorsPage({
                 t={t}
                 fromPrice={d.fromPrice}
                 consultationPrice={d.consultation?.price ?? null}
+                inPersonPrice={d.inPerson?.price ?? null}
                 specialty={d.specialty_ ? { name: localized(d.specialty_, "name", locale), icon: d.specialty_.icon, slug: d.specialty_.slug } : null}
                 currency={settings.currency}
                 nextSlot={shortDate(d.nextSlot, locale)}

@@ -27,8 +27,10 @@ type Item = {
 };
 
 /** What the patient should do next for a consultation, as one short label. */
-function consultNext(c: { status: string; slot: { startsAt: Date }; endedAt: Date | null }, t: TFunction, rxCount: number) {
+function consultNext(c: { status: string; mode: string; slot: { startsAt: Date }; endedAt: Date | null }, t: TFunction, rxCount: number) {
   const chat = chatState(c);
+  // At the practice there is nothing to pay online: once confirmed, the patient just comes.
+  if (c.mode === "IN_PERSON" && c.status === "CONFIRMED") return { label: t("account.next.upcoming"), tone: "wait" as const };
   if (c.status === "PAID" && chat === "open") return { label: t("account.next.joinChat"), tone: "live" as const };
   if (c.status === "CONFIRMED") return { label: t("account.next.pay"), tone: "action" as const };
   if (c.status === "REQUESTED") return { label: t("account.next.waitingDoctor"), tone: "wait" as const };
@@ -79,7 +81,7 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-semibold text-ink">
-                  {t("consult.short")} · {specialty}
+                  {t(c.mode === "IN_PERSON" ? "cabinet.tag" : "consult.short")} · {specialty}
                 </p>
                 {chatState(c) === "open" ? (
                   <Badge tone="green">
@@ -87,7 +89,7 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
                     {t("chat.live")}
                   </Badge>
                 ) : (
-                  <StatusBadge status={c.status} t={t} />
+                  <StatusBadge status={c.status} t={t} mode={c.mode} />
                 )}
               </div>
               <p className="mt-0.5 text-sm text-muted">

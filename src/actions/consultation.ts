@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { fail, ok, type ActionState } from "@/lib/action-state";
-import { CONSULT_MIN_LEAD_HOURS, canMarkNoShow } from "@/lib/consultation-rules";
+import { CONSULT_MIN_LEAD_HOURS, IN_PERSON_MIN_LEAD_MINUTES, canMarkNoShow } from "@/lib/consultation-rules";
 import {
   acceptConsultation,
   answerReschedule,
@@ -19,7 +19,7 @@ import { formatDateTime } from "@/lib/format";
 import { getT, toLocale } from "@/lib/i18n";
 import { sendTemplate } from "@/lib/mail";
 import { getProvider, providersFor } from "@/lib/payments";
-import { consultationOffer } from "@/lib/queries";
+import { consultationOffer, inPersonOffer } from "@/lib/queries";
 import { isDoctorRole } from "@/lib/roles";
 import { appUrl, getSettings } from "@/lib/settings";
 import { bookingReference } from "@/lib/tokens";
@@ -118,6 +118,77 @@ export async function requestConsultationAction(
   redirect(`/${locale}/account/consultations/${consultation.id}?requested=1`);
 }
 
+/**
+ * Appointment at the practice: no payment, no chat. Confirmed at once when the doctor
+ * accepts requests automatically, otherwise the doctor confirms it.
+ */
+export async function requestInPersonAction(localeRaw: string, doctorId: string, _: ActionState, formData: FormData): Promise<ActionState> {
+  const locale = toLocale(localeRaw);
+  const patient = await currentPatient();
+  if (!patient) return fail("errors.loginRequired");
+  const slotId = String(formData.get("slotId") ?? "");
+  const reason = String(formData.get("reason") ?? "").trim().slice(0, 1000) || null;
+  if (!slotId) return fail("errors.chooseSlot");
+
+  const doctor = await db.doctor.findFirst({ where: { id: doctorId, active: true, user: { active: true } }, include: { user: true } });
+  const offer = doctor ? inPersonOffer(doctor) : null;
+  if (!doctor || !offer) return fail("errors.invalid");
+
+  const settings = await getSettings();
+  const earliest = new Date(Date.now() + IN_PERSON_MIN_LEAD_MINUTES * 60_000);
+  const consultation = await db.$transaction(async (tx) => {
+    const held = await tx.slot.updateMany({
+      where: { id: slotId, doctorId, kind: "CONSULTATION", status: "FREE", startsAt: { gt: earliest } },
+      data: { status: "HELD" },
+    });
+    if (held.count === 0) return null;
+    return tx.consultation.create({
+      data: {
+        reference: bookingReference().replace("LD-", "LC-"),
+        mode: "IN_PERSON",
+        patientId: patient.id,
+        doctorId,
+        slotId,
+        reason,
+        durationMinutes: doctor.consultationMinutes,
+        price: offer.price,
+        // Paid at the practice: Medelys owes the doctor nothing for it.
+        doctorFee: 0,
+        currency: settings.currency,
+      },
+      include: { slot: true },
+    });
+  });
+  if (!consultation) return fail("errors.slotTaken");
+
+  const doctorDate = formatDateTime(consultation.slot.startsAt, toLocale(doctor.user.locale));
+  await sendTemplate(doctor.user, "newInPerson", { reference: consultation.reference, date: doctorDate, patient: `${patient.firstName} ${patient.lastName}` }, `/doctor/consultations/${consultation.id}`);
+  if (doctor.instantBooking) {
+    await acceptConsultation(consultation.id);
+  } else {
+    await sendTemplate(
+      patient,
+      "inPersonRequested",
+      { reference: consultation.reference, date: formatDateTime(consultation.slot.startsAt, locale), doctor: `Dr ${doctor.user.lastName}` },
+      `/account/consultations/${consultation.id}`,
+    );
+  }
+  redirect(`/${locale}/account/consultations/${consultation.id}?requested=1`);
+}
+
+/** At the practice, the doctor records whether the patient came. */
+export async function closeInPersonAction(localeRaw: string, id: string, outcome: "COMPLETED" | "NO_SHOW"): Promise<void> {
+  const locale = toLocale(localeRaw);
+  const me = await currentDoctor();
+  if (!me) redirect(`/${locale}/login`);
+  await db.consultation.updateMany({
+    where: { id, doctorId: me.doctor.id, mode: "IN_PERSON", status: "CONFIRMED", slot: { startsAt: { lt: new Date() } } },
+    data: { status: outcome, endedAt: new Date() },
+  });
+  revalidatePath(`/${locale}/doctor`, "layout");
+  redirect(`/${locale}/doctor/consultations/${id}`);
+}
+
 export async function confirmConsultationAction(localeRaw: string, id: string): Promise<void> {
   const locale = toLocale(localeRaw);
   const me = await currentDoctor();
@@ -152,6 +223,14 @@ export async function cancelConsultationAction(localeRaw: string, id: string): P
   const patient = await currentPatient();
   if (!patient) redirect(`/${locale}/login`);
   const outcome = await cancelConsultationByPatient(id, patient.id);
+  if (outcome === "cancelled") {
+    // At the practice the doctor keeps the slot in mind: tell them it is free again.
+    const c = await db.consultation.findUnique({ where: { id }, include: { slot: true, doctor: { include: { user: true } } } });
+    if (c?.mode === "IN_PERSON") {
+      const date = formatDateTime(c.slot.startsAt, toLocale(c.doctor.user.locale));
+      await sendTemplate(c.doctor.user, "inPersonCancelled", { reference: c.reference, date, patient: `${patient.firstName} ${patient.lastName}` }, "/doctor/slots");
+    }
+  }
   redirect(`/${locale}/account/consultations/${id}?cancel=${outcome}`);
 }
 
