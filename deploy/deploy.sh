@@ -25,6 +25,10 @@ APP_PORT="$(env_value APP_PORT)"
 APP_URL="$(env_value APP_URL)"
 
 compose=(docker compose --env-file .env.production -f docker-compose.prod.yml)
+# A second copy on the same server (staging) needs its own containers and database volume.
+if [ -n "$(env_value COMPOSE_PROJECT_NAME)" ]; then
+  compose+=(-p "$(env_value COMPOSE_PROJECT_NAME)")
+fi
 # Optional extra compose file (e.g. a local override); not needed on a normal VPS.
 if [ -n "${COMPOSE_OVERRIDE:-}" ]; then
   compose+=(-f "$COMPOSE_OVERRIDE")

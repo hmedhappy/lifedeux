@@ -7,7 +7,7 @@ on:
 # A newer push to the same branch cancels the run still in progress (never a deployment midway).
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/staging' }}
 
 jobs:
   test:
@@ -41,14 +41,18 @@ jobs:
       - run: npm run test:e2e
 
   # Merged to main and every test green: the VPS runs deploy/ci-deploy.sh (backup, then deploy.sh).
+  # main -> https://medelys.tn (production), staging -> https://medelys.afdev.site
   deploy:
     needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
     concurrency:
-      group: deploy-production
+      group: deploy-${{ github.ref_name }}
       cancel-in-progress: false
+    env:
+      TARGET: ${{ github.ref_name == 'staging' && 'staging ' || '' }}  # '' is falsy in expressions: test staging first
+      SITE: ${{ github.ref_name == 'main' && 'https://medelys.tn' || 'https://medelys.afdev.site' }}
     steps:
       - name: Deploy to the VPS
         env:
@@ -59,7 +63,7 @@ jobs:
           install -m 700 -d ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
-          # The key may only run ci-deploy.sh on the server; the commit sha is its one argument.
-          ssh -i ~/.ssh/deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "root@$HOST" "$GITHUB_SHA"
+          # The key may only run ci-deploy.sh on the server: "<sha>" for main, "staging <sha>" for staging.
+          ssh -i ~/.ssh/deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "root@$HOST" "${TARGET}${GITHUB_SHA}"
       - name: Check the site answers
-        run: curl -fsS -o /dev/null -w "%{http_code}\n" --retry 10 --retry-delay 6 --retry-all-errors https://medelys.afdev.site/fr
+        run: curl -fsS -o /dev/null -w "%{http_code}\n" --retry 10 --retry-delay 6 --retry-all-errors "$SITE/fr"

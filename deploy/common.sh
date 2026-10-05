@@ -11,6 +11,8 @@ fi
 env_value() { grep -E "^$1=" .env.production | tail -n1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//'; }
 
 compose=(docker compose --env-file .env.production -f docker-compose.prod.yml)
+# A second copy on the same server (staging) needs its own containers and database volume.
+if [ -n "$(env_value COMPOSE_PROJECT_NAME)" ]; then compose+=(-p "$(env_value COMPOSE_PROJECT_NAME)"); fi
 if [ -n "${COMPOSE_OVERRIDE:-}" ]; then compose+=(-f "$COMPOSE_OVERRIDE"); fi
 if [ "$(env_value USE_CADDY)" != "0" ]; then compose+=(--profile caddy); fi
 

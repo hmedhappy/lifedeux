@@ -91,9 +91,16 @@ cd lifedeux
 ./deploy/deploy.sh        # récupère le code (git pull), reconstruit, redémarre ; les données sont conservées
 ```
 
-## Déploiement automatique (merge sur `main`)
+## Déploiement automatique (`main` → production, `staging` → staging)
 
-Chaque push sur `main` lance la CI GitHub (lint, types, tests unitaires, build, tests de bout en bout). Si tout est vert, le job `deploy` se connecte au VPS et lance `deploy/ci-deploy.sh` avec le commit testé : sauvegarde de la base, passage du dossier sur ce commit, puis `deploy.sh`. Un push sur une autre branche ne déploie rien.
+| Branche | Site | Dossier sur le VPS | Port | Base |
+|---|---|---|---|---|
+| `main` | https://medelys.tn | `/root/lifedeux` | 3010 | la vraie (sauvegardée) |
+| `staging` | https://medelys.afdev.site | `/root/medelys-staging` | 3011 | données de démo (`SEED_DEMO=true`), emails seulement vers `MAIL_ONLY_TO`, pas de vrais paiements |
+
+Chaque push lance la CI GitHub (lint, types, tests unitaires, build, tests de bout en bout). Si tout est vert sur `main` ou `staging`, le job `deploy` se connecte au VPS et lance `deploy/ci-deploy.sh` avec le commit testé (`<sha>` pour main, `staging <sha>` pour staging) : sauvegarde de la base (production seulement), passage du dossier sur ce commit, puis `deploy.sh`. Un push sur une autre branche ne déploie rien.
+
+Le staging a son propre `.env.production` avec `COMPOSE_PROJECT_NAME=medelys-staging` : conteneurs et volume de base séparés de la production.
 
 - **Clé SSH dédiée** : sa clé publique est dans `/root/.ssh/authorized_keys` du VPS, précédée de `command="/root/lifedeux/deploy/ci-deploy.sh",no-port-forwarding,no-agent-forwarding,no-X11-forwarding,no-pty`. Elle ne peut rien faire d'autre que ce script.
 - **Secrets GitHub** (Settings → Secrets → Actions) : `VPS_SSH_KEY` (clé privée), `VPS_KNOWN_HOSTS` (`ssh-keyscan -t ed25519 <ip>`), `VPS_HOST` (IP du VPS).
